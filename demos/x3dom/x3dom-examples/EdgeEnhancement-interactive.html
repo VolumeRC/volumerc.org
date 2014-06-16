@@ -1,0 +1,86 @@
+<html>
+<head>
+    <title>Volume Rendering EdgeEnhancementVolumeStyle</title>
+    <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
+  <!-- BEGIN:X3DOM -->
+  <meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge" />
+  <link rel="stylesheet" type="text/css" href="../media/css/x3dom.css" />
+  <script type="text/javascript" src="../media/js/x3dom-full.js"></script>
+  <!-- END:X3DOM -->
+  <style type="text/css">
+    #ctrlContainer { position: absolute; top:185px; left:520px; padding: 0px; width: 280px; }
+    #sliderContainer div { float:left; width: 200px; }
+    #sliderContainer li { height: 20px; }
+    #sliderContainer ul { clear: both; list-style-type: none; margin: 10px 0 10px 0; padding: 0; }
+  </style>
+  <link type="text/css" href="../media/css/jquery-ui.css" rel="stylesheet"/>
+</head>
+<body>
+  <h1>Edge Enhancement Style</h1>
+  <div>
+  <X3D xmlns='http://www.web3d.org/specifications/x3d-namespace'
+         showStat='true' showLog='true' width='500px' height='500px'>
+      <Scene>
+          <Background DEF='BG' skyColor='1 1 1' transparency='0'></Background> 
+          <Viewpoint description='Default' zNear='0.0001' zFar='100'></Viewpoint>
+          <Transform>
+            <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
+              <ImageTextureAtlas containerField='voxels' url='data/aorta/aorta1024.png' numberOfSlices='96' slicesOverX='10' slicesOverY='10'></ImageTextureAtlas>
+              <EdgeEnhancementVolumeStyle id='edgeStyle' gradientThreshold='0.8' edgeColor="0.0 0.0 1.0">
+                <ImageTextureAtlas containerField='surfaceNormals' url='data/aorta/aorta-gradient_1024.png' numberOfSlices='96' slicesOverX='10' slicesOverY='10'></ImageTextureAtlas>
+              </EdgeEnhancementVolumeStyle>
+            </VolumeData>
+          </Transform>
+      </Scene>
+    </X3D>
+  </div>
+
+  <div id="ctrlContainer">
+    <label>Select gradient threshold:</label>
+    <div id="sliderContainer">
+      <span style="width:100px; float:left; clear:both; padding:5px;" id="threshold">0.8</span>
+      <ul>
+        <li>
+          <div id="thresholdSlider" class="sliderT"></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div>
+    <span style="position:absolute; top:290px; left:520px;" onmouseover="document.getElementById('colPick').color.showPicker();">
+      Choose <i>edge</i> color: <br>&nbsp;</br>
+      <input id="colPick" class="color" value="000000"/>
+    </span>
+  </div>
+
+  <script type="text/javascript" src="../media/js/jscolor.js"></script>
+  <script type="text/javascript" src="../media/js/jquery.min.js"></script>
+  <script type="text/javascript" src="../media/js/jquery-ui.min.js"></script>
+  <script type="text/javascript">
+    var edge_col = "#000000";
+
+    $(document).ready( function()
+    {
+        //Init the edge style parameters
+        document.getElementById("edgeStyle").setAttribute('gradientThreshold', '0.8');
+        document.getElementById("threshold").innerHTML = 0.8;
+        document.getElementById("edgeStyle").setAttribute('edgeColor', edge_col);
+        document.getElementById("colPick").setAttribute('value', edge_col);
+
+        $(".sliderT").slider({min: 0, max: 3.14, step: 0.1, value: 0.8, animate: true,
+            range: false, slide: function(e, ui) {
+                threshold = ui.value;
+                document.getElementById("edgeStyle").setAttribute('gradientThreshold', threshold);
+                document.getElementById("threshold").innerHTML = threshold;
+            }});
+
+        $("#colPick").change(function(){
+          edge_col = '#'+this.color.toString();
+          document.getElementById("edgeStyle").setAttribute('edgeColor', edge_col);
+        });
+    });
+  </script>
+
+</body>
+</html>

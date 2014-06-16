@@ -1,0 +1,252 @@
+<html>
+<head>
+<title>Silicium TF demo</title>
+
+<!-- amoreno -->
+<link type="text/css" href="vendor/assets/stylesheets/themes/base/ui.all.css" rel="stylesheet" />
+<link type="text/css" href="app/assets/stylesheets/panelControles.css" rel="stylesheet" />
+<script type="text/javascript" src="vendor/assets/javascripts/jquery-1.3.2.js"></script>
+<script type="text/javascript" src="vendor/assets/javascripts/ui/ui.core.js"></script>
+<script type="text/javascript" src="vendor/assets/javascripts/ui/ui.slider.js"></script>
+<script type="text/javascript" src="vendor/assets/javascripts/ui/ui.draggable.js"></script>
+<script type="text/javascript" src="app/assets/javascripts/event.js"></script>
+<!-- amoreno -->
+		
+<script type="text/javascript" src="vendor/assets/javascripts/sylvester.js"></script>
+<script type="text/javascript" src="lib/assets/javascripts/glUtils.js"></script>
+<script type="text/javascript" src="lib/assets/javascripts/glAux.js"></script><!-- Deprecated!! -->
+<script type="text/javascript" src="app/assets/javascripts/volrenrc.js"></script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40928041-1', 'volumerc.org');
+  ga('send', 'pageview');
+
+</script>
+<!-- aarbelaiz -->
+<script type="text/javascript">
+$(document).ready(function(){
+		//Default init transfer function canvas
+		initTransferFunction();
+		drawTF(initColor.colors.components);
+	});
+</script>
+<!-- aarbelaiz -->
+
+<script type="text/javascript">
+
+var globalIndexColors=0;//very important is the global index of colors(R,G,B,A)
+
+function load_resource(url) {
+	var req = new XMLHttpRequest();
+	req.open('GET', url, false);
+	req.overrideMimeType('text/plain; charset=x-user-defined');
+	req.send(null);
+	//  alert(req.status);
+	if (req.status != 200) return '';
+	return req.responseText;
+}
+
+function init_TF_Colors_Json()
+{
+  var urlJson="data/initTransferColors_silicium.json";
+  eval("var initColor="+load_resource(urlJson));
+  return initColor;
+}
+
+function zum(factor){
+	uZoomLevel = uZoomLevel*factor;
+	uOffsetX=uOffsetX/factor;
+	uOffsetY=uOffsetY/factor;
+	uOffsetZ=uOffsetZ/factor;
+}
+
+function reset(){
+	uZoomLevel=1.0;
+	uOffsetX=0.0;
+	uOffsetY=0.0;
+	uOffsetZ=0.0;
+}
+
+function offset (x, y, z){
+	uOffsetX=uOffsetX+x;
+	uOffsetY=uOffsetY+y;
+	uOffsetZ=uOffsetZ+z;
+}
+
+function setRenderQuality(offset){
+	if (uNumSteps+offset>0) {
+		uNumSteps=uNumSteps+offset;
+		var quality = document.getElementById("curQuality");
+		quality.innerHTML="Q: " + uNumSteps;
+	}
+}
+	
+function LoadAirTempDemo()
+{
+	var canvas = document.getElementById("VolRenRCView");
+	var gl = null;
+	try {
+		gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
+		gl.viewportWidth = canvas.width;
+		gl.viewportHeight = canvas.height;
+	} catch (e) {
+	}
+	
+	if (!gl) {
+		alert("Could not initialise WebGL, sorry :-(");
+	}
+
+	
+	imgNameArray =["data/Dataset-Silicium/silicium000.png","data/Dataset-Silicium/silicium001.png","data/Dataset-Silicium/silicium002.png","data/Dataset-Silicium/silicium003.png","data/Dataset-Silicium/silicium004.png","data/Dataset-Silicium/silicium005.png","data/Dataset-Silicium/silicium006.png","data/Dataset-Silicium/silicium007.png","data/Dataset-Silicium/silicium008.png","data/Dataset-Silicium/silicium009.png","data/Dataset-Silicium/silicium010.png","data/Dataset-Silicium/silicium011.png","data/Dataset-Silicium/silicium012.png","data/Dataset-Silicium/silicium013.png","data/Dataset-Silicium/silicium014.png","data/Dataset-Silicium/silicium015.png","data/Dataset-Silicium/silicium016.png","data/Dataset-Silicium/silicium017.png","data/Dataset-Silicium/silicium018.png","data/Dataset-Silicium/silicium019.png","data/Dataset-Silicium/silicium020.png","data/Dataset-Silicium/silicium021.png","data/Dataset-Silicium/silicium022.png","data/Dataset-Silicium/silicium023.png","data/Dataset-Silicium/silicium024.png","data/Dataset-Silicium/silicium025.png","data/Dataset-Silicium/silicium026.png","data/Dataset-Silicium/silicium027.png","data/Dataset-Silicium/silicium028.png","data/Dataset-Silicium/silicium029.png","data/Dataset-Silicium/silicium030.png","data/Dataset-Silicium/silicium031.png","data/Dataset-Silicium/silicium032.png","data/Dataset-Silicium/silicium033.png","data/Dataset-Silicium/silicium034.png","data/Dataset-Silicium/silicium035.png","data/Dataset-Silicium/silicium036.png","data/Dataset-Silicium/silicium037.png","data/Dataset-Silicium/silicium038.png","data/Dataset-Silicium/silicium039.png","data/Dataset-Silicium/silicium040.png","data/Dataset-Silicium/silicium041.png","data/Dataset-Silicium/silicium042.png","data/Dataset-Silicium/silicium043.png","data/Dataset-Silicium/silicium044.png","data/Dataset-Silicium/silicium045.png","data/Dataset-Silicium/silicium046.png","data/Dataset-Silicium/silicium047.png","data/Dataset-Silicium/silicium048.png","data/Dataset-Silicium/silicium049.png","data/Dataset-Silicium/silicium050.png","data/Dataset-Silicium/silicium051.png","data/Dataset-Silicium/silicium052.png","data/Dataset-Silicium/silicium053.png","data/Dataset-Silicium/silicium054.png","data/Dataset-Silicium/silicium055.png","data/Dataset-Silicium/silicium056.png","data/Dataset-Silicium/silicium057.png","data/Dataset-Silicium/silicium058.png","data/Dataset-Silicium/silicium059.png","data/Dataset-Silicium/silicium060.png","data/Dataset-Silicium/silicium061.png","data/Dataset-Silicium/silicium062.png","data/Dataset-Silicium/silicium063.png","data/Dataset-Silicium/silicium064.png","data/Dataset-Silicium/silicium065.png","data/Dataset-Silicium/silicium066.png","data/Dataset-Silicium/silicium067.png","data/Dataset-Silicium/silicium068.png","data/Dataset-Silicium/silicium069.png","data/Dataset-Silicium/silicium070.png","data/Dataset-Silicium/silicium071.png","data/Dataset-Silicium/silicium072.png","data/Dataset-Silicium/silicium073.png","data/Dataset-Silicium/silicium074.png","data/Dataset-Silicium/silicium075.png","data/Dataset-Silicium/silicium076.png","data/Dataset-Silicium/silicium077.png","data/Dataset-Silicium/silicium078.png","data/Dataset-Silicium/silicium079.png","data/Dataset-Silicium/silicium080.png","data/Dataset-Silicium/silicium081.png","data/Dataset-Silicium/silicium082.png","data/Dataset-Silicium/silicium083.png","data/Dataset-Silicium/silicium084.png","data/Dataset-Silicium/silicium085.png","data/Dataset-Silicium/silicium086.png","data/Dataset-Silicium/silicium087.png","data/Dataset-Silicium/silicium088.png","data/Dataset-Silicium/silicium089.png","data/Dataset-Silicium/silicium090.png","data/Dataset-Silicium/silicium091.png","data/Dataset-Silicium/silicium092.png","data/Dataset-Silicium/silicium093.png","data/Dataset-Silicium/silicium094.png","data/Dataset-Silicium/silicium095.png","data/Dataset-Silicium/silicium096.png","data/Dataset-Silicium/silicium097.png"
+	];
+	
+	var volume = VolRenRC(gl, canvas, imgNameArray, 256,256, document.getElementById("transfer_function_canvas"), 1.0, 1.0, 1.0, 1.45,3.0);
+}
+
+window.onload = LoadAirTempDemo;
+
+
+</script>
+
+
+</head>
+
+
+
+
+<body bgcolor="#E9E9E9">
+
+<!-- amoreno -->
+<div align="center">
+	<h1>Silicium Dataset - Transfer Function Editor</h1>
+	<h4>Dataset obtained from volvis.org</h4>
+</div>
+	<button type="button" onclick="zum(0.75)">Zoom+</button>
+	<button type="button" onclick="zum(4.0/3.0)">Zoom-</button>
+	<button type="button" onclick="offset(0, -0.25, 0)">-Y</button>
+	<button type="button" onclick="offset(0, 0.25, 0)">+Y</button>
+	<button type="button" onclick="offset(-0.25, 0, 0)">-X</button>
+	<button type="button" onclick="offset(0.25, 0, 0)">+X</button>
+	<button type="button" onclick="offset(0, 0, -0.25)">-Z</button>
+	<button type="button" onclick="offset(0, 0, 0.25)">+Z</button>
+	<button type="button" onclick="reset()">Reset</button>
+	<button type="button" onclick="setRenderQuality(50.0)">Q+</button>
+	<button type="button" onclick="setRenderQuality(-50.0)">Q-</button>
+	<span id="curQuality"></span>
+	<div> <span id="data"></span></div>
+
+	<div class="demo">
+<!-- amoreno -->
+			
+<canvas id="VolRenRCView" width="700" height="700" style="border:1px solid black"></canvas>
+
+<!-- amoreno -->
+		<div class="control-panel">
+			<div class="control-transparency">
+				<div id="eq">
+					<p>
+						<label for="amount">Opacity Level</label>
+						<input type="text" id="amount" style="border:0; color:#000000; font-weight:bold;" /></p>
+
+					<script type="text/javascript">
+var j=0;
+initColor=init_TF_Colors_Json();
+for(j=0;j<initColor.colors.length;j++){
+	document.write("<span class='rango#"+j+"'>"+initColor.colors.components[j].A+"</span>");
+}
+//loadOtherDataSets();//mul
+					</script>
+
+				</div>
+				 <div id="colorCanvas">
+					<script type="text/javascript">
+for(i=0;i<18;i++) {
+	var red,green,blue
+	document.write ("<div id='colorPixel"+ i +"' class='colorPixel' onclick='transferColorEvent(this,i)'></div>");
+	red=initColor.colors.components[i].R;
+	green=initColor.colors.components[i].G;
+	blue=initColor.colors.components[i].B; 
+	hex=hexFromRGB(parseInt(red), parseInt(green), parseInt(blue));
+	$("#colorPixel"+ i).css("background-color", "#" + hex);
+}
+function transferColorEvent(value,idx){
+	var red,green,blue;
+	index=value.id.substring(10,12);
+	globalIndexColors=parseInt(index);
+	red=initColor.colors.components[parseInt(index)].R;
+	green=initColor.colors.components[parseInt(index)].G;
+	blue=initColor.colors.components[parseInt(index)].B; 
+	detectarColor(red,green,blue);	
+	//aarbelaiz
+	drawTF(initColor.colors.components);
+	//~aarbelaiz	
+}
+$(function() {
+	$("#slider__").slider({
+		value:3.0,
+		min: 0,
+		max: 100,
+		step: 0.5,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uLightFactor=ui.value;
+			$("#amount__").val( ui.value);
+		}
+	});
+	$("#amount__").val($("#slider__").slider("value"));
+});
+$(function() {
+	$("#slider1__").slider({
+		value:1.45,
+		min: 0,
+		max: 2.00,
+		step: 0.01,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uOpacityFactor=ui.value;
+			$("#amount1__").val(ui.value);
+
+		}
+	});
+	$("#amount1__").val($("#slider__1").slider("value"));
+});
+					</script>
+				</div>
+			</div>
+			<div class="control-color">
+				<h3>Color: </h3>
+				<div id="red"></div>
+				<div id="green"></div>
+				<div id="blue"></div>
+				<div id="swatch" class="ui-widget-content ui-corner-all"></div>
+			</div>	
+			<div class="control-global">							
+				<p>
+					<label for="amount">Light Factor :</label>
+					<input type="text" id="amount__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+
+				<div id="slider__"></div>
+				<p>
+					<label for="amount">Opacity Factor :</label>
+					<input type="text" id="amount1__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+				<div id="slider1__"></div>
+			</div>
+			<!-- aarbelaiz -->
+			<div class="transfer-function">
+				<label>Current Transfer Function:</label>
+				<br>
+				<canvas id="transfer_function_canvas" width="255" height="100" style="border:1px solid black"></canvas>
+			</div>
+			<!-- aarbelaiz -->								
+		</div>
+	</div><!-- End demo -->
+</div><!-- End demo-description -->
+</body>
+
+</html>

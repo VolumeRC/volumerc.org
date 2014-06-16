@@ -1,0 +1,96 @@
+<html>
+<head>
+    <title>Volume Rendering SilhouetteEnhancementVolumeStyle</title>
+    <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
+  <!-- BEGIN:X3DOM -->
+  <meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge" />
+  <link rel="stylesheet" type="text/css" href="../media/css/x3dom.css" />
+  <script type="text/javascript" src="../media/js/x3dom-full.js"></script>
+  <!-- END:X3DOM -->
+  <style type="text/css">
+    #ctrlContainer { position: absolute; top:185px; left:520px; padding: 0px; width: 280px; }
+    #sliderContainer div { float:left; width: 200px; }
+    #sliderContainer li { height: 20px; }
+    #sliderContainer ul { clear: both; list-style-type: none; margin: 10px 0 10px 0; padding: 0; }
+  </style>
+  <link type="text/css" href="../media/css/jquery-ui.css" rel="stylesheet"/>
+</head>
+<body>
+  <h1>Silhouette Enhancement Style</h1>
+  <X3D showStat='true' showLog='true' width='500px' height='500px'>
+      <Scene>
+          <Background DEF='BG' skyColor='1 1 1' transparency='0'></Background>
+          <Viewpoint description='Default' zNear='0.0001' zFar='100'></Viewpoint>
+          <Transform>
+            <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
+              <ImageTextureAtlas containerField='voxels' url='data/aorta/aorta1024.png' numberOfSlices='96' slicesOverX='10' slicesOverY='10'></ImageTextureAtlas>
+              <SilhouetteEnhancementVolumeStyle id="silhouetteStyle" silhouetteBoundaryOpacity='0.9' silhouetteRetainedOpacity='0.0' silhouetteSharpness='1.5'>
+                <ImageTextureAtlas containerField='surfaceNormals' url='data/aorta/aorta-gradient_1024.png' numberOfSlices='96' slicesOverX='10' slicesOverY='10'></ImageTextureAtlas>
+              </SilhouetteEnhancementVolumeStyle>
+            </VolumeData>
+          </Transform>
+      </Scene>
+    </X3D>
+    <div id="ctrlContainer">
+      <label>Select Boundary Opacity:</label>
+      <div id="sliderContainer">
+        <span style="width:100px; color:#FF0000; float:left; clear:both; padding:5px;" id="thresholdB">0.9</span>
+        <ul>
+          <li>
+            <div id="thresholdSlider" class="sliderB"></div>
+          </li>
+        </ul>
+      </div>
+      <br/>
+      <label>Select Retained Opacity:</label>
+      <div id="sliderContainer">
+        <span style="width:100px; color:#FF0000; float:left; clear:both; padding:5px;" id="thresholdR">0.0</span>
+        <ul>
+          <li>
+            <div id="thresholdSlider" class="sliderR"></div>
+          </li>
+        </ul>
+      </div>
+      <br/>
+      <label>Select Silhouette Sharpness:</label>
+      <div id="sliderContainer">
+        <span style="width:100px; color:#FF0000; float:left; clear:both; padding:5px;" id="thresholdS">1.5</span>
+        <ul>
+          <li>
+            <div id="thresholdSlider" class="sliderS"></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <script type="text/javascript" src="../media/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../media/js/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+      var threshold = 0.8;
+      var edge_col = "#000000";
+
+      $(document).ready( function()
+      {
+          $(".sliderB").slider({min: 0, max: 1, step: 0.1, value: 0.9, animate: true,
+              range: false, slide: function(e, ui) {
+                  threshold = ui.value;
+                  document.getElementById("silhouetteStyle").setAttribute('silhouetteBoundaryOpacity', threshold);
+                  document.getElementById("thresholdB").innerHTML = threshold;
+              }});
+
+          $(".sliderR").slider({min: 0, max: 1, step: 0.1, value: 0.0, animate: true,
+              range: false, slide: function(e, ui) {
+                  threshold = ui.value;
+                  document.getElementById("silhouetteStyle").setAttribute('silhouetteRetainedOpacity', threshold);
+                  document.getElementById("thresholdR").innerHTML = threshold;
+              }});
+
+          $(".sliderS").slider({min: 0, max: 25, step: 0.2, value: 1.2, animate: true,
+              range: false, slide: function(e, ui) {
+                  threshold = ui.value;
+                  document.getElementById("silhouetteStyle").setAttribute('silhouetteSharpness', threshold);
+                  document.getElementById("thresholdS").innerHTML = threshold;
+              }});
+      });
+    </script>
+</body>
+</html>

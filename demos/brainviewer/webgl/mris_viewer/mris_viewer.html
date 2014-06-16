@@ -1,0 +1,391 @@
+<!--
+Copyright (c) 2011, Children's Hospital Boston
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the Children's Hospital Boston nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL CHILDREN'S HOSPITAL BOSTON BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+    </style>
+
+<title>MRIS Viewer</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="../common/sylvester.js"></script>
+<script type="text/javascript" src="../common/glUtils.js"></script>
+<script type="text/javascript" src="../common/binaryParseUtils.js"></script>
+<script type="text/javascript" src="../common/mrisLoader.js"></script>
+<script type="text/javascript" src="../common/crvLoader.js"></script>
+<script type="text/javascript" src="../common/brainSurface.js"></script>
+
+
+
+<script type="text/javascript">
+
+  var gl;
+  function initGL(canvas) {
+    try {
+      gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
+      gl.viewportWidth = canvas.width;
+      gl.viewportHeight = canvas.height;
+    } catch(e) {
+    }
+    if (!gl) {
+      alert("Could not initialise WebGL.  Please make sure your browser supports WebGL.");
+    }
+  }
+
+
+  var mvMatrix;
+  var mvMatrixStack = [];
+
+  function mvPushMatrix(m) {
+    if (m) {
+      mvMatrixStack.push(m.dup());
+      mvMatrix = m.dup();
+    } else {
+      mvMatrixStack.push(mvMatrix.dup());
+    }
+  }
+
+  function mvPopMatrix() {
+    if (mvMatrixStack.length == 0) {
+      throw "Invalid popMatrix!";
+    }
+    mvMatrix = mvMatrixStack.pop();
+    return mvMatrix;
+  }
+
+
+  function loadIdentity() {
+    mvMatrix = Matrix.I(4);
+  }
+
+
+  function multMatrix(m) {
+    mvMatrix = mvMatrix.x(m);
+  }
+
+
+  function mvTranslate(v) {
+    var m = Matrix.Translation($V([v[0], v[1], v[2]])).ensure4x4();
+    multMatrix(m);
+  }
+
+  function createRotationMatrix(angle, v) {
+    var arad = angle * Math.PI / 180.0;
+    return Matrix.Rotation(arad, $V([v[0], v[1], v[2]])).ensure4x4();
+  }
+
+  function mvRotate(ang, v) {
+    var arad = ang * Math.PI / 180.0;
+    var m = Matrix.Rotation(arad, $V([v[0], v[1], v[2]])).ensure4x4();
+    multMatrix(m);
+  }
+
+  function matScale(m, sx, sy, sz)
+  {
+    m.elements[0][0] *= sx;
+    m.elements[0][1] *= sx;
+    m.elements[0][2] *= sx;
+    m.elements[0][3] *= sx;
+
+    m.elements[1][0] *= sy;
+    m.elements[1][1] *= sy;
+    m.elements[1][2] *= sy;
+    m.elements[1][3] *= sy;
+
+    m.elements[2][0] *= sz;
+    m.elements[2][1] *= sz;
+    m.elements[2][2] *= sz;
+    m.elements[2][3] *= sz;
+
+  }
+  function mvScale(sx, sy, sz)
+  {
+    matScale(mvMatrix, sx, sy, sz);
+
+  }
+
+
+
+  var pMatrix;
+  function perspective(fovy, aspect, znear, zfar) {
+    pMatrix = makePerspective(fovy, aspect, znear, zfar);
+  }
+
+
+  function setMatrixUniforms() {
+    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, new Float32Array(pMatrix.flatten()));
+    gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, new Float32Array(mvMatrix.flatten()));
+
+    var normalMatrix = mvMatrix.inverse();
+    normalMatrix = normalMatrix.transpose();
+    gl.uniformMatrix4fv(shaderProgram.nMatrixUniform, false, new Float32Array(normalMatrix.flatten()));
+  }
+
+
+  var xRot = 0;
+  var xSpeed = 0;
+
+  var yRot = 0;
+  var ySpeed = 0;
+
+  var z = -4.0;
+
+  var filter = 0;
+
+
+  var currentlyPressedKeys = Object();
+
+  function handleKeyDown(event) {
+    currentlyPressedKeys[event.keyCode] = true;
+
+    if (String.fromCharCode(event.keyCode) == "F") {
+      filter += 1;
+      if (filter == 3) {
+        filter = 0;
+      }
+    }
+  }
+
+
+  function handleKeyUp(event) {
+    currentlyPressedKeys[event.keyCode] = false;
+  }
+
+
+  function handleKeys() {
+    if (currentlyPressedKeys[33]) {
+      // Page Up
+      z -= 0.05;
+    }
+    if (currentlyPressedKeys[34]) {
+      // Page Down
+      z += 0.05;
+    }
+    if (currentlyPressedKeys[37]) {
+      // Left cursor key
+      ySpeed -= 1;
+    }
+    if (currentlyPressedKeys[39]) {
+      // Right cursor key
+      ySpeed += 1;
+    }
+    if (currentlyPressedKeys[38]) {
+      // Up cursor key
+      xSpeed -= 1;
+    }
+    if (currentlyPressedKeys[40]) {
+      // Down cursor key
+      xSpeed += 1;
+    }
+  }
+
+
+  var mouseDown = false;
+  var lastMouseX = null;
+  var lastMouseY = null;
+
+  var brainRotationMatrix = Matrix.I(4);
+
+  function handleMouseDown(event) {
+    mouseDown = true;
+    lastMouseX = event.clientX;
+    lastMouseY = event.clientY;
+  }
+
+
+  function handleMouseUp(event) {
+    mouseDown = false;
+  }
+
+
+  function handleMouseMove(event) {
+    if (!mouseDown) {
+      return;
+    }
+    var newX = event.clientX;
+    var newY = event.clientY;
+
+    var deltaX = newX - lastMouseX
+    var newRotationMatrix = createRotationMatrix(deltaX / 10, [0, 1, 0]);
+
+    var deltaY = newY - lastMouseY;
+    newRotationMatrix = newRotationMatrix.x(createRotationMatrix(deltaY / 10, [1, 0, 0]));
+
+    brainRotationMatrix = newRotationMatrix.x(brainRotationMatrix);
+
+    lastMouseX = newX
+    lastMouseY = newY;
+  }
+
+  function handleMouseWheel(e) {
+    // From SpiderGL
+    var delta = 0;
+    if (!e) /* For IE. */ {
+            e = window.event;
+    }
+    if (e.wheelDelta) /* IE/Opera. */ {
+            delta = e.wheelDelta / 120;
+            /* In Opera 9, delta differs in sign as compared to IE.
+             */
+            if (window.opera) {
+                    delta = -delta;
+            }
+    }
+    else if (e.detail) /** Mozilla case. */ {
+            /** In Mozilla, sign of delta is different than in IE.
+             * Also, delta is multiple of 3.
+             */
+            delta = -e.detail / 3;
+    }
+    /* If delta is nonzero, handle it.
+     * Basically, delta is now positive if wheel was scrolled up,
+     * and negative, if wheel was scrolled down.
+     */
+    if (delta) {
+        z += (delta / 2);
+    }
+  }
+
+
+
+  var gBrainSurface = new BrainSurface();
+
+  function loadMRIS() {
+      mrisURL = location.search.substring(1)
+      console.log('URL: ' + mrisURL);
+      gBrainSurface.loadSurface(mrisURL, handleLoadedSurface);
+  }
+
+  function handleLoadedSurface(brainSurface)
+  {
+
+    if (brainSurface.vertexPositionBuffer != null)
+    {
+        brainSurface.setOpacity(1.0);
+    }
+  }
+
+  function drawScene() {
+
+    var canvas = document.getElementById("webgl-canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewportWidth = canvas.width;
+    gl.viewportHeight = canvas.height;
+
+    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    if (gBrainSurface.vertexPositionBuffer == null) {
+        return;
+    }
+
+    perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+    loadIdentity();
+    var scale = gBrainSurface.curScale[0];
+    mvScale(scale, scale, scale);
+    mvTranslate([0.0, 0.0, z / scale]);
+
+    mvPushMatrix();
+    multMatrix(brainRotationMatrix);
+    mvRotate(-90.0, [1, 0, 0]);
+
+    gBrainSurface.drawSurface(pMatrix, mvMatrix);
+    mvPopMatrix();
+
+  }
+
+  var lastTime = 0;
+  function animate() {
+    var timeNow = new Date().getTime();
+    if (lastTime != 0) {
+      var elapsed = timeNow - lastTime;
+
+      xRot += (xSpeed * elapsed) / 1000.0;
+      yRot += (ySpeed * elapsed) / 1000.0;
+    }
+    lastTime = timeNow;
+  }
+
+  function tick() {
+    handleKeys();
+    drawScene();
+    animate();
+
+  }
+
+
+  function webGLStart() {
+    var canvas = document.getElementById("webgl-canvas");
+    initGL(canvas);
+    loadMRIS();
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+    gl.clearDepth(1.0);
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+    canvas.onmousedown = handleMouseDown;
+    document.onmouseup = handleMouseUp;
+    document.onmousemove = handleMouseMove;
+    document.onmousewheel = handleMouseWheel;
+
+    setInterval(tick, 15);
+  }
+
+
+
+</script>
+
+
+</head>
+
+
+<body onload="webGLStart();">
+
+<center>
+  <canvas id="webgl-canvas" style="border: none;" width="100%" height="100%" margin="0px"></canvas>
+</center>
+
+</body>
+
+</html>

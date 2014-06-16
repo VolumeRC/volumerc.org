@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<title>Ray Casting Volume Rendering</title>
+	<script type="text/javascript" src="lib/sylvester.js"></script>
+	<script type="text/javascript" src="lib/glUtils.js"></script>
+	<script type="text/javascript" src="lib/glAux.js"></script>
+	<script type="text/javascript" src="lib/jquery-2.0.3.min.js"></script>
+	<script type="text/javascript" src="events.js"></script>
+	<script type="text/javascript" src="volumerc.js?x"></script>
+	<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	ga('create', 'UA-40928041-1', 'volumerc.org');
+	ga('send', 'pageview');
+
+	</script>
+</head>
+<body bgcolor="#E9E9E9">
+	<center>
+		<h1>Nucleon - Ray Casting Volume Rendering Styles</h1>
+		<h4>Dataset obtained from volvis.org</h4>
+		<canvas id="canvas_window" width="512" height="512" style="border:1px solid black"></canvas>
+		<br>
+		<form id="presets" name="change presets">
+			<select id="shader" name="shader">
+				<option value="raycast-color.frag">OpacityMap Volume Style</option>
+				<option value="raycast-edge-enhancement-from_texture.frag">Edge Enhancement</option>
+				<option value="raycast-boundary-enhancement.frag">Boundary Enhancement</option>
+				<option value="raycast-silhouette-enhancement-from_texture.frag">Silhouette Enhancement</option>
+				<option value="raycast-cartoon-from_texture.frag">Cartoon Volume Style</option>
+			</select>
+			<select name="resolution">
+				<option value="nucleon_full.png">Nucleon Volume Data</option>
+			</select>
+			<select name="transfer_function">
+				<option value="nucleon-tf6.png">Transfer Function</option>
+			</select>
+			<button type="submit">Update</button>
+		</form>
+		<br>
+		<input id="c_rotate" type="checkbox" onclick="setTimeout(tick, 5)">Autorotate</input>
+		<br>
+		<!-- CONTROLS -->
+		<!-- Edge-enhancement options form -->
+		<form id="edge-enhancement-form" name="edge-enhancement-presets" class="shader_form" style="display: none">
+			<fieldset>
+				<legend>Edge Enhancement Style</legend>
+				Gradient Threshold:<input name="gradientT" type="text" value="1.4"></input>
+				<fieldset>
+					<legend>Edge Color</legend>
+					R:<input name="red" type="text" value="0.0"></input>
+					G:<input name="green" type="text" value="0.0"></input>
+					B:<input name="blue" type="text" value="1.0"></input>
+				</fieldset>
+			</fieldset>
+		</form>
+		<!-- Boundary enhancement options form -->
+		<form id="boundary-enhancement-form" name"boundary-enahncement-presets" class="shader_form" style="display: none">
+			<fieldset>
+				<legend>Boundary Enhancement Style</legend>
+				Retained Opacity:<input name="retainedOpacity" type="text" value="0.2"></input>
+				Boundary Opacity:<input name="boundaryOpacity" type="text" value="1.0"></input>
+				Opacity Factor:<input name="opacityFactor" type="text" value="0.5"></input>
+			</fieldset>
+		</form>
+		<!-- Silhouette enhancement options form -->
+		<form id="silhouette-enhancement-form" name="silhouette-enhancement-presets" class="shader_form" style="display: none">
+			<fieldset>
+				<legend>Silhouette Enhancement Style</legend>
+				Retained Opacity:<input name="retainedOpacity" type="text" value="0.1"></input>
+				Boundary Opacity:<input name="boundaryOpacity" type="text" value="1.0"></input>
+				Sharpeness:<input name="silhouetteSharpness" type="text" value="4.0"></input>
+			</fieldset>
+		</form>
+		<!-- Cartoon Volume Style options form -->
+		<form id="cartoon-style-form" name="cartoon-style-presets" class="shader_form" style="display: none">
+			<fieldset>
+				<legend>Cartoon Style</legend>
+				Color Steps:<input name="colorSteps" type="text" value="30"></input>
+				<fieldset>
+					<legend>Orthogonal Color</legend>
+					R:<input name="o_red" type="text" value="0.0"></input>
+					G:<input name="o_green" type="text" value="0.0"></input>
+					B:<input name="o_blue" type="text" value="1.0"></input>
+					A:<input name="o_aplha" type="text" value="1.0"></input>
+				</fieldset>
+				<fieldset>
+					<legend>Parallel Color</legend>
+					R:<input name="p_red" type="text" value="1.0"></input>
+					G:<input name="p_green" type="text" value="0.0"></input>
+					B:<input name="p_blue" type="text" value="0.0"></input>
+					A:<input name="p_aplha" type="text" value="1.0"></input>
+				</fieldset>
+			</fieldset>
+		</form>
+		<br>
+		<p>Rotation with the mouse, and Alt+Mouse to Zoom</p>
+		<p>After a new style selection, click the update button to apply changes.</p>
+	</center>
+</body>
+<script type="text/javascript">
+	$(document).ready(function(){
+		//Default initial selection
+		init('raycast-color.frag','nucleon_full.png','nucleon-tf6.png', 'nucleon-gradient_full.png');
+
+		//Init the different styles options to null
+		document.edgeOptions = null;
+		document.silhouetteOptions = null;
+		document.boundaryOptions = null;
+		document.cartoonOptions = null;
+
+		////////////////////////
+		// Main form submission
+		////////////////////////
+		//Submit handle for the new visualization type
+		$('#presets').submit(function(event){
+			event.preventDefault();
+			var options = $(this).serializeArray();
+			init(options[0].value, options[1].value, options[2].value, "nucleon-gradient_full.png");
+		});
+
+		///////////////////
+		// Shader Selection
+		///////////////////
+		//Handler for the shader selection, shows and hides each shader options
+		$('#presets #shader').change(function(){
+			$('.shader_form').hide();
+			if(this.value === "raycast-edge-enhancement.frag" || this.value === "raycast-edge-enhancement-from_texture.frag"){
+				var edge_form = $('#edge-enhancement-form');
+				edge_form.show();
+				document.edgeOptions = edge_form.serializeArray();
+			}
+			if(this.value === "raycast-boundary-enhancement.frag" || this.value === "raycast-boundary-enhancement-from_texture.frag"){
+				var boundary_form = $('#boundary-enhancement-form');
+				boundary_form.show();
+				document.boundaryOptions = boundary_form.serializeArray();
+			}
+			if(this.value === "raycast-silhouette-enhancement.frag" || this.value === "raycast-silhouette-enhancement-from_texture.frag"){
+				var silhouette_form = $('#silhouette-enhancement-form');
+				silhouette_form.show();
+				document.silhouetteOptions = silhouette_form.serializeArray();
+			}
+			if(this.value == "raycast-cartoon.frag" || this.value === "raycast-cartoon-from_texture.frag"){
+				var cartoon_form = $('#cartoon-style-form');
+				cartoon_form.show();
+				document.cartoonOptions = cartoon_form.serializeArray();
+			}
+		});
+
+		////////////////////////
+		/// Volume Styles forms
+		////////////////////////
+		//Edge enhacement form
+		$("#edge-enhancement-form").change(function(event){
+			document.edgeOptions = $(this).serializeArray();
+		});
+		//Boundary enhancement form
+		$('#boundary-enhancement-form').change(function(event){
+			document.boundaryOptions = $(this).serializeArray();
+		});
+		//Silhouette enhancement form 
+		$("#silhouette-enhancement-form").change(function(event){
+			document.silhouetteOptions = $(this).serializeArray();
+		});
+		//Cartoon style form
+		$("#cartoon-style-form").change(function(event){
+			document.cartoonOptions = $(this).serializeArray();
+		});
+	});
+
+	//Call to the main drawing function to initialize the raycasting 
+	function init(shader, image, tf, grad){
+		volumerc_main("shaders/"+shader, "img/"+image, "img/"+tf, "img/"+grad);
+	}
+</script>
+</html>

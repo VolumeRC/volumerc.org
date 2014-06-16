@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<title>Ray Casting Volume Rendering</title>
+	<script type="text/javascript" src="lib/sylvester.js"></script>
+	<script type="text/javascript" src="lib/glUtils.js"></script>
+	<script type="text/javascript" src="lib/glAux.js"></script>
+	<script type="text/javascript" src="lib/jquery-2.0.3.min.js"></script>
+	<script type="text/javascript" src="events.js"></script>
+	<script type="text/javascript" src="volumerc.js?x"></script>
+</head>
+<body bgcolor="#E9E9E9">
+	<center>
+		<h1>Ray Casting Volume Rendering</h1>
+		<canvas id="canvas_window" width="600" height="600" style="border:1px solid black"></canvas>
+		<br>
+		<form id="presets" name="change presets">
+			<select id="shader" name="shader">
+				<option value="raycast-bw.frag">No TF</option>
+				<option value="raycast-color.frag">TF</option>
+			</select>
+			<select name="resolution">
+				<!--Creative Commons License, Tooth scanned with a microCT by Vicomtech-IK4 is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License-->
+				<option value="TOOTH_ACRILIC_NO003_VR_x8_1024_copyright.png">1024x1024 resolution</option>
+			</select>
+			<select id="tf" name="transfer_function">
+				<option value="tf.png">Color</option>
+				<option value="tf2.png">Pulp</option>
+				<option value="tf3.png">Shape</option>
+			</select>
+			<button type="submit">Change</button>
+		</form>
+		<br>
+		<p>Rotation with the mouse, and Alt+Mouse to Zoom</p>
+	</center>
+</body>
+<script type="text/javascript">
+	$(document).ready(function(){
+		//Default initial selection
+		init('raycast-bw.frag','TOOTH_ACRILIC_NO003_VR_x8_1024_copyright.png','tf.png');
+		//By default the TF section must remain hidden
+		$('#presets #tf').hide();
+
+		////////////////////////
+		// Main form submission
+		////////////////////////
+		//Submit handle for the new visualization type
+		$('#presets').submit(function(event){
+			event.preventDefault();
+			var options = $(this).serializeArray();
+			init(options[0].value, options[1].value, options[2].value);
+		});
+
+		// When no transfer function mode is selected, hide the TF selection.
+		$('#presets #shader').change(function(){
+			if(this.value === "raycast-bw.frag"){
+				$('#presets #tf').hide();
+			}else{
+				$('#presets #tf').show();
+			}
+		});
+
+	});
+
+	//Call to the main drawing function to initialize the raycasting 
+	function init(shader, image, tf){
+		volumerc_main("shaders/"+shader, "img/"+image, "img/"+tf);
+	}
+</script>
+</html>

@@ -1,0 +1,88 @@
+<html>
+<head>
+  <title>Volume Rendering CartoonVolumeStyle</title>
+  <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
+  <!-- BEGIN:X3DOM -->
+  <meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge" />
+  <link rel="stylesheet" type="text/css" href="../media/css/x3dom.css" />
+  <script type="text/javascript" src="../media/js/x3dom-full.js"></script> 
+  <!-- END:X3DOM -->
+  <style type="text/css">
+  #ctrlContainer { position: absolute; top:185px; left:520px; padding: 0px; width: 280px; }
+  #sliderContainer div { float:left; width: 200px; }
+  #sliderContainer li { height: 20px; }
+  #sliderContainer ul { clear: both; list-style-type: none; margin: 10px 0 10px 0; padding: 0; }
+  </style>
+  <link type="text/css" href="../media/css/jquery-ui.css" rel="stylesheet"/>
+</head>
+<body>
+	<h1>Cartoon Volume Style</h1>
+ <div>
+   <X3D xmlns='http://www.web3d.org/specifications/x3d-namespace'
+   showStat='true' showLog='true' width='500px' height='500px'>
+   <Scene>
+    <Background DEF='BG' skyColor='1 1 1' transparency='0'></Background> 
+    <Viewpoint description='Default' zNear='0.0001' zFar='100'></Viewpoint>
+    <Transform>
+      <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
+        <ImageTextureAtlas containerField='voxels' url='data/aorta/aorta1024.png' numberOfSlices='96' slicesOverX='10' slicesOverY='10'></ImageTextureAtlas>
+        <CartoonVolumeStyle id="cartoonStyle">
+         <ImageTextureAtlas containerField='surfaceNormals' url='data/aorta/aorta-gradient_1024.png' numberOfSlices='96' slicesOverX='10' slicesOverY='10'></ImageTextureAtlas>
+       </CartoonVolumeStyle>
+     </VolumeData>
+   </Transform>
+ </Scene>
+</X3D>
+</div>
+
+<div>
+ <span style="position:absolute; top:270px; left:520px;" onmouseover="document.getElementById('ortColor').color.showPicker();">
+  Choose <i>Orthogonal</i> color: <br>&nbsp;</br>
+  <input id="ortColor" class="color" value="000000"/>
+</span>
+</div>
+<div>
+ <span style="position:absolute; top:350px; left:520px;" onmouseover="document.getElementById('paralColor').color.showPicker();">
+  Choose <i>Parallel</i> color: <br>&nbsp;</br>
+  <input id="paralColor" class="color" value="000000"/>
+</span>
+</div>
+<div id="ctrlContainer">
+ <label>Select color steps:</label>
+ <div id="sliderContainer">
+  <ul>
+    <li>
+     <span style="width:100px; float:left; clear:both; padding:5px;" id="colorSteps">30</span>
+     <div id="thresholdSlider" class="sliderC"></div>
+   </li>
+ </ul>
+</div>
+</div>
+<script type="text/javascript" src="../media/js/jscolor.js"></script>
+<script type="text/javascript" src="../media/js/jquery.min.js"></script>
+<script type="text/javascript" src="../media/js/jquery-ui.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  			//Init all the values
+  			var cartoonStyle = document.getElementById("cartoonStyle");
+  			cartoonStyle.setAttribute('orthogonalColor', '#43A334');
+  			document.getElementById("ortColor").setAttribute('value', '#43A334');
+  			cartoonStyle.setAttribute('parallelColor', '#3843E8');
+  			document.getElementById("paralColor").setAttribute('value', '#3843E8');
+  			cartoonStyle.setAttribute('steps', '30');
+
+  			$("#ortColor").change(function(){
+          cartoonStyle.setAttribute('orthogonalColor', '#'+this.color.toString());
+        });
+       $("#paralColor").change(function(){
+        cartoonStyle.setAttribute('parallelColor', '#'+this.color.toString());
+      });
+       $(".sliderC").slider({min: 0, max: 64, step: 1, value: 30, animate: true, range: false, slide: function(e, ui) {
+        cartoonStyle.setAttribute('colorSteps', ui.value);
+        document.getElementById("colorSteps").innerHTML = ui.value;
+      }});
+
+     });
+</script>
+</body>
+</html>

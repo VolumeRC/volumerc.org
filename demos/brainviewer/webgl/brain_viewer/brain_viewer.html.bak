@@ -1,0 +1,667 @@
+<html>
+
+<head>
+<style type="text/css">
+                        html,body {
+                            height: 100%;
+                            background-color: #121212
+
+                        }
+                        body {
+                            margin: 0px;
+                            border: 0px;
+                        }
+
+			.box25 {
+                                float: left;
+				width: 25%;
+                                height: 100%;                                
+                                
+                	}
+                        .box75 {
+                                float: left;
+                                width: 75%;
+                                height: 100%;
+                                
+                        }
+                        .container {                            
+                            min-height:100%;
+                            
+                        }
+			
+                        canvas {
+                            margin: 0px;
+                            border: 0px;
+                            width: 100%;
+                            height: 100%;
+                        }
+}
+		</style>
+<title>Brain Surface and Tractography Viewer</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<link type="text/css" href="../jquery/css/vader/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
+<script type="text/javascript" src="../jquery/js/jquery-1.4.4.min.js"></script>
+<script type="text/javascript" src="../jquery/js/jquery-ui-1.8.7.custom.min.js"></script>
+
+<script type="text/javascript" src="../common/sylvester.js"></script>
+<script type="text/javascript" src="../common/glUtils.js"></script>
+<script type="text/javascript" src="../common/binaryParseUtils.js"></script>
+<script type="text/javascript" src="../common/mrisLoader.js"></script>
+<script type="text/javascript" src="../common/crvLoader.js"></script>
+<script type="text/javascript" src="../common/trkLoader.js"></script>
+<script type="text/javascript" src="../common/brainSurface.js"></script>
+<script type="text/javascript" src="../common/tractography.js"></script>
+
+<script type="text/javascript">
+
+    /**
+     * Provides requestAnimationFrame in a cross browser
+     * way.
+     */
+  if (!window.requestAnimationFrame) {
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+             window.webkitRequestAnimationFrame ||
+             window.mozRequestAnimationFrame ||
+             window.oRequestAnimationFrame ||
+             window.msRequestAnimationFrame ||
+             function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+               window.setTimeout(callback, 1000/60);
+             };
+    })();
+  }
+       
+  var gl;
+  function initGL(canvas)
+  {
+    try {
+      gl = canvas.getContext("experimental-webgl");
+      gl.viewportWidth = canvas.width;
+      gl.viewportHeight = canvas.height;
+    } catch(e) {
+    }
+    if (!gl) {
+      alert("Could not initialise WebGL.  Please make sure your browser supports WebGL.");
+    }
+  }
+
+
+  
+  var mvMatrix;
+
+  function loadIdentity() {
+    mvMatrix = Matrix.I(4);
+  }
+
+
+  function multMatrix(m) {
+    mvMatrix = mvMatrix.x(m);
+  }
+
+
+  function mvTranslate(v) {
+    var m = Matrix.Translation($V([v[0], v[1], v[2]])).ensure4x4();
+    multMatrix(m);
+  }
+
+  function createRotationMatrix(angle, v) {
+    var arad = angle * Math.PI / 180.0;
+    return Matrix.Rotation(arad, $V([v[0], v[1], v[2]])).ensure4x4();
+  }
+
+  function mvRotate(ang, v) {
+    var arad = ang * Math.PI / 180.0;
+    var m = Matrix.Rotation(arad, $V([v[0], v[1], v[2]])).ensure4x4();
+    multMatrix(m);
+  }
+
+  function matScale(m, sx, sy, sz)
+  {
+    m.elements[0][0] *= sx;
+    m.elements[0][1] *= sx;
+    m.elements[0][2] *= sx;
+    m.elements[0][3] *= sx;
+
+    m.elements[1][0] *= sy;
+    m.elements[1][1] *= sy;
+    m.elements[1][2] *= sy;
+    m.elements[1][3] *= sy;
+
+    m.elements[2][0] *= sz;
+    m.elements[2][1] *= sz;
+    m.elements[2][2] *= sz;
+    m.elements[2][3] *= sz;
+
+  }
+  function mvScale(sx, sy, sz)
+  {
+    matScale(mvMatrix, sx, sy, sz);
+    
+  }
+
+  var pMatrix;
+  function perspective(fovy, aspect, znear, zfar) {
+    pMatrix = makePerspective(fovy, aspect, znear, zfar);
+  }
+
+
+  var z = -4.0;
+  var currentlyPressedKeys = Object();
+
+  function handleKeyDown(event) {
+    currentlyPressedKeys[event.keyCode] = true;
+
+    // Handle key presses here
+  }
+
+
+  function handleKeyUp(event) {
+    currentlyPressedKeys[event.keyCode] = false;
+  }
+
+
+  function handleKeys() {
+    if (currentlyPressedKeys[33]) {
+      // Page Up
+      z -= 0.05;
+    }
+    if (currentlyPressedKeys[34]) {
+      // Page Down
+      z += 0.05;
+    }    
+  }
+
+
+  var mouseDown = false;
+  var lastMouseX = null;
+  var lastMouseY = null;
+
+  var brainRotationMatrix = Matrix.I(4);
+
+  function handleMouseDown(event) {
+    mouseDown = true;
+    lastMouseX = event.clientX;
+    lastMouseY = event.clientY;
+  }
+
+
+  function handleMouseUp(event) {
+    mouseDown = false;
+  }
+
+
+  function handleMouseMove(event) {
+    if (!mouseDown) {
+      return;
+    }
+    var newX = event.clientX;
+    var newY = event.clientY;
+
+    var deltaX = newX - lastMouseX
+    var newRotationMatrix = createRotationMatrix(deltaX / 10, [0, 1, 0]);
+
+    var deltaY = newY - lastMouseY;
+    newRotationMatrix = newRotationMatrix.x(createRotationMatrix(deltaY / 10, [1, 0, 0]));
+
+    brainRotationMatrix = newRotationMatrix.x(brainRotationMatrix);
+
+    lastMouseX = newX
+    lastMouseY = newY;
+  }
+
+  function handleMouseWheel(e) {
+    // From SpiderGL
+    var delta = 0;
+    if (!e) /* For IE. */ {
+            e = window.event;
+    }
+    if (e.wheelDelta) /* IE/Opera. */ {
+            delta = e.wheelDelta / 120;
+            /* In Opera 9, delta differs in sign as compared to IE.
+             */
+            if (window.opera) {
+                    delta = -delta;
+            }
+    }
+    else if (e.detail) /** Mozilla case. */ {
+            /** In Mozilla, sign of delta is different than in IE.
+             * Also, delta is multiple of 3.
+             */
+            delta = -e.detail / 3;
+    }
+    /* If delta is nonzero, handle it.
+     * Basically, delta is now positive if wheel was scrolled up,
+     * and negative, if wheel was scrolled down.
+     */
+    if (delta) {
+        z += (delta / 2);
+    }
+  }
+
+  var gBrainSurfaces = new Array(2);
+  var gTracks = new Tractography();
+  //@TEMP - for demo purposes, hardcode the url
+  //var gBaseURL = location.search.substring(1);
+  var gBaseURL = '/demo_data/surf';
+  //@TEMP
+
+  function loadMRIS(surface, surfaceFile, callback)
+  {
+      mrisURL = gBaseURL;
+      console.log('URL: ' + mrisURL + '/' + surfaceFile);
+      surface.loadSurface(mrisURL + '/' + surfaceFile, callback);
+  }
+
+
+
+  function drawScene() {
+
+    var canvas = document.getElementById("webgl-canvas");
+    canvas.width = canvas.clientWidth;//window.innerWidth;
+    canvas.height =canvas.clientHeight;//window.innerHeight;
+    gl.viewportWidth = canvas.width;
+    gl.viewportHeight = canvas.height;
+
+    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    
+    perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+    
+    var scale = 0.01513;
+
+    ////////////////////////////////////////////////////////////////////////
+    //  Draw Tractography
+    ////////////////////////////////////////////////////////////////////////
+    loadIdentity();
+    mvScale(scale, scale, scale);
+    mvTranslate([0.0, 0.0, z / scale]);
+    multMatrix(brainRotationMatrix);
+    
+    // I described the way these matrices are created here:
+    //  http://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferTrackVisTransforms
+    // For demo purposes, these are hard-coded here, whereas in an actual
+    // version of it these will be loaded via XHTTPRequest.
+
+    // mri_info dti_b0.nii --vox2ras-tkr
+    var CRSd2XYZtkreg = $M([[-2.00000,   0.00000,   0.00000,  110.00000],
+                            [0.00000,    0.00000,    2.00000,  -79.00000],
+                            [0.00000,   -2.00000,    0.00000,  110.00000],
+                            [0.00000,    0.00000,    0.00000,    1.00000]]);
+
+    // bbregister --s <subject> --mov dti_b0.nii --init-fsl --reg bbregister.dat --bold --tol1d 1e-3
+    var bbregmatrix = $M([[9.994560e-01, -2.959258e-02, -1.456270e-02, -2.266882e+00],
+                          [1.266916e-02, -6.318483e-02, 9.979210e-01, -2.148178e+01],
+                          [3.045095e-02, 9.975628e-01, 6.277557e-02, 4.659803e-01],
+                          [0, 0, 0, 1]]);
+
+    multMatrix(CRSd2XYZtkreg);
+
+
+    if (gShowTracks && gTracks.vertexPositionBuffer != null)
+    {
+        gTracks.drawTracks(pMatrix, mvMatrix);
+    }
+
+    
+    ////////////////////////////////////////////////////////////////////////
+    //  Draw Brain Surfaces
+    ////////////////////////////////////////////////////////////////////////
+    loadIdentity();
+    mvScale(scale, scale, scale);
+    mvTranslate([0.0, 0.0, z / scale]);
+    multMatrix(brainRotationMatrix);
+    multMatrix(bbregmatrix);
+
+    gl.frontFace( gl.CW );
+    gl.enable( gl.CULL_FACE );
+    gl.enable( gl.BLEND );
+    gl.blendFunc ( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA );
+
+    if (gHemisphere[0] && gBrainSurfaces[0].vertexPositionBuffer != null)
+    {
+        gBrainSurfaces[0].drawSurface(pMatrix, mvMatrix);
+    }
+    if (gHemisphere[1] && gBrainSurfaces[1].vertexPositionBuffer != null)
+    {
+        gBrainSurfaces[1].drawSurface(pMatrix, mvMatrix);
+    }
+
+    gl.disable( gl.BLEND);        
+  }
+
+  var lastTime = 0;
+  function animate() {
+    var timeNow = new Date().getTime();
+    if (lastTime != 0) {
+      var elapsed = timeNow - lastTime;
+
+      // Animate here
+    }
+    lastTime = timeNow;
+  }
+
+  function tick() {
+    var canvas = document.getElementById("webgl-canvas");
+    window.requestAnimationFrame(tick, canvas);
+    
+    handleKeys();
+    drawScene();
+    animate();
+
+    $("#loading").empty().html("");
+
+  }
+
+var gHemisphere = [ true, true ];
+var gHemisphereNames = [ 'lh', 'rh' ];
+var gSurface = 'smoothwm'
+var gCurvature = undefined;
+var gShowTracks = true;
+
+  function webGLStart() {
+                   
+    var canvas = document.getElementById("webgl-canvas");
+    if (canvas == null)
+        return;
+
+    initGL(canvas);
+
+    $("#loading").empty().html('Loading, please wait...');
+    gBrainSurfaces[0] = new BrainSurface();
+    gBrainSurfaces[1] = new BrainSurface();    
+    loadMRIS( gBrainSurfaces[0], gHemisphereNames[0] + '.' + gSurface, handleLoadedSurface );
+    loadMRIS( gBrainSurfaces[1], gHemisphereNames[1] + '.' + gSurface, handleLoadedSurface);
+    gTracks.loadTracks("/demo_data/streamline.trk");
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
+
+    gl.clearDepth(1.0);
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+    canvas.onmousedown = handleMouseDown;
+    document.onmouseup = handleMouseUp;
+    document.onmousemove = handleMouseMove;
+    document.onmousewheel = handleMouseWheel;
+
+    tick();
+  }
+
+
+function surfaceChanged()
+{
+    gSurface = $('#surface_select :selected').val();
+
+    loadMRIS( gBrainSurfaces[0], gHemisphereNames[0] + '.' + gSurface, handleLoadedSurface );
+    loadMRIS( gBrainSurfaces[1], gHemisphereNames[1] + '.' + gSurface, handleLoadedSurface );
+}
+
+function toggleHemispheres()
+{
+    gHemisphere[1] = ($('#lh_hemisphere:checked').val() != undefined) ? true : false;
+    gHemisphere[0] = ($('#rh_hemisphere:checked').val() != undefined) ? true : false;
+}
+
+function toggleTracks()
+{
+    gShowTracks = $('#tractography:checked').val();
+}
+
+function curvatureChanged()
+{
+    gCurvature = $('#curvature_select :selected').text();
+
+    if (gCurvature == 'None')
+    {
+        $( "#amount" ).val( ' ' );
+        gBrainSurfaces[0].drawCurvature = 0;
+        gBrainSurfaces[1].drawCurvature = 0;
+    }
+    else
+    {
+        for (var hemi = 0; hemi < 2; hemi++)
+        {
+            var crvFile = gHemisphereNames[hemi] + '.' + gSurface + '.' + gCurvature + '.crv';
+            var crvURL = gBaseURL;
+            console.log('URL: ' + crvURL + '/' + crvFile);
+            gBrainSurfaces[hemi].loadCurvature(crvURL + '/' + crvFile, handleLoadedCurvature);
+        }        
+    }
+
+}
+
+function handleLoadedSurface(brainSurface)
+{
+
+    if (gBrainSurfaces[0].vertexPositionBuffer != null &&
+        gBrainSurfaces[1].vertexPositionBuffer != null)
+    {
+        curvatureChanged();
+        var value = $( "#slider-opacity" ).slider( "option", "value" );
+        var minSlider = 0;
+        var maxSlider = 100;
+        var opacity = (value - minSlider) / (maxSlider - minSlider)
+
+        gBrainSurfaces[0].setOpacity(opacity);
+        gBrainSurfaces[1].setOpacity(opacity);
+    }
+}
+
+function handleLoadedCurvature(brainSurface)
+{
+    if (gBrainSurfaces[0].vertexCurvatureBuffer != null &&
+        gBrainSurfaces[1].vertexCurvatureBuffer != null)
+    {
+        var values = $( "#slider-range" ).slider( "option", "values" );
+        var minSlider = 0;
+        var maxSlider = 1000;
+
+        var curSliderMin = (values[0] - minSlider) / (maxSlider - minSlider);
+        var curSliderMax = (values[1] - minSlider) / (maxSlider - minSlider);
+
+        // Get the min/max from both hemispheres
+        var minCurv = gBrainSurfaces[0].crvFile.minCurv[1];
+        var maxCurv = gBrainSurfaces[0].crvFile.maxCurv[1];
+        if (gBrainSurfaces[1].crvFile.minCurv[1] < minCurv)
+            minCurv = gBrainSurfaces[1].crvFile.minCurv[1];
+        if (gBrainSurfaces[1].crvFile.maxCurv[1] < maxCurv)
+            maxCurv = gBrainSurfaces[1].crvFile.maxCurv[1];
+
+        for (var hemi = 0; hemi < 2; hemi++)
+        {
+            gBrainSurfaces[hemi].curCurvMin[0] = (1.0 - curSliderMin) * minCurv + curSliderMin * maxCurv;
+            gBrainSurfaces[hemi].curCurvMax[0] = (1.0 - curSliderMax) * minCurv + curSliderMax * maxCurv;
+        }
+    }
+}
+
+function handleOpacitySlider(event, ui)
+{
+    var minSlider = 0;
+    var maxSlider = 100;
+    var opacity = (ui.value - minSlider) / (maxSlider - minSlider)
+
+    gBrainSurfaces[0].setOpacity(opacity);
+    gBrainSurfaces[1].setOpacity(opacity);
+}
+
+function handleTrackLengthSlider(event, ui)
+{
+    //var minSlider = 0;
+    //var maxSlider = 100;
+    //var minTrackLength = (ui.value - minSlider) / (maxSlider - minSlider)
+
+    gTracks.setMinTrackLength(ui.value);
+}
+
+function handleCurvatureSlider(event, ui)
+{
+    var minSlider = 0;
+    var maxSlider = 1000;
+
+    var curSliderMin = (ui.values[0] - minSlider) / (maxSlider - minSlider);
+    var curSliderMax = (ui.values[1] - minSlider) / (maxSlider - minSlider);
+
+    // Get the min/max from both hemispheres
+    var minCurv = gBrainSurfaces[0].crvFile.minCurv[1];
+    var maxCurv = gBrainSurfaces[0].crvFile.maxCurv[1];
+    if (gBrainSurfaces[1].crvFile.minCurv[1] < minCurv)
+        minCurv = gBrainSurfaces[1].crvFile.minCurv[1];
+    if (gBrainSurfaces[1].crvFile.maxCurv[1] < maxCurv)
+        maxCurv = gBrainSurfaces[1].crvFile.maxCurv[1];
+
+    for (var hemi = 0; hemi < 2; hemi++)
+    {
+        gBrainSurfaces[hemi].curCurvMin[0] = (1.0 - curSliderMin) * minCurv + curSliderMin * maxCurv;
+        gBrainSurfaces[hemi].curCurvMax[0] = (1.0 - curSliderMax) * minCurv + curSliderMax * maxCurv;
+    }
+}
+
+$(function() {
+		$( "#controls" ).accordion({
+			fillSpace: true,
+                        autoHeight: true
+		});
+
+                $( "#viewer" ).accordion({
+			fillSpace: true,
+                        autoHeight: true
+		});                
+
+                $( "#slider-range" ).slider({
+			range: true,
+			min: 0,
+			max: 1000,
+			values: [ 420, 576 ],
+			slide: handleCurvatureSlider
+		});
+                $( "#slider-opacity" ).slider({
+                        range: false,
+			min: 0,
+			max: 100,
+			value: 100,
+			slide: handleOpacitySlider
+		});
+                $( "#slider-tracklength" ).slider({
+                        range: false,
+			min: 0,
+			max: 100,
+			value: 15,
+			slide: handleTrackLengthSlider
+		});                
+	});
+
+        $(window).resize(function(){
+            $("#controls").accordion("resize");
+            $("#viewer").accordion("resize");
+        });
+
+
+</script>
+
+
+</head>
+
+
+<body onload="webGLStart();" style="font-size:80%;">
+    <div class="container">
+            <div class="box25">
+                <div id="controls" >
+                    <h5><a href="#">Viewer Options</a></h5>
+                    <div>
+                            Surface:
+                                <SELECT id="surface_select" onchange="surfaceChanged()">
+                                    <option value="smoothwm">White Matter</option>
+                                    <option value="pial">Pial</option>
+                                </SELECT>
+                            <BR/>
+                            <BR/>
+                            Surface Opacity:
+
+                                <div id="slider-opacity"></div>
+                            <BR/>
+                            Display:
+                            <BR/>
+                            <input type="checkbox" id="lh_hemisphere" checked="checked" onclick="toggleHemispheres()" value="lh" />Left Hemisphere
+                            <BR/>
+                            <input type="checkbox" id="rh_hemisphere" checked="checked" onclick="toggleHemispheres()" value="rh" />Right Hemisphere
+                            <BR/>
+                            <input type="checkbox" id="tractography" checked="checked" onclick="toggleTracks()"/>Tractography
+                            <BR/>
+                            <BR/>
+                            Curvature:
+                                <SELECT id="curvature_select" onchange="curvatureChanged()">
+                                    <option value="None">None</option>
+                                    <option value="BE">BE</option>
+                                    <option value="C">C</option>
+                                    <option value="FI">FI</option>
+                                    <option selected value="H">H</option>
+                                    <option value="K">K</option>
+                                    <option value="K1">K1</option>
+                                    <option value="K2">K2</option>
+                                    <option value="S">S</option>
+                                </SELECT>
+                                <BR/>
+                                <BR/>
+                        Curvature display range:
+                        <div id="slider-range"></div>
+                        Minimum Track Length:
+                            <div id="slider-tracklength"></div>
+                    </div>
+                    <h5><a href="#">Info</a></h5>
+                    <div>
+                        <P>
+                            Surfaces generated with <A HREF="http://surfer.nmr.mgh.harvard.edu/" target="_blank">FreeSurfer</A>: 
+                        </P>
+                        <P>
+                            Dale, A.M., Fischl, B., Sereno, M.I., 1999. Cortical surface-based analysis. I. Segmentation and surface reconstruction. Neuroimage 9, 179-194.
+                        </P>
+                        <P>
+                            Tractography generated with <A HREF="http://www.trackvis.org/dtk/" target="_blank">Diffusion Toolkit</A>: 
+                        </P>
+                        <P>
+                            Wang R., Benner T., Sorensen A. G., and Wedeen V.J.. Diffusion Toolkit: A Software Package for Diffusion Imaging Data Processing and Tractography. ISMRM abstract Proc. Intl. Soc. Mag. Reson. Med. 15 (2007) 3720
+                        </P>
+                        <P>
+                            Curvature generation described in:
+                        </P>
+                        <p>
+                            Pienaar R., Fischl B., Caviness V., Makris N., Grant P.E. <a HREF="http://cigl.spl.harvard.edu/publications/item/view/1769" target="_blank"><i> Methodology for Analyzing Curvature in the developing
+                                brain from preterm to Adult.</i></a> Int J Imaging Syst Technol. 2008 Jun 1;18(1):42-68. PMID: 19936261. PMCID: PMC2779548.
+                        </p>
+                        <P>
+                            WebGL viewer developed by:
+                            <BR/>
+                            <BR/>
+                            <A HREF="mailto:daniel.ginsburg@childrens.harvard.edu">Dan Ginsburg</A>
+                            <BR/><A HREF="mailto:rudolph.pienaar@childrens.harvard.edu">Rudolph Pienaar</A>
+                            <BR/>
+                            at Children's Hospital Boston<BR/>
+                            <I>Fetal-Neonatal Neuroimaging and Development Science Center</I> 
+                            <BR/>
+                            2011
+                            <BR/>
+                        </P>
+
+                        
+                    </div>                    
+                </div>
+            </div>
+            <div class="box75">
+                <div id="viewer">
+                    <h5><a href="#">Brain Surface and Tractography Viewer</a></h5>
+                    <div>
+                        <div id="loading"></div>
+                
+                        <canvas id="webgl-canvas" ></canvas>
+                    </div>
+                </div>
+            </div>
+    </div>
+</body>
+
+</html>

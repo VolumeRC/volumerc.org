@@ -1,0 +1,234 @@
+<html>
+<head>
+<title>Air temperature</title>
+
+<!-- amoreno -->
+<link type="text/css" href="themes/base/ui.all.css" rel="stylesheet" />
+<link type="text/css" href="panelControles.css" rel="stylesheet" />
+<script type="text/javascript" src="jquery-1.3.2.js"></script>
+<script type="text/javascript" src="ui/ui.core.js"></script>
+<script type="text/javascript" src="ui/ui.slider.js"></script>
+<script type="text/javascript" src="ui/ui.draggable.js"></script>
+<script type="text/javascript" src="event.js"></script>
+<!-- amoreno -->
+		
+<script type="text/javascript" src="./volrenrc-TF_Editor/sylvester.js"></script>
+<script type="text/javascript" src="./volrenrc-TF_Editor/glUtils.js"></script>
+<script type="text/javascript" src="./volrenrc-TF_Editor/glAux.js"></script><!-- Deprecated!! -->
+<script type="text/javascript" src="./volrenrc-TF_Editor/volrenrc.js"></script>
+
+<script type="text/javascript">
+
+var globalIndexColors=0;//very important is the global index of colors(R,G,B,A)
+
+function load_resource(url) {
+	var req = new XMLHttpRequest();
+	req.open('GET', url, false);
+	req.overrideMimeType('text/plain; charset=x-user-defined');
+	req.send(null);
+	//  alert(req.status);
+	if (req.status != 200) return '';
+	return req.responseText;
+}
+
+function init_TF_Colors_Json()
+{
+  var urlJson="initTransferColors.json";
+  eval("var initColor="+load_resource(urlJson));
+  return initColor;
+}
+
+function zum(factor){
+	uZoomLevel = uZoomLevel*factor;
+	uOffsetX=uOffsetX/factor;
+	uOffsetY=uOffsetY/factor;
+	uOffsetZ=uOffsetZ/factor;
+}
+
+function reset(){
+	uZoomLevel=1.0;
+	uOffsetX=0.0;
+	uOffsetY=0.0;
+	uOffsetZ=0.0;
+}
+
+function offset (x, y, z){
+	uOffsetX=uOffsetX+x;
+	uOffsetY=uOffsetY+y;
+	uOffsetZ=uOffsetZ+z;
+}
+
+function setRenderQuality(offset){
+	if (uNumSteps+offset>0) {
+		uNumSteps=uNumSteps+offset;
+		var quality = document.getElementById("curQuality");
+		quality.innerHTML="Q: " + uNumSteps;
+	}
+}
+	
+function LoadAirTempDemo()
+{
+	var canvas = document.getElementById("VolRenRCView");
+	var gl = null;
+	try {
+		gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
+		gl.viewportWidth = canvas.width;
+		gl.viewportHeight = canvas.height;
+	} catch (e) {
+	}
+	
+	if (!gl) {
+		alert("Could not initialise WebGL, sorry :-(");
+	}
+
+	
+	imgNameArray =[
+"./Dataset-Nariz/nariz en nuca.000.png", "./Dataset-Nariz/nariz en nuca.001.png", "./Dataset-Nariz/nariz en nuca.002.png", "./Dataset-Nariz/nariz en nuca.003.png", "./Dataset-Nariz/nariz en nuca.004.png", "./Dataset-Nariz/nariz en nuca.005.png", "./Dataset-Nariz/nariz en nuca.006.png", "./Dataset-Nariz/nariz en nuca.007.png", "./Dataset-Nariz/nariz en nuca.008.png", "./Dataset-Nariz/nariz en nuca.009.png", "./Dataset-Nariz/nariz en nuca.010.png", "./Dataset-Nariz/nariz en nuca.011.png", "./Dataset-Nariz/nariz en nuca.012.png", "./Dataset-Nariz/nariz en nuca.013.png", "./Dataset-Nariz/nariz en nuca.014.png", "./Dataset-Nariz/nariz en nuca.015.png", "./Dataset-Nariz/nariz en nuca.016.png", "./Dataset-Nariz/nariz en nuca.017.png", "./Dataset-Nariz/nariz en nuca.018.png", "./Dataset-Nariz/nariz en nuca.019.png", "./Dataset-Nariz/nariz en nuca.020.png", "./Dataset-Nariz/nariz en nuca.021.png", "./Dataset-Nariz/nariz en nuca.022.png", "./Dataset-Nariz/nariz en nuca.023.png", "./Dataset-Nariz/nariz en nuca.024.png", "./Dataset-Nariz/nariz en nuca.025.png", "./Dataset-Nariz/nariz en nuca.026.png", "./Dataset-Nariz/nariz en nuca.027.png", "./Dataset-Nariz/nariz en nuca.028.png", "./Dataset-Nariz/nariz en nuca.029.png", "./Dataset-Nariz/nariz en nuca.030.png", "./Dataset-Nariz/nariz en nuca.031.png", "./Dataset-Nariz/nariz en nuca.032.png", "./Dataset-Nariz/nariz en nuca.033.png", "./Dataset-Nariz/nariz en nuca.034.png", "./Dataset-Nariz/nariz en nuca.035.png", "./Dataset-Nariz/nariz en nuca.036.png", "./Dataset-Nariz/nariz en nuca.037.png", "./Dataset-Nariz/nariz en nuca.038.png", "./Dataset-Nariz/nariz en nuca.039.png", "./Dataset-Nariz/nariz en nuca.040.png", "./Dataset-Nariz/nariz en nuca.041.png", "./Dataset-Nariz/nariz en nuca.042.png", "./Dataset-Nariz/nariz en nuca.043.png", "./Dataset-Nariz/nariz en nuca.044.png", "./Dataset-Nariz/nariz en nuca.045.png", "./Dataset-Nariz/nariz en nuca.046.png", "./Dataset-Nariz/nariz en nuca.047.png", "./Dataset-Nariz/nariz en nuca.048.png", "./Dataset-Nariz/nariz en nuca.049.png", "./Dataset-Nariz/nariz en nuca.050.png", "./Dataset-Nariz/nariz en nuca.051.png", "./Dataset-Nariz/nariz en nuca.052.png", "./Dataset-Nariz/nariz en nuca.053.png", "./Dataset-Nariz/nariz en nuca.054.png", "./Dataset-Nariz/nariz en nuca.055.png", "./Dataset-Nariz/nariz en nuca.056.png", "./Dataset-Nariz/nariz en nuca.057.png", "./Dataset-Nariz/nariz en nuca.058.png", "./Dataset-Nariz/nariz en nuca.059.png", "./Dataset-Nariz/nariz en nuca.060.png", "./Dataset-Nariz/nariz en nuca.061.png", "./Dataset-Nariz/nariz en nuca.062.png", "./Dataset-Nariz/nariz en nuca.063.png", "./Dataset-Nariz/nariz en nuca.064.png", "./Dataset-Nariz/nariz en nuca.065.png", "./Dataset-Nariz/nariz en nuca.066.png", "./Dataset-Nariz/nariz en nuca.067.png", "./Dataset-Nariz/nariz en nuca.068.png", "./Dataset-Nariz/nariz en nuca.069.png", "./Dataset-Nariz/nariz en nuca.070.png", "./Dataset-Nariz/nariz en nuca.071.png", "./Dataset-Nariz/nariz en nuca.072.png", "./Dataset-Nariz/nariz en nuca.073.png", "./Dataset-Nariz/nariz en nuca.074.png", "./Dataset-Nariz/nariz en nuca.075.png", "./Dataset-Nariz/nariz en nuca.076.png", "./Dataset-Nariz/nariz en nuca.077.png", "./Dataset-Nariz/nariz en nuca.078.png", "./Dataset-Nariz/nariz en nuca.079.png", "./Dataset-Nariz/nariz en nuca.080.png", "./Dataset-Nariz/nariz en nuca.081.png", "./Dataset-Nariz/nariz en nuca.082.png", "./Dataset-Nariz/nariz en nuca.083.png", "./Dataset-Nariz/nariz en nuca.084.png", "./Dataset-Nariz/nariz en nuca.085.png", "./Dataset-Nariz/nariz en nuca.086.png", "./Dataset-Nariz/nariz en nuca.087.png", "./Dataset-Nariz/nariz en nuca.088.png", "./Dataset-Nariz/nariz en nuca.089.png", "./Dataset-Nariz/nariz en nuca.090.png", "./Dataset-Nariz/nariz en nuca.091.png", "./Dataset-Nariz/nariz en nuca.092.png", "./Dataset-Nariz/nariz en nuca.093.png", "./Dataset-Nariz/nariz en nuca.094.png", "./Dataset-Nariz/nariz en nuca.095.png", "./Dataset-Nariz/nariz en nuca.096.png", "./Dataset-Nariz/nariz en nuca.097.png", "./Dataset-Nariz/nariz en nuca.098.png", "./Dataset-Nariz/nariz en nuca.099.png", "./Dataset-Nariz/nariz en nuca.100.png", "./Dataset-Nariz/nariz en nuca.101.png", "./Dataset-Nariz/nariz en nuca.102.png", "./Dataset-Nariz/nariz en nuca.103.png", "./Dataset-Nariz/nariz en nuca.104.png", "./Dataset-Nariz/nariz en nuca.105.png", "./Dataset-Nariz/nariz en nuca.106.png", "./Dataset-Nariz/nariz en nuca.107.png", "./Dataset-Nariz/nariz en nuca.108.png", "./Dataset-Nariz/nariz en nuca.109.png", "./Dataset-Nariz/nariz en nuca.110.png", "./Dataset-Nariz/nariz en nuca.111.png", "./Dataset-Nariz/nariz en nuca.112.png", "./Dataset-Nariz/nariz en nuca.113.png", "./Dataset-Nariz/nariz en nuca.114.png", "./Dataset-Nariz/nariz en nuca.115.png", "./Dataset-Nariz/nariz en nuca.116.png", "./Dataset-Nariz/nariz en nuca.117.png", "./Dataset-Nariz/nariz en nuca.118.png", "./Dataset-Nariz/nariz en nuca.119.png", "./Dataset-Nariz/nariz en nuca.120.png", "./Dataset-Nariz/nariz en nuca.121.png", "./Dataset-Nariz/nariz en nuca.122.png", "./Dataset-Nariz/nariz en nuca.123.png", "./Dataset-Nariz/nariz en nuca.124.png", "./Dataset-Nariz/nariz en nuca.125.png", "./Dataset-Nariz/nariz en nuca.126.png", "./Dataset-Nariz/nariz en nuca.127.png", "./Dataset-Nariz/nariz en nuca.128.png", "./Dataset-Nariz/nariz en nuca.129.png", "./Dataset-Nariz/nariz en nuca.130.png", "./Dataset-Nariz/nariz en nuca.131.png", "./Dataset-Nariz/nariz en nuca.132.png", "./Dataset-Nariz/nariz en nuca.133.png", "./Dataset-Nariz/nariz en nuca.134.png", "./Dataset-Nariz/nariz en nuca.135.png", "./Dataset-Nariz/nariz en nuca.136.png", "./Dataset-Nariz/nariz en nuca.137.png", "./Dataset-Nariz/nariz en nuca.138.png", "./Dataset-Nariz/nariz en nuca.139.png", "./Dataset-Nariz/nariz en nuca.140.png", "./Dataset-Nariz/nariz en nuca.141.png", "./Dataset-Nariz/nariz en nuca.142.png", "./Dataset-Nariz/nariz en nuca.143.png", "./Dataset-Nariz/nariz en nuca.144.png", "./Dataset-Nariz/nariz en nuca.145.png", "./Dataset-Nariz/nariz en nuca.146.png", "./Dataset-Nariz/nariz en nuca.147.png", "./Dataset-Nariz/nariz en nuca.148.png", "./Dataset-Nariz/nariz en nuca.149.png", "./Dataset-Nariz/nariz en nuca.150.png", "./Dataset-Nariz/nariz en nuca.151.png", "./Dataset-Nariz/nariz en nuca.152.png", "./Dataset-Nariz/nariz en nuca.153.png", "./Dataset-Nariz/nariz en nuca.154.png", "./Dataset-Nariz/nariz en nuca.155.png", "./Dataset-Nariz/nariz en nuca.156.png", "./Dataset-Nariz/nariz en nuca.157.png", "./Dataset-Nariz/nariz en nuca.158.png", "./Dataset-Nariz/nariz en nuca.159.png", "./Dataset-Nariz/nariz en nuca.160.png", "./Dataset-Nariz/nariz en nuca.161.png", "./Dataset-Nariz/nariz en nuca.162.png", "./Dataset-Nariz/nariz en nuca.163.png", "./Dataset-Nariz/nariz en nuca.164.png", "./Dataset-Nariz/nariz en nuca.165.png", "./Dataset-Nariz/nariz en nuca.166.png", "./Dataset-Nariz/nariz en nuca.167.png", "./Dataset-Nariz/nariz en nuca.168.png", "./Dataset-Nariz/nariz en nuca.169.png", "./Dataset-Nariz/nariz en nuca.170.png", "./Dataset-Nariz/nariz en nuca.171.png", "./Dataset-Nariz/nariz en nuca.172.png", "./Dataset-Nariz/nariz en nuca.173.png", "./Dataset-Nariz/nariz en nuca.174.png", "./Dataset-Nariz/nariz en nuca.175.png", "./Dataset-Nariz/nariz en nuca.176.png", "./Dataset-Nariz/nariz en nuca.177.png", "./Dataset-Nariz/nariz en nuca.178.png", "./Dataset-Nariz/nariz en nuca.179.png", "./Dataset-Nariz/nariz en nuca.180.png", "./Dataset-Nariz/nariz en nuca.181.png", "./Dataset-Nariz/nariz en nuca.182.png", "./Dataset-Nariz/nariz en nuca.183.png", "./Dataset-Nariz/nariz en nuca.184.png", "./Dataset-Nariz/nariz en nuca.185.png", "./Dataset-Nariz/nariz en nuca.186.png", "./Dataset-Nariz/nariz en nuca.187.png", "./Dataset-Nariz/nariz en nuca.188.png", "./Dataset-Nariz/nariz en nuca.189.png", "./Dataset-Nariz/nariz en nuca.190.png", "./Dataset-Nariz/nariz en nuca.191.png", "./Dataset-Nariz/nariz en nuca.192.png", "./Dataset-Nariz/nariz en nuca.193.png", "./Dataset-Nariz/nariz en nuca.194.png", "./Dataset-Nariz/nariz en nuca.195.png", "./Dataset-Nariz/nariz en nuca.196.png", "./Dataset-Nariz/nariz en nuca.197.png", "./Dataset-Nariz/nariz en nuca.198.png", "./Dataset-Nariz/nariz en nuca.199.png", "./Dataset-Nariz/nariz en nuca.200.png", "./Dataset-Nariz/nariz en nuca.201.png", "./Dataset-Nariz/nariz en nuca.202.png", "./Dataset-Nariz/nariz en nuca.203.png", "./Dataset-Nariz/nariz en nuca.204.png", "./Dataset-Nariz/nariz en nuca.205.png", "./Dataset-Nariz/nariz en nuca.206.png", "./Dataset-Nariz/nariz en nuca.207.png", "./Dataset-Nariz/nariz en nuca.208.png", "./Dataset-Nariz/nariz en nuca.209.png", "./Dataset-Nariz/nariz en nuca.210.png", "./Dataset-Nariz/nariz en nuca.211.png", "./Dataset-Nariz/nariz en nuca.212.png", "./Dataset-Nariz/nariz en nuca.213.png", "./Dataset-Nariz/nariz en nuca.214.png", "./Dataset-Nariz/nariz en nuca.215.png", "./Dataset-Nariz/nariz en nuca.216.png", "./Dataset-Nariz/nariz en nuca.217.png", "./Dataset-Nariz/nariz en nuca.218.png", "./Dataset-Nariz/nariz en nuca.219.png", "./Dataset-Nariz/nariz en nuca.220.png", "./Dataset-Nariz/nariz en nuca.221.png", "./Dataset-Nariz/nariz en nuca.222.png", "./Dataset-Nariz/nariz en nuca.223.png", "./Dataset-Nariz/nariz en nuca.224.png", "./Dataset-Nariz/nariz en nuca.225.png", "./Dataset-Nariz/nariz en nuca.226.png", "./Dataset-Nariz/nariz en nuca.227.png", "./Dataset-Nariz/nariz en nuca.228.png", "./Dataset-Nariz/nariz en nuca.229.png", "./Dataset-Nariz/nariz en nuca.230.png", "./Dataset-Nariz/nariz en nuca.231.png", "./Dataset-Nariz/nariz en nuca.232.png", "./Dataset-Nariz/nariz en nuca.233.png", "./Dataset-Nariz/nariz en nuca.234.png", "./Dataset-Nariz/nariz en nuca.235.png", "./Dataset-Nariz/nariz en nuca.236.png", "./Dataset-Nariz/nariz en nuca.237.png", "./Dataset-Nariz/nariz en nuca.238.png", "./Dataset-Nariz/nariz en nuca.239.png", "./Dataset-Nariz/nariz en nuca.240.png", "./Dataset-Nariz/nariz en nuca.241.png", "./Dataset-Nariz/nariz en nuca.242.png", "./Dataset-Nariz/nariz en nuca.243.png", "./Dataset-Nariz/nariz en nuca.244.png", "./Dataset-Nariz/nariz en nuca.245.png", "./Dataset-Nariz/nariz en nuca.246.png", "./Dataset-Nariz/nariz en nuca.247.png", "./Dataset-Nariz/nariz en nuca.248.png", "./Dataset-Nariz/nariz en nuca.249.png", "./Dataset-Nariz/nariz en nuca.250.png", "./Dataset-Nariz/nariz en nuca.251.png", "./Dataset-Nariz/nariz en nuca.252.png", "./Dataset-Nariz/nariz en nuca.253.png", "./Dataset-Nariz/nariz en nuca.254.png", "./Dataset-Nariz/nariz en nuca.255.png"
+	];
+	
+	var volume = VolRenRC(gl, canvas, imgNameArray, 256,256, 1.0, 1.0, 1.0, 0.005,5.0);
+
+}
+
+window.onload = LoadAirTempDemo;
+
+
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40928041-1', 'volumerc.org');
+  ga('send', 'pageview');
+
+</script>
+
+</head>
+
+
+
+
+<body bgcolor="#E9E9E9">
+
+<!-- amoreno -->
+<div align="center"><h1>Ray Casting Volume Rendering</h1></div>
+	<button type="button" onclick="zum(0.75)">Zoom+</button>
+	<button type="button" onclick="zum(4.0/3.0)">Zoom-</button>
+	<button type="button" onclick="offset(0, -0.25, 0)">-Y</button>
+	<button type="button" onclick="offset(0, 0.25, 0)">+Y</button>
+	<button type="button" onclick="offset(-0.25, 0, 0)">-X</button>
+	<button type="button" onclick="offset(0.25, 0, 0)">+X</button>
+	<button type="button" onclick="offset(0, 0, -0.25)">-Z</button>
+	<button type="button" onclick="offset(0, 0, 0.25)">+Z</button>
+	<button type="button" onclick="reset()">Reset</button>
+	<button type="button" onclick="setRenderQuality(50.0)">Q+</button>
+	<button type="button" onclick="setRenderQuality(-50.0)">Q-</button>
+	<span id="curQuality"></span>
+	<div> <span id="data"></span></div>
+
+	<div class="demo">
+<!-- amoreno -->
+			
+<canvas id="VolRenRCView" width="800" height="800" style="border:1px solid black"></canvas>
+
+
+<!-- amoreno -->
+		<div class="control-panel">
+			<div class="control-transparency">
+				<div id="eq">
+					<p>
+						<label for="amount">Nivel Transpariencia</label>
+						<input type="text" id="amount" style="border:0; color:#000000; font-weight:bold;" /></p>
+
+					<script type="text/javascript">
+var j=0;
+initColor=init_TF_Colors_Json();
+for(j=0;j<initColor.colors.length;j++){
+	document.write("<span class='rango#"+j+"'>"+initColor.colors.components[j].A+"</span>");
+}
+//loadOtherDataSets();//mul
+					</script>
+
+				</div>
+				 <div id="colorCanvas">
+					<script type="text/javascript">
+for(i=0;i<16;i++) {
+	var red,green,blue
+	document.write ("<div id='colorPixel"+ i +"' class='colorPixel' onclick='transferColorEvent(this,i)'></div>");
+	red=initColor.colors.components[i].R;
+	green=initColor.colors.components[i].G;
+	blue=initColor.colors.components[i].B; 
+	hex=hexFromRGB(parseInt(red), parseInt(green), parseInt(blue));
+	$("#colorPixel"+ i).css("background-color", "#" + hex);
+}
+function transferColorEvent(value,idx){
+	var red,green,blue;
+	index=value.id.substring(10,12);
+	globalIndexColors=parseInt(index);
+	red=initColor.colors.components[parseInt(index)].R;
+	green=initColor.colors.components[parseInt(index)].G;
+	blue=initColor.colors.components[parseInt(index)].B; 
+	detectarColor(red,green,blue);		
+}
+$(function() {
+	$("#slider__").slider({
+		value:5.0,
+		min: 0,
+		max: 20,
+		step: 0.5,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uLightFactor=ui.value;
+			$("#amount__").val( ui.value);
+		}
+	});
+	$("#amount__").val($("#slider__").slider("value"));
+});
+$(function() {
+	$("#slider1__").slider({
+		value:0.005,
+		min: 0,
+		max: 0.100,
+		step: 0.001,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uOpacityFactor=ui.value;
+			$("#amount1__").val(ui.value);
+
+		}
+	});
+	$("#amount1__").val($("#slider__1").slider("value"));
+});
+					</script>
+				</div>
+			</div>
+			<div class="control-color">
+				</br>
+				<h3>Color por transparencia: </h3>
+				<div id="red"></div>
+				<div id="green"></div>
+				<div id="blue"></div>
+				<div id="swatch" class="ui-widget-content ui-corner-all"></div>
+			</div>	
+			<div class="control-global">							
+				<p>
+					<label for="amount">Light Factor :</label>
+					<input type="text" id="amount__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+
+				<div id="slider__"></div>
+				<p>
+					<label for="amount">Opacity Factor :</label>
+					<input type="text" id="amount1__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+				<div id="slider1__"></div>
+			</div>							
+		</div>
+	</div><!-- End demo -->
+</div><!-- End demo-description -->
+</body>
+
+</html>

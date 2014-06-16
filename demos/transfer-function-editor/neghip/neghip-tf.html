@@ -1,0 +1,251 @@
+<html>
+<head>
+<title>Neghip TF demo</title>
+
+<!-- amoreno -->
+<link type="text/css" href="vendor/assets/stylesheets/themes/base/ui.all.css" rel="stylesheet" />
+<link type="text/css" href="app/assets/stylesheets/panelControles.css" rel="stylesheet" />
+<script type="text/javascript" src="vendor/assets/javascripts/jquery-1.3.2.js"></script>
+<script type="text/javascript" src="vendor/assets/javascripts/ui/ui.core.js"></script>
+<script type="text/javascript" src="vendor/assets/javascripts/ui/ui.slider.js"></script>
+<script type="text/javascript" src="vendor/assets/javascripts/ui/ui.draggable.js"></script>
+<script type="text/javascript" src="app/assets/javascripts/event.js"></script>
+<!-- amoreno -->
+		
+<script type="text/javascript" src="vendor/assets/javascripts/sylvester.js"></script>
+<script type="text/javascript" src="lib/assets/javascripts/glUtils.js"></script>
+<script type="text/javascript" src="lib/assets/javascripts/glAux.js"></script><!-- Deprecated!! -->
+<script type="text/javascript" src="app/assets/javascripts/volrenrc.js"></script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40928041-1', 'volumerc.org');
+  ga('send', 'pageview');
+
+</script>
+<!-- aarbelaiz -->
+<script type="text/javascript">
+$(document).ready(function(){
+		//Default init transfer function canvas
+		initTransferFunction();
+		drawTF(initColor.colors.components);
+	});
+</script>
+<!-- aarbelaiz -->
+
+<script type="text/javascript">
+
+var globalIndexColors=0;//very important is the global index of colors(R,G,B,A)
+
+function load_resource(url) {
+	var req = new XMLHttpRequest();
+	req.open('GET', url, false);
+	req.overrideMimeType('text/plain; charset=x-user-defined');
+	req.send(null);
+	//  alert(req.status);
+	if (req.status != 200) return '';
+	return req.responseText;
+}
+
+function init_TF_Colors_Json()
+{
+  var urlJson="data/initTransferColors_neghip.json";
+  eval("var initColor="+load_resource(urlJson));
+  return initColor;
+}
+
+function zum(factor){
+	uZoomLevel = uZoomLevel*factor;
+	uOffsetX=uOffsetX/factor;
+	uOffsetY=uOffsetY/factor;
+	uOffsetZ=uOffsetZ/factor;
+}
+
+function reset(){
+	uZoomLevel=1.0;
+	uOffsetX=0.0;
+	uOffsetY=0.0;
+	uOffsetZ=0.0;
+}
+
+function offset (x, y, z){
+	uOffsetX=uOffsetX+x;
+	uOffsetY=uOffsetY+y;
+	uOffsetZ=uOffsetZ+z;
+}
+
+function setRenderQuality(offset){
+	if (uNumSteps+offset>0) {
+		uNumSteps=uNumSteps+offset;
+		var quality = document.getElementById("curQuality");
+		quality.innerHTML="Q: " + uNumSteps;
+	}
+}
+	
+function LoadAirTempDemo()
+{
+	var canvas = document.getElementById("VolRenRCView");
+	var gl = null;
+	try {
+		gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
+		gl.viewportWidth = canvas.width;
+		gl.viewportHeight = canvas.height;
+	} catch (e) {
+	}
+	
+	if (!gl) {
+		alert("Could not initialise WebGL, sorry :-(");
+	}
+
+	
+	imgNameArray =["data/Dataset-Neghip/neghip0.png","data/Dataset-Neghip/neghip1.png","data/Dataset-Neghip/neghip2.png","data/Dataset-Neghip/neghip3.png","data/Dataset-Neghip/neghip4.png","data/Dataset-Neghip/neghip5.png","data/Dataset-Neghip/neghip6.png","data/Dataset-Neghip/neghip7.png","data/Dataset-Neghip/neghip8.png","data/Dataset-Neghip/neghip9.png","data/Dataset-Neghip/neghip10.png","data/Dataset-Neghip/neghip11.png","data/Dataset-Neghip/neghip12.png","data/Dataset-Neghip/neghip13.png","data/Dataset-Neghip/neghip14.png","data/Dataset-Neghip/neghip15.png","data/Dataset-Neghip/neghip16.png","data/Dataset-Neghip/neghip17.png","data/Dataset-Neghip/neghip18.png","data/Dataset-Neghip/neghip19.png","data/Dataset-Neghip/neghip20.png","data/Dataset-Neghip/neghip21.png","data/Dataset-Neghip/neghip22.png","data/Dataset-Neghip/neghip23.png","data/Dataset-Neghip/neghip24.png","data/Dataset-Neghip/neghip25.png","data/Dataset-Neghip/neghip26.png","data/Dataset-Neghip/neghip27.png","data/Dataset-Neghip/neghip28.png","data/Dataset-Neghip/neghip29.png","data/Dataset-Neghip/neghip30.png","data/Dataset-Neghip/neghip31.png","data/Dataset-Neghip/neghip32.png","data/Dataset-Neghip/neghip33.png","data/Dataset-Neghip/neghip34.png","data/Dataset-Neghip/neghip35.png","data/Dataset-Neghip/neghip36.png","data/Dataset-Neghip/neghip37.png","data/Dataset-Neghip/neghip38.png","data/Dataset-Neghip/neghip39.png","data/Dataset-Neghip/neghip40.png","data/Dataset-Neghip/neghip41.png","data/Dataset-Neghip/neghip42.png","data/Dataset-Neghip/neghip43.png","data/Dataset-Neghip/neghip44.png","data/Dataset-Neghip/neghip45.png","data/Dataset-Neghip/neghip46.png","data/Dataset-Neghip/neghip47.png","data/Dataset-Neghip/neghip48.png","data/Dataset-Neghip/neghip49.png","data/Dataset-Neghip/neghip50.png","data/Dataset-Neghip/neghip51.png","data/Dataset-Neghip/neghip52.png","data/Dataset-Neghip/neghip53.png","data/Dataset-Neghip/neghip54.png","data/Dataset-Neghip/neghip55.png","data/Dataset-Neghip/neghip56.png","data/Dataset-Neghip/neghip57.png","data/Dataset-Neghip/neghip58.png","data/Dataset-Neghip/neghip59.png","data/Dataset-Neghip/neghip60.png","data/Dataset-Neghip/neghip61.png","data/Dataset-Neghip/neghip62.png","data/Dataset-Neghip/neghip63.png"
+	];
+	
+	var volume = VolRenRC(gl, canvas, imgNameArray, 256,256, document.getElementById("transfer_function_canvas"), 1.0, 1.0, 1.0, 1.45,3.0);
+}
+
+window.onload = LoadAirTempDemo;
+
+
+</script>
+
+
+</head>
+
+
+
+
+<body bgcolor="#E9E9E9">
+
+<!-- amoreno -->
+<div align="center">
+	<h1>Neghip Dataset - Transfer Function Editor</h1>
+	<h4>Dataset obtained from volvis.org</h4>
+</div>
+	<button type="button" onclick="zum(0.75)">Zoom+</button>
+	<button type="button" onclick="zum(4.0/3.0)">Zoom-</button>
+	<button type="button" onclick="offset(0, -0.25, 0)">-Y</button>
+	<button type="button" onclick="offset(0, 0.25, 0)">+Y</button>
+	<button type="button" onclick="offset(-0.25, 0, 0)">-X</button>
+	<button type="button" onclick="offset(0.25, 0, 0)">+X</button>
+	<button type="button" onclick="offset(0, 0, -0.25)">-Z</button>
+	<button type="button" onclick="offset(0, 0, 0.25)">+Z</button>
+	<button type="button" onclick="reset()">Reset</button>
+	<button type="button" onclick="setRenderQuality(50.0)">Q+</button>
+	<button type="button" onclick="setRenderQuality(-50.0)">Q-</button>
+	<span id="curQuality"></span>
+	<div> <span id="data"></span></div>
+
+	<div class="demo">
+<!-- amoreno -->
+			
+<canvas id="VolRenRCView" width="700" height="700" style="border:1px solid black"></canvas>
+<!-- amoreno -->
+		<div class="control-panel">
+			<div class="control-transparency">
+				<div id="eq">
+					<p>
+						<label for="amount">Opacity Level</label>
+						<input type="text" id="amount" style="border:0; color:#000000; font-weight:bold;" /></p>
+
+					<script type="text/javascript">
+var j=0;
+initColor=init_TF_Colors_Json();
+for(j=0;j<initColor.colors.length;j++){
+	document.write("<span class='rango#"+j+"'>"+initColor.colors.components[j].A+"</span>");
+}
+//loadOtherDataSets();//mul
+					</script>
+
+				</div>
+				 <div id="colorCanvas">
+					<script type="text/javascript">
+for(i=0;i<18;i++) {
+	var red,green,blue
+	document.write ("<div id='colorPixel"+ i +"' class='colorPixel' onclick='transferColorEvent(this,i)'></div>");
+	red=initColor.colors.components[i].R;
+	green=initColor.colors.components[i].G;
+	blue=initColor.colors.components[i].B; 
+	hex=hexFromRGB(parseInt(red), parseInt(green), parseInt(blue));
+	$("#colorPixel"+ i).css("background-color", "#" + hex);
+}
+function transferColorEvent(value,idx){
+	var red,green,blue;
+	index=value.id.substring(10,12);
+	globalIndexColors=parseInt(index);
+	red=initColor.colors.components[parseInt(index)].R;
+	green=initColor.colors.components[parseInt(index)].G;
+	blue=initColor.colors.components[parseInt(index)].B; 
+	detectarColor(red,green,blue);	
+	//aarbelaiz
+	drawTF(initColor.colors.components);
+	//~aarbelaiz	
+}
+$(function() {
+	$("#slider__").slider({
+		value:3.0,
+		min: 0,
+		max: 100,
+		step: 0.5,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uLightFactor=ui.value;
+			$("#amount__").val( ui.value);
+		}
+	});
+	$("#amount__").val($("#slider__").slider("value"));
+});
+$(function() {
+	$("#slider1__").slider({
+		value:1.45,
+		min: 0,
+		max: 2.00,
+		step: 0.01,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uOpacityFactor=ui.value;
+			$("#amount1__").val(ui.value);
+
+		}
+	});
+	$("#amount1__").val($("#slider__1").slider("value"));
+});
+					</script>
+				</div>
+			</div>
+			<div class="control-color">
+				<h3>Color: </h3>
+				<div id="red"></div>
+				<div id="green"></div>
+				<div id="blue"></div>
+				<div id="swatch" class="ui-widget-content ui-corner-all"></div>
+			</div>	
+			<div class="control-global">							
+				<p>
+					<label for="amount">Light Factor :</label>
+					<input type="text" id="amount__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+
+				<div id="slider__"></div>
+				<p>
+					<label for="amount">Opacity Factor :</label>
+					<input type="text" id="amount1__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+				<div id="slider1__"></div>
+			</div>
+			<!-- aarbelaiz -->
+			<div class="transfer-function">
+				<label>Current Transfer Function:</label>
+				<br>
+				<canvas id="transfer_function_canvas" width="255" height="100" style="border:1px solid black"></canvas>
+			</div>
+			<!-- aarbelaiz -->						
+		</div>
+	</div><!-- End demo -->
+</div><!-- End demo-description -->
+</body>
+
+</html>

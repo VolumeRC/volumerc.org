@@ -1,0 +1,283 @@
+p{
+	margin:  20px 0 20px 235px;
+	width:596px;
+	font-family:Helvetica, sans-serif;
+	color:#cecece;
+	font-size:12px;
+	text-align:justify;
+}
+
+h1{	
+	margin: 0 0 0 235px;
+	left:235px;
+	top:0px;
+	width:451px;
+	font-family:Helvetica, sans-serif;
+	color:#cecece;
+	font-size:25px;	
+}
+#Tabla {
+	position:relative;
+	margin: 0 auto;
+	top:0px;
+	width:961px;
+	height:100%;
+	background-color:#333333;
+}
+#Cabecera {
+	/*position:relative;*/
+	top: 0px;
+	width:961px;
+	/*height:167px;*/
+}
+
+#Menu {
+	position:absolute;
+	left:235px;
+	top:75px;
+	width:642px;
+	height:4px;
+}
+
+#Home{
+	position:absolute;
+	left:235px;
+	top:79px;
+	width:55px;
+	height:32px;
+}
+
+#esquina_arriba {
+	position:absolute;
+	left:49px;
+	top:132px;
+	width:61px;
+	height:61px;
+}
+
+#text{
+	position: absolute;
+	left: -160px;
+	top: 135px;
+	width: 330px;
+	height: 50px;
+	font-family:Helvetica, sans-serif;
+	color: #cecece;
+	font-size: 16px;
+}
+
+#esquina_abajo {
+	position:absolute;
+	left:373px;
+	top:275px;
+	width:62px;
+	height:62px;
+}
+
+#imagen_cara {
+	position:absolute;
+	left:444px;
+	width:517px;
+	height:509px;
+}
+
+#About{
+	position:absolute;
+	left:290px;
+	top:79px;
+	width:63px;
+	height:32px;
+}
+
+#Demos {
+	position:absolute;
+	left:353px;
+	top:79px;
+	width:63px;
+	height:32px;
+}
+
+#imagen_G {
+	position:absolute;
+	left:494px;
+	top:231px;
+	width:320px;
+	height:320px;
+}
+
+#flecha_izquierda_G {
+	position:absolute;
+	left:379px;
+	top:365px;
+	width:42px;
+	height:47px;
+}
+
+#flecha_derecha_G {
+	position:absolute;
+	left:882px;
+	top:365px;
+	width:41px;
+	height:47px;
+}
+
+#imagen1_P {
+	position:absolute;
+	left:327px;
+	top:557px;
+	width:79px;
+	height:79px;
+}
+
+#Imagen2_P {
+	position:absolute;
+	left:408px;
+	top:557px;
+	width:79px;
+	height:79px;
+}
+
+#Imagen3_P {
+	position:absolute;
+	left:489px;
+	top:557px;
+	width:79px;
+	height:79px;
+}
+
+#Imagen4_P {
+	position:absolute;
+	left:570px;
+	top:557px;
+	width:80px;
+	height:79px;
+}
+
+#Imagen5_P {
+	position:absolute;
+	left:652px;
+	top:557px;
+	width:80px;
+	height:79px;
+}
+
+#Imagen6_P {
+	position:absolute;
+	left:734px;
+	top:557px;
+	width:79px;
+	height:79px;
+}
+
+#Imagen7_P {
+	position:absolute;
+	left:815px;
+	top:557px;
+	width:80px;
+	height:79px;
+}
+
+#Imagen8_P {
+	position:absolute;
+	left:896px;
+	top:557px;
+	width:79px;
+	height:79px;
+}
+
+#flecha_izquierda_P {
+	position:absolute;
+	left:299px;
+	top:576px;
+	width:22px;
+	height:44px;
+}
+
+#flecha_derecha_P {
+	position:absolute;
+	left:986px;
+	top:577px;
+	width:22px;
+	height:43px;
+}
+
+#Documentation {
+	position:absolute;
+	left:416px;
+	top:79px;
+	width:126px;
+	height:32px;
+}
+
+#News {
+	position:absolute;
+	left:542px;
+	top:79px;
+	width:50px;
+	height:32px;
+}
+
+#Subrayado_titulo_cuerpo {
+	position:absolute;
+	left:236px;
+	top:30px;
+	width:451px;
+	/*height:14px;*/
+}
+
+#Texto_Cuerpo {
+	position:absolute;
+	left:235px;
+	top:50px;
+	width:596px;
+	/*height:395px;*/
+	font-family:Helvetica, sans-serif;
+	color:#cecece;
+	font-size:12px;
+}
+
+#Contact {
+	position:absolute;
+	left:592px;
+	top:79px;
+	width:101px;
+	height:32px;
+}
+
+#Publications{
+	position:absolute;
+	left:693px;
+	top:79px;
+	width:103px;
+	height:32px;
+}
+
+#Proyects {
+	position:absolute;
+	left:796px;
+	top:79px;
+	width:81px;
+	height:32px;
+}
+
+#Menu015 {
+	position:absolute;
+	left:235px;
+	top:111px;
+	width:642px;
+	height:4px;
+}
+
+#cuerpo {
+	position:relative;
+	/*top: 167px;*/
+	width:961px;
+}
+
+#Footer {
+	/*position:relative;*/
+	/*top:676px;*/
+	/*width:961px;*/
+	/*height:74px;*/
+	clear:both;
+}

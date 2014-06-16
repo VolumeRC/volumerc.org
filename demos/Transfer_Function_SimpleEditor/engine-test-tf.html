@@ -1,0 +1,234 @@
+<html>
+<head>
+<title>Air temperature</title>
+
+<!-- amoreno -->
+<link type="text/css" href="themes/base/ui.all.css" rel="stylesheet" />
+<link type="text/css" href="panelControles.css" rel="stylesheet" />
+<script type="text/javascript" src="jquery-1.3.2.js"></script>
+<script type="text/javascript" src="ui/ui.core.js"></script>
+<script type="text/javascript" src="ui/ui.slider.js"></script>
+<script type="text/javascript" src="ui/ui.draggable.js"></script>
+<script type="text/javascript" src="event.js"></script>
+<!-- amoreno -->
+		
+<script type="text/javascript" src="./volrenrc-TF_Editor/sylvester.js"></script>
+<script type="text/javascript" src="./volrenrc-TF_Editor/glUtils.js"></script>
+<script type="text/javascript" src="./volrenrc-TF_Editor/glAux.js"></script><!-- Deprecated!! -->
+<script type="text/javascript" src="./volrenrc-TF_Editor/volrenrc.js"></script>
+
+<script type="text/javascript">
+
+var globalIndexColors=0;//very important is the global index of colors(R,G,B,A)
+
+function load_resource(url) {
+	var req = new XMLHttpRequest();
+	req.open('GET', url, false);
+	req.overrideMimeType('text/plain; charset=x-user-defined');
+	req.send(null);
+	//  alert(req.status);
+	if (req.status != 200) return '';
+	return req.responseText;
+}
+
+function init_TF_Colors_Json()
+{
+  var urlJson="initTransferColors.json";
+  eval("var initColor="+load_resource(urlJson));
+  return initColor;
+}
+
+function zum(factor){
+	uZoomLevel = uZoomLevel*factor;
+	uOffsetX=uOffsetX/factor;
+	uOffsetY=uOffsetY/factor;
+	uOffsetZ=uOffsetZ/factor;
+}
+
+function reset(){
+	uZoomLevel=1.0;
+	uOffsetX=0.0;
+	uOffsetY=0.0;
+	uOffsetZ=0.0;
+}
+
+function offset (x, y, z){
+	uOffsetX=uOffsetX+x;
+	uOffsetY=uOffsetY+y;
+	uOffsetZ=uOffsetZ+z;
+}
+
+function setRenderQuality(offset){
+	if (uNumSteps+offset>0) {
+		uNumSteps=uNumSteps+offset;
+		var quality = document.getElementById("curQuality");
+		quality.innerHTML="Q: " + uNumSteps;
+	}
+}
+	
+function LoadAirTempDemo()
+{
+	var canvas = document.getElementById("VolRenRCView");
+	var gl = null;
+	try {
+		gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
+		gl.viewportWidth = canvas.width;
+		gl.viewportHeight = canvas.height;
+	} catch (e) {
+	}
+	
+	if (!gl) {
+		alert("Could not initialise WebGL, sorry :-(");
+	}
+
+	
+	imgNameArray =[
+"./Dataset-Engine/engine.000.png", "./Dataset-Engine/engine.001.png", "./Dataset-Engine/engine.002.png", "./Dataset-Engine/engine.003.png", "./Dataset-Engine/engine.004.png", "./Dataset-Engine/engine.005.png", "./Dataset-Engine/engine.006.png", "./Dataset-Engine/engine.007.png", "./Dataset-Engine/engine.008.png", "./Dataset-Engine/engine.009.png", "./Dataset-Engine/engine.010.png", "./Dataset-Engine/engine.011.png", "./Dataset-Engine/engine.012.png", "./Dataset-Engine/engine.013.png", "./Dataset-Engine/engine.014.png", "./Dataset-Engine/engine.015.png", "./Dataset-Engine/engine.016.png", "./Dataset-Engine/engine.017.png", "./Dataset-Engine/engine.018.png", "./Dataset-Engine/engine.019.png", "./Dataset-Engine/engine.020.png", "./Dataset-Engine/engine.021.png", "./Dataset-Engine/engine.022.png", "./Dataset-Engine/engine.023.png", "./Dataset-Engine/engine.024.png", "./Dataset-Engine/engine.025.png", "./Dataset-Engine/engine.026.png", "./Dataset-Engine/engine.027.png", "./Dataset-Engine/engine.028.png", "./Dataset-Engine/engine.029.png", "./Dataset-Engine/engine.030.png", "./Dataset-Engine/engine.031.png", "./Dataset-Engine/engine.032.png", "./Dataset-Engine/engine.033.png", "./Dataset-Engine/engine.034.png", "./Dataset-Engine/engine.035.png", "./Dataset-Engine/engine.036.png", "./Dataset-Engine/engine.037.png", "./Dataset-Engine/engine.038.png", "./Dataset-Engine/engine.039.png", "./Dataset-Engine/engine.040.png", "./Dataset-Engine/engine.041.png", "./Dataset-Engine/engine.042.png", "./Dataset-Engine/engine.043.png", "./Dataset-Engine/engine.044.png", "./Dataset-Engine/engine.045.png", "./Dataset-Engine/engine.046.png", "./Dataset-Engine/engine.047.png", "./Dataset-Engine/engine.048.png", "./Dataset-Engine/engine.049.png", "./Dataset-Engine/engine.050.png", "./Dataset-Engine/engine.051.png", "./Dataset-Engine/engine.052.png", "./Dataset-Engine/engine.053.png", "./Dataset-Engine/engine.054.png", "./Dataset-Engine/engine.055.png", "./Dataset-Engine/engine.056.png", "./Dataset-Engine/engine.057.png", "./Dataset-Engine/engine.058.png", "./Dataset-Engine/engine.059.png", "./Dataset-Engine/engine.060.png", "./Dataset-Engine/engine.061.png", "./Dataset-Engine/engine.062.png", "./Dataset-Engine/engine.063.png"
+	];
+	
+	var volume = VolRenRC(gl, canvas, imgNameArray, 256,256, 1.0, 1.0, 0.5, 0.005,5.0);
+
+}
+
+window.onload = LoadAirTempDemo;
+
+
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40928041-1', 'volumerc.org');
+  ga('send', 'pageview');
+
+</script>
+
+</head>
+
+
+
+
+<body bgcolor="#E9E9E9">
+
+<!-- amoreno -->
+<div align="center"><h1>Ray Casting Volume Rendering</h1></div>
+	<button type="button" onclick="zum(0.75)">Zoom+</button>
+	<button type="button" onclick="zum(4.0/3.0)">Zoom-</button>
+	<button type="button" onclick="offset(0, -0.25, 0)">-Y</button>
+	<button type="button" onclick="offset(0, 0.25, 0)">+Y</button>
+	<button type="button" onclick="offset(-0.25, 0, 0)">-X</button>
+	<button type="button" onclick="offset(0.25, 0, 0)">+X</button>
+	<button type="button" onclick="offset(0, 0, -0.25)">-Z</button>
+	<button type="button" onclick="offset(0, 0, 0.25)">+Z</button>
+	<button type="button" onclick="reset()">Reset</button>
+	<button type="button" onclick="setRenderQuality(50.0)">Q+</button>
+	<button type="button" onclick="setRenderQuality(-50.0)">Q-</button>
+	<span id="curQuality"></span>
+	<div> <span id="data"></span></div>
+
+	<div class="demo">
+<!-- amoreno -->
+			
+<canvas id="VolRenRCView" width="800" height="800" style="border:1px solid black"></canvas>
+
+
+<!-- amoreno -->
+		<div class="control-panel">
+			<div class="control-transparency">
+				<div id="eq">
+					<p>
+						<label for="amount">Nivel Transpariencia</label>
+						<input type="text" id="amount" style="border:0; color:#000000; font-weight:bold;" /></p>
+
+					<script type="text/javascript">
+var j=0;
+initColor=init_TF_Colors_Json();
+for(j=0;j<initColor.colors.length;j++){
+	document.write("<span class='rango#"+j+"'>"+initColor.colors.components[j].A+"</span>");
+}
+//loadOtherDataSets();//mul
+					</script>
+
+				</div>
+				 <div id="colorCanvas">
+					<script type="text/javascript">
+for(i=0;i<16;i++) {
+	var red,green,blue
+	document.write ("<div id='colorPixel"+ i +"' class='colorPixel' onclick='transferColorEvent(this,i)'></div>");
+	red=initColor.colors.components[i].R;
+	green=initColor.colors.components[i].G;
+	blue=initColor.colors.components[i].B; 
+	hex=hexFromRGB(parseInt(red), parseInt(green), parseInt(blue));
+	$("#colorPixel"+ i).css("background-color", "#" + hex);
+}
+function transferColorEvent(value,idx){
+	var red,green,blue;
+	index=value.id.substring(10,12);
+	globalIndexColors=parseInt(index);
+	red=initColor.colors.components[parseInt(index)].R;
+	green=initColor.colors.components[parseInt(index)].G;
+	blue=initColor.colors.components[parseInt(index)].B; 
+	detectarColor(red,green,blue);		
+}
+$(function() {
+	$("#slider__").slider({
+		value:5.0,
+		min: 0,
+		max: 20,
+		step: 0.5,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uLightFactor=ui.value;
+			$("#amount__").val( ui.value);
+		}
+	});
+	$("#amount__").val($("#slider__").slider("value"));
+});
+$(function() {
+	$("#slider1__").slider({
+		value:0.005,
+		min: 0,
+		max: 0.100,
+		step: 0.001,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uOpacityFactor=ui.value;
+			$("#amount1__").val(ui.value);
+
+		}
+	});
+	$("#amount1__").val($("#slider__1").slider("value"));
+});
+					</script>
+				</div>
+			</div>
+			<div class="control-color">
+				</br>
+				<h3>Color por transparencia: </h3>
+				<div id="red"></div>
+				<div id="green"></div>
+				<div id="blue"></div>
+				<div id="swatch" class="ui-widget-content ui-corner-all"></div>
+			</div>	
+			<div class="control-global">							
+				<p>
+					<label for="amount">Light Factor :</label>
+					<input type="text" id="amount__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+
+				<div id="slider__"></div>
+				<p>
+					<label for="amount">Opacity Factor :</label>
+					<input type="text" id="amount1__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+				<div id="slider1__"></div>
+			</div>							
+		</div>
+	</div><!-- End demo -->
+</div><!-- End demo-description -->
+</body>
+
+</html>

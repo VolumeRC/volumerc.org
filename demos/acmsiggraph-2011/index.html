@@ -1,0 +1,132 @@
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<TITLE>WebGL Direct Volume Rendering</TITLE>
+<SCRIPT type="text/javascript" src="./volrenrc/sylvester.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="./volrenrc/glUtils.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="./volrenrc/glAux.js"></SCRIPT><!-- Deprecated!! -->
+<SCRIPT type="text/javascript" src="./volrenrc/volrenrc-rgb.js"></SCRIPT>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40928041-1', 'volumerc.org');
+  ga('send', 'pageview');
+
+</script>
+
+<script type="text/javascript">
+
+var volume;
+
+function LoadDemo()
+{
+	var canvas = document.getElementById("VolRenRCView");
+	volume = new VolRenRC(canvas,1.0,1.0,1.0);
+	ACMDemo();
+	//MedDemo();
+}
+
+function ACMDemo()
+{
+	
+	imgNameArray =["./data/acmdata/s3.png","./data/acmdata/s3.png","./data/acmdata/L2.png","./data/acmdata/s3.png","./data/acmdata/L1.png","./data/acmdata/s3.png"];
+	
+	volume.readTextureSlices(imgNameArray,4096,256,256);
+	
+	volume.objectRotationMatrix = createRotationMatrix(-90, [0, 1, 0]).x(createRotationMatrix(180, [0, 0, 1])).x(createRotationMatrix(0, [1, 0, 0]));
+	volume.opacityFactor = 0.1;
+	volume.lightFactor = 1.5;
+			
+	
+}
+
+function MedDemo()
+{
+	imgNameArray =["./data/aorta-high2.jpg"];
+
+	volume.readTextureMosaic(imgNameArray,10,96,256,256);
+	volume.read1DTransferFunction("./data/tf.png");
+	
+	volume.objectRotationMatrix = createRotationMatrix(0, [0, 1, 0]).x(createRotationMatrix(0, [0, 0, 1])).x(createRotationMatrix(90, [1, 0, 0]));
+	
+	volume.opacityFactor = 0.05;
+	volume.lightFactor = 1.0;
+}
+
+window.onload = LoadDemo;
+
+</script>
+
+
+
+<style type="text/css">
+body {
+	text-align: center;   
+}					
+</style>
+
+
+</HEAD>
+
+<BODY bgcolor="white">
+<img src="./logos/Vicomtech_IK4_72ppp_negro.png" width="250px" alt="Vicomtech-ik4"/>
+<br />
+<h1>WebGL Direct Volume Rendering</h1>
+<canvas id="VolRenRCView" width="400" height="400" style="border:1px solid black"></canvas><br/>
+<A HREF="./volrenMed.html">Medical DEMO</A><br/>
+<!--<button onClick="ACMDemo();">ACM Logo</button>
+<button onClick="MedDemo();">Medical Dataset</button>-->
+
+
+<h2>Publications</h2>
+<h3>Interactive visualization of volumetric data with WebGL in real-time</h3>
+<p style="text-align:justify;">This article presents and discusses the implementation of a direct volume 
+rendering system for the Web, which articulates a large portion of the 
+rendering task in the client machine. By placing the rendering emphasis in the 
+local client, our system takes advantage of its power, while at the same time 
+eliminates processing from unreliable bottlenecks (e.g. network). The system 
+developed articulates in efficient manner the capabilities of the recently 
+released WebGL standard, which makes available the accelerated graphic 
+pipeline (formerly unusable). The dependency on specially customized hardware 
+is eliminated, and yet efficient rendering rates are achieved.  The Web 
+increasingly competes against desktop applications in many scenarios, but the 
+graphical demands of some of the applications (e.g. interactive scientific 
+visualization by volume rendering), have impeded their successful settlement 
+in Web scenarios. Performance, scalability, accuracy, security are some of the 
+many challenges that must be solved before visual Web applications popularize. 
+In this publication we discuss both performance and scalability of the volume 
+rendering by WebGL ray-casting in two different but challenging application 
+domains: medical imaging and radar meteorology.</p>
+
+<h3>Bibtex</h3>
+
+<pre style="text-align:left">
+@inproceedings{Congote:2011:IVV:2010425.2010449,
+ author = {Congote, John and Segura, Alvaro and Kabongo, Luis and Moreno, Aitor and Posada, Jorge and Ruiz, Oscar},
+ title = {Interactive visualization of volumetric data with WebGL in real-time},
+ booktitle = {Proceedings of the 16th International Conference on 3D Web Technology},
+ series = {Web3D '11},
+ year = {2011},
+ isbn = {978-1-4503-0774-1},
+ location = {Paris, France},
+ pages = {137--146},
+ numpages = {10},
+ url = {http://doi.acm.org/10.1145/2010425.2010449},
+ doi = {http://doi.acm.org/10.1145/2010425.2010449},
+ acmid = {2010449},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {WebGL, direct volume rendering, medical imaging, ray casting, real-time visualization, weather radar volume},
+} 
+</pre>
+<h2>Contact</h2>
+<pre style="text-align:center">
+<address><a HREF="mailto:volumerendering@vicomtech.org?&subject=[WebGL Direct Volume Rendering]">Vicomtech-IK4</a></address>
+<img src="./logos/GMedia_logo_coloured.png" width="250px" alt="graphicsmedia.net"/>
+</pre>
+</BODY>
+</HTML>

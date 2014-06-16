@@ -1,0 +1,14 @@
+ObjectType = Image
+NDims = 3
+BinaryData = True
+BinaryDataByteOrderMSB = False
+CompressedData = True
+CompressedDataSize = 5711871
+TransformMatrix = 1 -7.27596e-12 0 0 0 -1 0 -1 0
+Offset = -127.321 141.306 144.13
+CenterOfRotation = 0 0 0
+AnatomicalOrientation = RSP
+ElementSpacing = 1 1 1
+DimSize = 256 256 256
+ElementType = MET_UCHAR
+ElementDataFile = orig_T1_MRI.zraw

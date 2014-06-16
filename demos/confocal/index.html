@@ -1,0 +1,325 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:asev="http://sciencenet.kit.edu/experiment/">
+<!-- Written by Asmi H. Shah, 2011. Part of 'AskMe Experiment Publisher', software usable for non-commercial use only, and only if proper credit is clearly visibly given wherever the code is used, Contact: http://liebel-lag.org. -->
+<head>
+<meta name='description' content='AskMe - Experiment Publisher - 3DVolumeVis' />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name='keywords' content='scAskMe tool, liebel-lab, sciencenet, High Content Screening (HCS), HTS, knowledge management, experiment publishing, large scale raw data, semantic web' />
+<meta name='publisher' content='Liebel-Lab, Karlsruhe Institute of Technology' />
+<title>Experiment Viewer: 2011-05-18_10-19-28_ASMI_KIT_DataAsmi3D</title>
+<style ="text/css">body {background: url(./AskMe_3D_files/header_bg1.jpg) repeat-x;text-align: center;font: 70% "Trebuchet MS", sans-serif;margin: 30px;color:#6C2DC7;}p.verdana {font-family:verdana; font-size:12px;} 
+p.verdana{font-family:verdana; font-size:12px;} 
+h1.verdana{font-family:verdana; font-size:24px;}
+.thumbnail{
+position: relative;
+z-index: 0;
+}
+.thumbnail:hover{background-color: transparent;z-index: 50;}
+
+.thumbnail span{ position: absolute;background-color: lightyellow;padding: 5px;left: 0px;margin:0;border: 1px dashed gray;visibility: hidden;color: black;text-decoration: none;}
+
+.thumbnail span img{ 
+border-width: 0;
+padding: 2px;}
+
+.thumbnail:hover span{ position:fixed; visibility: visible;top: 20px;left: 0px; margin:100px 200px;}</style>
+<script type="text/javascript" src="./AskMe_3D_files/sylvester.js"></script>
+<script type="text/javascript" src="./AskMe_3D_files/glUtils.js"></script>
+<script type="text/javascript" src="./AskMe_3D_files/glAux.js"></script>
+<script type="text/javascript" src="./AskMe_3D_files/volumerc2.js"></script>
+<script type="text/javascript">
+var zoom=2.0;
+var lastMouseX = null;
+var lastMouseY = null;var mouseZoom = null;var objectRotationMatrix = createRotationMatrix(90, [1, 0, 0]).x(createRotationMatrix(180, [0, 0, 1]));
+
+function handleMouseDown(event) {if (event.altKey){mouseZoom = true;}else {mouseDown = true;lastMouseX = event.clientX;lastMouseY = event.clientY;}}
+function handleMouseUp(event){mouseDown = false;mouseZoom = false;}
+function handleMouseMove(event){if (mouseDown) {var newX = event.clientX;var newY = event.clientY;var deltaX = newX - lastMouseX;var newRotationMatrix = createRotationMatrix(deltaX / 10, [0, 1, 0]);var deltaY = newY - lastMouseY;newRotationMatrix = newRotationMatrix.x(createRotationMatrix(deltaY / 10, [1, 0, 0]));objectRotationMatrix = newRotationMatrix.x(objectRotationMatrix);lastMouseX = newX;lastMouseY = newY;setTimeout(drawVolume, 1);} else if (mouseZoom) {var newX = event.clientX;var newY = event.clientY;var deltaX = newX - lastMouseX;var deltaY = newY - lastMouseY;zoom -= (deltaX+deltaY)/100,0;lastMouseX = newX;lastMouseY = newY;setTimeout(drawVolume, 1);}return;}
+
+var drawVolume;var volume;
+
+function init()
+{
+	var canvas = document.getElementById("canvas_win");
+	var gl;
+	try {
+		gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
+	} catch (e) {}
+	if (!gl) {alert("Could not initialise WebGL, sorry :-(");}
+
+	imagesDir = './ResultJPGs/rx3_zoom_right_eyeBatch_BlindDeblur001_zSLICE_ch00.jpg';
+	imagesDirS = imagesDir.split('SLICE');
+	var data = new Array();
+
+	for (i=0;i<213;i++){
+		num = i.toString();
+		if (num.length == 1){num = '00'+num;} 
+		else if (num.length == 2){num = '0'+num;}
+		data[i] = imagesDirS[0]+num+imagesDirS[1];
+	}
+	
+/*	var data = new Array();
+	data[0] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z000_ch00.jpg";
+	data[1] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z001_ch00.jpg";
+	data[2] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z002_ch00.jpg";
+	data[3] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z003_ch00.jpg";
+	data[4] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z004_ch00.jpg";
+	data[5] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z005_ch00.jpg";
+	data[6] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z006_ch00.jpg";
+	data[7] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z007_ch00.jpg";
+	data[8] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z008_ch00.jpg";
+	data[9] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z009_ch00.jpg";
+	data[10] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z010_ch00.jpg";
+	data[11] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z011_ch00.jpg";
+	data[12] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z012_ch00.jpg";
+	data[13] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z013_ch00.jpg";
+	data[14] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z014_ch00.jpg";
+	data[15] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z015_ch00.jpg";
+	data[16] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z016_ch00.jpg";
+	data[17] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z017_ch00.jpg";
+	data[18] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z018_ch00.jpg";
+	data[19] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z019_ch00.jpg";
+	data[20] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z020_ch00.jpg";
+	data[21] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z021_ch00.jpg";
+	data[22] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z022_ch00.jpg";
+	data[23] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z023_ch00.jpg";
+	data[24] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z024_ch00.jpg";
+	data[25] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z025_ch00.jpg";
+	data[26] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z026_ch00.jpg";
+	data[27] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z027_ch00.jpg";
+	data[28] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z028_ch00.jpg";
+	data[29] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z029_ch00.jpg";
+	data[30] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z030_ch00.jpg";
+	data[31] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z031_ch00.jpg";
+	data[32] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z032_ch00.jpg";
+	data[33] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z033_ch00.jpg";
+	data[34] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z034_ch00.jpg";
+	data[35] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z035_ch00.jpg";
+	data[36] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z036_ch00.jpg";
+	data[37] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z037_ch00.jpg";
+	data[38] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z038_ch00.jpg";
+	data[39] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z039_ch00.jpg";
+	data[40] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z040_ch00.jpg";
+	data[41] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z041_ch00.jpg";
+	data[42] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z042_ch00.jpg";
+	data[43] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z043_ch00.jpg";
+	data[44] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z044_ch00.jpg";
+	data[45] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z045_ch00.jpg";
+	data[46] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z046_ch00.jpg";
+	data[47] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z047_ch00.jpg";
+	data[48] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z048_ch00.jpg";
+	data[49] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z049_ch00.jpg";
+	data[50] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z050_ch00.jpg";
+	data[51] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z051_ch00.jpg";
+	data[52] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z052_ch00.jpg";
+	data[53] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z053_ch00.jpg";
+	data[54] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z054_ch00.jpg";
+	data[55] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z055_ch00.jpg";
+	data[56] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z056_ch00.jpg";
+	data[57] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z057_ch00.jpg";
+	data[58] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z058_ch00.jpg";
+	data[59] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z059_ch00.jpg";
+	data[60] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z060_ch00.jpg";
+	data[61] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z061_ch00.jpg";
+	data[62] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z062_ch00.jpg";
+	data[63] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z063_ch00.jpg";
+	data[64] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z064_ch00.jpg";
+	data[65] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z065_ch00.jpg";
+	data[66] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z066_ch00.jpg";
+	data[67] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z067_ch00.jpg";
+	data[68] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z068_ch00.jpg";
+	data[69] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z069_ch00.jpg";
+	data[70] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z070_ch00.jpg";
+	data[71] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z071_ch00.jpg";
+	data[72] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z072_ch00.jpg";
+	data[73] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z073_ch00.jpg";
+	data[74] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z074_ch00.jpg";
+	data[75] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z075_ch00.jpg";
+	data[76] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z076_ch00.jpg";
+	data[77] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z077_ch00.jpg";
+	data[78] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z078_ch00.jpg";
+	data[79] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z079_ch00.jpg";
+	data[80] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z080_ch00.jpg";
+	data[81] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z081_ch00.jpg";
+	data[82] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z082_ch00.jpg";
+	data[83] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z083_ch00.jpg";
+	data[84] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z084_ch00.jpg";
+	data[85] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z085_ch00.jpg";
+	data[86] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z086_ch00.jpg";
+	data[87] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z087_ch00.jpg";
+	data[88] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z088_ch00.jpg";
+	data[89] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z089_ch00.jpg";
+	data[90] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z090_ch00.jpg";
+	data[91] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z091_ch00.jpg";
+	data[92] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z092_ch00.jpg";
+	data[93] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z093_ch00.jpg";
+	data[94] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z094_ch00.jpg";
+	data[95] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z095_ch00.jpg";
+	data[96] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z096_ch00.jpg";
+	data[97] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z097_ch00.jpg";
+	data[98] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z098_ch00.jpg";
+	data[99] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z099_ch00.jpg";
+	data[100] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z100_ch00.jpg";
+	data[101] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z101_ch00.jpg";
+	data[102] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z102_ch00.jpg";
+	data[103] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z103_ch00.jpg";
+	data[104] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z104_ch00.jpg";
+	data[105] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z105_ch00.jpg";
+	data[106] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z106_ch00.jpg";
+	data[107] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z107_ch00.jpg";
+	data[108] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z108_ch00.jpg";
+	data[109] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z109_ch00.jpg";
+	data[110] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z110_ch00.jpg";
+	data[111] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z111_ch00.jpg";
+	data[112] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z112_ch00.jpg";
+	data[113] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z113_ch00.jpg";
+	data[114] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z114_ch00.jpg";
+	data[115] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z115_ch00.jpg";
+	data[116] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z116_ch00.jpg";
+	data[117] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z117_ch00.jpg";
+	data[118] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z118_ch00.jpg";
+	data[119] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z119_ch00.jpg";
+	data[120] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z120_ch00.jpg";
+	data[121] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z121_ch00.jpg";
+	data[122] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z122_ch00.jpg";
+	data[123] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z123_ch00.jpg";
+	data[124] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z124_ch00.jpg";
+	data[125] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z125_ch00.jpg";
+	data[126] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z126_ch00.jpg";
+	data[127] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z127_ch00.jpg";
+	data[128] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z128_ch00.jpg";
+	data[129] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z129_ch00.jpg";
+	data[130] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z130_ch00.jpg";
+	data[131] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z131_ch00.jpg";
+	data[132] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z132_ch00.jpg";
+	data[133] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z133_ch00.jpg";
+	data[134] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z134_ch00.jpg";
+	data[135] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z135_ch00.jpg";
+	data[136] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z136_ch00.jpg";
+	data[137] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z137_ch00.jpg";
+	data[138] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z138_ch00.jpg";
+	data[139] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z139_ch00.jpg";
+	data[140] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z140_ch00.jpg";
+	data[141] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z141_ch00.jpg";
+	data[142] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z142_ch00.jpg";
+	data[143] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z143_ch00.jpg";
+	data[144] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z144_ch00.jpg";
+	data[145] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z145_ch00.jpg";
+	data[146] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z146_ch00.jpg";
+	data[147] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z147_ch00.jpg";
+	data[148] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z148_ch00.jpg";
+	data[149] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z149_ch00.jpg";
+	data[150] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z150_ch00.jpg";
+	data[151] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z151_ch00.jpg";
+	data[152] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z152_ch00.jpg";
+	data[153] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z153_ch00.jpg";
+	data[154] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z154_ch00.jpg";
+	data[155] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z155_ch00.jpg";
+	data[156] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z156_ch00.jpg";
+	data[157] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z157_ch00.jpg";
+	data[158] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z158_ch00.jpg";
+	data[159] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z159_ch00.jpg";
+	data[160] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z160_ch00.jpg";
+	data[161] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z161_ch00.jpg";
+	data[162] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z162_ch00.jpg";
+	data[163] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z163_ch00.jpg";
+	data[164] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z164_ch00.jpg";
+	data[165] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z165_ch00.jpg";
+	data[166] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z166_ch00.jpg";
+	data[167] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z167_ch00.jpg";
+	data[168] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z168_ch00.jpg";
+	data[169] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z169_ch00.jpg";
+	data[170] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z170_ch00.jpg";
+	data[171] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z171_ch00.jpg";
+	data[172] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z172_ch00.jpg";
+	data[173] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z173_ch00.jpg";
+	data[174] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z174_ch00.jpg";
+	data[175] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z175_ch00.jpg";
+	data[176] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z176_ch00.jpg";
+	data[177] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z177_ch00.jpg";
+	data[178] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z178_ch00.jpg";
+	data[179] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z179_ch00.jpg";
+	data[180] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z180_ch00.jpg";
+	data[181] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z181_ch00.jpg";
+	data[182] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z182_ch00.jpg";
+	data[183] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z183_ch00.jpg";
+	data[184] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z184_ch00.jpg";
+	data[185] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z185_ch00.jpg";
+	data[186] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z186_ch00.jpg";
+	data[187] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z187_ch00.jpg";
+	data[188] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z188_ch00.jpg";
+	data[189] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z189_ch00.jpg";
+	data[190] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z190_ch00.jpg";
+	data[191] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z191_ch00.jpg";
+	data[192] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z192_ch00.jpg";
+	data[193] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z193_ch00.jpg";
+	data[194] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z194_ch00.jpg";
+	data[195] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z195_ch00.jpg";
+	data[196] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z196_ch00.jpg";
+	data[197] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z197_ch00.jpg";
+	data[198] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z198_ch00.jpg";
+	data[199] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z199_ch00.jpg";
+	data[200] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z200_ch00.jpg";
+	data[201] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z201_ch00.jpg";
+	data[202] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z202_ch00.jpg";
+	data[203] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z203_ch00.jpg";
+	data[204] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z204_ch00.jpg";
+	data[205] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z205_ch00.jpg";
+	data[206] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z206_ch00.jpg";
+	data[207] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z207_ch00.jpg";
+	data[208] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z208_ch00.jpg";
+	data[209] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z209_ch00.jpg";
+	data[210] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z210_ch00.jpg";
+	data[211] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z211_ch00.jpg";
+	data[212] = "rx3_zoom_right_eyeBatch_BlindDeblur001_z212_ch00.jpg";
+	
+	*/
+
+	volume = new VolumeRC(gl, canvas, data, 512, 512, 1.0, 1.0, 113.0/512.0);
+
+	canvas.onmousedown = handleMouseDown;
+	document.onmouseup = handleMouseUp;
+	document.onmousemove = handleMouseMove;
+	drawVolume = function(){
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		perspective(45.0, 1.0, 0.1, 100.0);
+		loadIdentity();
+		mvTranslate([0.0, 0.0, -zoom]);
+		mvPushMatrix();
+		multMatrix(objectRotationMatrix);
+		mvTranslate([-0.5, -0.5, -0.5]);
+		volume.drawVolume(pMatrix, mvMatrix);
+		mvPopMatrix();
+	}
+	drawVolume();
+}
+window.onload = init;
+
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40928041-1', 'volumerc.org');
+  ga('send', 'pageview');
+
+</script>
+
+</head>
+<body >
+<span property="asev:thisisacollection"></span>
+<img src="./AskMe_3D_files/sciencenettranspng.png" alt="Sciencenet" width="140" height="60" style="position:absolute;margin-top:-15px; direction:rtl; right:10px "/>
+<h1 style="color:#FFFFFF;position:relative;margin-top:50px" class="verdana"><center>Experiment: <b>2011-05-18_10-19-28_ASMI_KIT_DataAsmi3D</b></center></h1>
+
+<h2 align="left" style="color:#6C2DC7;position:relative;margin-top:50px" class="verdana"> <a href="http://sciencenet.kit.edu" target="_blank">Sciencenet</a> > <a href="http://141.52.175.54:8080/yacysearch.html?query=3DVolumeVis" target="_blank">Other Experiments</a> > <a href='' target="_self">2011-05-18_10-19-28_ASMI_KIT_DataAsmi3D</a></h2>
+<div  about="#ex" typeof="asev:Experiment" style="position:absolute; margin-top:5px" align="left"><p style='color:#6C2DC7' class="verdana"><br/><b>Organism/Assay:</b> <span property="asev:organism">Zebrafish</span><br/>
+<br/><b>Age:</b> <span property="asev:age">48 hpf</span><br/>
+<br/><b>Region of View:</b> <span property="asev:region_of_view">Brain - Right eye patch</span><br/>
+<br/><b>Genes/Molecules of interest:</b> <span property="asev:genes_of_interest"> rx3gfp; GFP expression in retina</span><br/>
+<br/><b>Other Information:</b> <span property="asev:other_information">confocal z-stack (212 z-slices); Leica LSI; Imaging System: Confocal Microscopy</span><br/>
+<br/><br/><br/>
+
+<canvas id="canvas_win"  width='512' height='512' style="border:1px solid white" ></canvas><br/><br/><br/><br/>This WebPage is created by use of AskMe Tool - Experiment Publisher in <a href='http://sciencenet.kit.edu'>Sciencenet</a>, Developed at <a href='http://liebel-lab.org'>Liebel-Lab</a>, <a href='http://www.kit.edu'>KIT</a>, Germany. Web Volume Rendering, Developed at <a href='http://www.vicomtech.org'>Vicomtech</a>, Spain</p> </div> </body></html>

@@ -1,0 +1,52 @@
+<HTML><HEAD><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<TITLE>Real-Time Interactive Visualization of Volumetric Data with WebGL</TITLE>
+<SCRIPT type="text/javascript" src="sylvester.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="glUtils.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="glAux.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="volumerc.js"></SCRIPT>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40928041-1', 'volumerc.org');
+  ga('send', 'pageview');
+
+</script>
+
+</HEAD><BODY onload="volumerc_main('./raycast-color.frag','./aorta-low.jpg','./tf.png');" bgcolor="white">
+<CENTER>
+<H1>Real-Time Interactive Visualization of Volumetric Data with WebGL</H1>
+
+<canvas id="canvas_win" width="512" height="512" style="border:1px solid black"></canvas>
+
+</br>
+<button type="button" onclick="volumerc_main('./raycast-bw.frag','./aorta-low.jpg','./tf.png');">Aorta LowRes B/W</button>
+<button type="button" onclick="volumerc_main('./raycast-color.frag','./aorta-low.jpg','./tf.png');">Aorta LowRes Color</button>
+<button type="button" onclick="volumerc_main('./raycast-bw.frag','./aorta-high.jpg','./tf.png');">Aorta HighRes B/W</button>
+<button type="button" onclick="volumerc_main('./raycast-color.frag','./aorta-high.jpg','./tf.png');">Aorta HighRes Color</button>
+<!-- <button type="button" onclick="volumerc_main('./raycast-skull.frag','./skull.png','./tf.png');">Skull</button>-->
+
+</button>
+<P>Rotation with the mouse, and Alt+Mouse to Zoom</P>
+</BR>
+
+<img src="abstract.png"></img>
+<p>Submited to <a href="http://www.web3d.org/conferences/web3d2011/">Web3D 2011 conference</a> (Bibtex Reference pending on acceptation will be given when available).</p>
+
+<video src="WebGL_RadarVolumeRendering.ogv" controls="controls">
+your browser does not support the video tag
+</video>
+
+<P>This page is a demonstration of our current research, therefore it is under continuous construction, check back soon for updates.</P>
+
+<h2>Contact</h2>
+<pre style="text-align:center">
+<address><a HREF="mailto:volumerendering@vicomtech.org?&subject=[Volume Rendering]">volumerendering@vicomtech.org</a></address>
+<img src="./logos/GMedia_logo_coloured.png" width="250px" alt="graphicsmedia.net"/>
+</pre>
+</CENTER>
+</BODY>
+</HTML>

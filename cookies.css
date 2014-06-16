@@ -1,0 +1,56 @@
+/* cookies banner */
+#cookies-banner
+{
+width: 94%;
+height: 12%;
+position:fixed;
+   left: 10px;
+bottom: 10px;
+z-index:100;
+   border: solid 1px #d59f0f;
+border-radius: 5px;
+   background: #efe9e5;
+   color: #644d35;
+   padding: 10px 30px;
+   font-size: 1.5emm; /*display: none;*/
+   font-family: "Century Gothic", "Arial", sans-serif
+}
+#cookies-banner .center
+{
+   float: left;
+   width: 100%;
+text-align: center;
+}
+#cookies-banner .left
+{
+   float: left;
+   width: 75%;
+}
+#cookies-banner .right
+{
+position: absolute;
+right:0;
+top:45%;
+   float: right;
+   width: 25%;
+   text-align: center;
+}
+#cookies-banner a
+{
+   color: #644d35;
+   text-decoration: underline;
+cursor: pointer;
+}
+#cookies-banner .closebtn
+{
+width: 30px;
+color: #000;
+text-shadow: 0 1px 0 #fff;
+opacity: .7;
+}
+#cookies-banner .closebtn:hover{ opacity: 1.0;}
+
+#cookies-banner .separador{
+width: 3px;
+height: 70%;
+}

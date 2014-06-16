@@ -1,0 +1,234 @@
+<html>
+<head>
+<title>Air temperature</title>
+
+<!-- amoreno -->
+<link type="text/css" href="themes/base/ui.all.css" rel="stylesheet" />
+<link type="text/css" href="panelControles.css" rel="stylesheet" />
+<script type="text/javascript" src="jquery-1.3.2.js"></script>
+<script type="text/javascript" src="ui/ui.core.js"></script>
+<script type="text/javascript" src="ui/ui.slider.js"></script>
+<script type="text/javascript" src="ui/ui.draggable.js"></script>
+<script type="text/javascript" src="event.js"></script>
+<!-- amoreno -->
+		
+<script type="text/javascript" src="./volrenrc-TF_Editor/sylvester.js"></script>
+<script type="text/javascript" src="./volrenrc-TF_Editor/glUtils.js"></script>
+<script type="text/javascript" src="./volrenrc-TF_Editor/glAux.js"></script><!-- Deprecated!! -->
+<script type="text/javascript" src="./volrenrc-TF_Editor/volrenrc.js"></script>
+
+<script type="text/javascript">
+
+var globalIndexColors=0;//very important is the global index of colors(R,G,B,A)
+
+function load_resource(url) {
+	var req = new XMLHttpRequest();
+	req.open('GET', url, false);
+	req.overrideMimeType('text/plain; charset=x-user-defined');
+	req.send(null);
+	//  alert(req.status);
+	if (req.status != 200) return '';
+	return req.responseText;
+}
+
+function init_TF_Colors_Json()
+{
+  var urlJson="initTransferColors_aorta.json";
+  eval("var initColor="+load_resource(urlJson));
+  return initColor;
+}
+
+function zum(factor){
+	uZoomLevel = uZoomLevel*factor;
+	uOffsetX=uOffsetX/factor;
+	uOffsetY=uOffsetY/factor;
+	uOffsetZ=uOffsetZ/factor;
+}
+
+function reset(){
+	uZoomLevel=1.0;
+	uOffsetX=0.0;
+	uOffsetY=0.0;
+	uOffsetZ=0.0;
+}
+
+function offset (x, y, z){
+	uOffsetX=uOffsetX+x;
+	uOffsetY=uOffsetY+y;
+	uOffsetZ=uOffsetZ+z;
+}
+
+function setRenderQuality(offset){
+	if (uNumSteps+offset>0) {
+		uNumSteps=uNumSteps+offset;
+		var quality = document.getElementById("curQuality");
+		quality.innerHTML="Q: " + uNumSteps;
+	}
+}
+	
+function LoadAirTempDemo()
+{
+	var canvas = document.getElementById("VolRenRCView");
+	var gl = null;
+	try {
+		gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
+		gl.viewportWidth = canvas.width;
+		gl.viewportHeight = canvas.height;
+	} catch (e) {
+	}
+	
+	if (!gl) {
+		alert("Could not initialise WebGL, sorry :-(");
+	}
+
+	
+	imgNameArray =[
+"Dataset-Aorta/Image00002.png","Dataset-Aorta/Image00003.png","Dataset-Aorta/Image00004.png","Dataset-Aorta/Image00005.png","Dataset-Aorta/Image00006.png","Dataset-Aorta/Image00007.png","Dataset-Aorta/Image00008.png","Dataset-Aorta/Image00009.png","Dataset-Aorta/Image00010.png","Dataset-Aorta/Image00011.png","Dataset-Aorta/Image00012.png","Dataset-Aorta/Image00013.png","Dataset-Aorta/Image00014.png","Dataset-Aorta/Image00015.png","Dataset-Aorta/Image00016.png","Dataset-Aorta/Image00017.png","Dataset-Aorta/Image00018.png","Dataset-Aorta/Image00019.png","Dataset-Aorta/Image00020.png","Dataset-Aorta/Image00021.png","Dataset-Aorta/Image00022.png","Dataset-Aorta/Image00023.png","Dataset-Aorta/Image00024.png","Dataset-Aorta/Image00025.png","Dataset-Aorta/Image00026.png","Dataset-Aorta/Image00027.png","Dataset-Aorta/Image00028.png","Dataset-Aorta/Image00029.png","Dataset-Aorta/Image00030.png","Dataset-Aorta/Image00031.png","Dataset-Aorta/Image00032.png","Dataset-Aorta/Image00033.png","Dataset-Aorta/Image00034.png","Dataset-Aorta/Image00035.png","Dataset-Aorta/Image00036.png","Dataset-Aorta/Image00037.png","Dataset-Aorta/Image00038.png","Dataset-Aorta/Image00039.png","Dataset-Aorta/Image00040.png","Dataset-Aorta/Image00041.png","Dataset-Aorta/Image00042.png","Dataset-Aorta/Image00043.png","Dataset-Aorta/Image00044.png","Dataset-Aorta/Image00045.png","Dataset-Aorta/Image00046.png","Dataset-Aorta/Image00047.png","Dataset-Aorta/Image00048.png","Dataset-Aorta/Image00049.png","Dataset-Aorta/Image00050.png","Dataset-Aorta/Image00051.png","Dataset-Aorta/Image00052.png","Dataset-Aorta/Image00053.png","Dataset-Aorta/Image00054.png","Dataset-Aorta/Image00055.png","Dataset-Aorta/Image00056.png","Dataset-Aorta/Image00057.png","Dataset-Aorta/Image00058.png","Dataset-Aorta/Image00059.png","Dataset-Aorta/Image00060.png","Dataset-Aorta/Image00061.png","Dataset-Aorta/Image00062.png","Dataset-Aorta/Image00063.png","Dataset-Aorta/Image00064.png","Dataset-Aorta/Image00065.png","Dataset-Aorta/Image00066.png","Dataset-Aorta/Image00067.png","Dataset-Aorta/Image00068.png","Dataset-Aorta/Image00069.png","Dataset-Aorta/Image00070.png","Dataset-Aorta/Image00071.png","Dataset-Aorta/Image00072.png","Dataset-Aorta/Image00073.png","Dataset-Aorta/Image00074.png","Dataset-Aorta/Image00075.png","Dataset-Aorta/Image00076.png","Dataset-Aorta/Image00077.png","Dataset-Aorta/Image00078.png","Dataset-Aorta/Image00079.png","Dataset-Aorta/Image00080.png","Dataset-Aorta/Image00081.png","Dataset-Aorta/Image00082.png","Dataset-Aorta/Image00083.png","Dataset-Aorta/Image00084.png","Dataset-Aorta/Image00085.png","Dataset-Aorta/Image00086.png","Dataset-Aorta/Image00087.png","Dataset-Aorta/Image00088.png","Dataset-Aorta/Image00089.png","Dataset-Aorta/Image00090.png","Dataset-Aorta/Image00091.png","Dataset-Aorta/Image00092.png","Dataset-Aorta/Image00093.png","Dataset-Aorta/Image00094.png","Dataset-Aorta/Image00095.png","Dataset-Aorta/Image00096.png","Dataset-Aorta/Image00097.png","Dataset-Aorta/Image00098.png"
+	];
+	
+	var volume = VolRenRC(gl, canvas, imgNameArray, 256,256, 1.0, 1.0, 1.0, 1.45,3.0);
+
+}
+
+window.onload = LoadAirTempDemo;
+
+
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40928041-1', 'volumerc.org');
+  ga('send', 'pageview');
+
+</script>
+
+</head>
+
+
+
+
+<body bgcolor="#E9E9E9">
+
+<!-- amoreno -->
+<div align="center"><h1>Ray Casting Volume Rendering</h1></div>
+	<button type="button" onclick="zum(0.75)">Zoom+</button>
+	<button type="button" onclick="zum(4.0/3.0)">Zoom-</button>
+	<button type="button" onclick="offset(0, -0.25, 0)">-Y</button>
+	<button type="button" onclick="offset(0, 0.25, 0)">+Y</button>
+	<button type="button" onclick="offset(-0.25, 0, 0)">-X</button>
+	<button type="button" onclick="offset(0.25, 0, 0)">+X</button>
+	<button type="button" onclick="offset(0, 0, -0.25)">-Z</button>
+	<button type="button" onclick="offset(0, 0, 0.25)">+Z</button>
+	<button type="button" onclick="reset()">Reset</button>
+	<button type="button" onclick="setRenderQuality(50.0)">Q+</button>
+	<button type="button" onclick="setRenderQuality(-50.0)">Q-</button>
+	<span id="curQuality"></span>
+	<div> <span id="data"></span></div>
+
+	<div class="demo">
+<!-- amoreno -->
+			
+<canvas id="VolRenRCView" width="800" height="800" style="border:1px solid black"></canvas>
+
+
+<!-- amoreno -->
+		<div class="control-panel">
+			<div class="control-transparency">
+				<div id="eq">
+					<p>
+						<label for="amount">Nivel Transpariencia</label>
+						<input type="text" id="amount" style="border:0; color:#000000; font-weight:bold;" /></p>
+
+					<script type="text/javascript">
+var j=0;
+initColor=init_TF_Colors_Json();
+for(j=0;j<initColor.colors.length;j++){
+	document.write("<span class='rango#"+j+"'>"+initColor.colors.components[j].A+"</span>");
+}
+//loadOtherDataSets();//mul
+					</script>
+
+				</div>
+				 <div id="colorCanvas">
+					<script type="text/javascript">
+for(i=0;i<18;i++) {
+	var red,green,blue
+	document.write ("<div id='colorPixel"+ i +"' class='colorPixel' onclick='transferColorEvent(this,i)'></div>");
+	red=initColor.colors.components[i].R;
+	green=initColor.colors.components[i].G;
+	blue=initColor.colors.components[i].B; 
+	hex=hexFromRGB(parseInt(red), parseInt(green), parseInt(blue));
+	$("#colorPixel"+ i).css("background-color", "#" + hex);
+}
+function transferColorEvent(value,idx){
+	var red,green,blue;
+	index=value.id.substring(10,12);
+	globalIndexColors=parseInt(index);
+	red=initColor.colors.components[parseInt(index)].R;
+	green=initColor.colors.components[parseInt(index)].G;
+	blue=initColor.colors.components[parseInt(index)].B; 
+	detectarColor(red,green,blue);		
+}
+$(function() {
+	$("#slider__").slider({
+		value:3.0,
+		min: 0,
+		max: 100,
+		step: 0.5,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uLightFactor=ui.value;
+			$("#amount__").val( ui.value);
+		}
+	});
+	$("#amount__").val($("#slider__").slider("value"));
+});
+$(function() {
+	$("#slider1__").slider({
+		value:1.45,
+		min: 0,
+		max: 2.00,
+		step: 0.01,
+		orientation: 'horizontal',
+		slide: function(event, ui) {
+			uOpacityFactor=ui.value;
+			$("#amount1__").val(ui.value);
+
+		}
+	});
+	$("#amount1__").val($("#slider__1").slider("value"));
+});
+					</script>
+				</div>
+			</div>
+			<div class="control-color">
+				</br>
+				<h3>Color por transparencia: </h3>
+				<div id="red"></div>
+				<div id="green"></div>
+				<div id="blue"></div>
+				<div id="swatch" class="ui-widget-content ui-corner-all"></div>
+			</div>	
+			<div class="control-global">							
+				<p>
+					<label for="amount">Light Factor :</label>
+					<input type="text" id="amount__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+
+				<div id="slider__"></div>
+				<p>
+					<label for="amount">Opacity Factor :</label>
+					<input type="text" id="amount1__" style="border:0; color:#000000; font-weight:bold;" />
+				</p>
+				<div id="slider1__"></div>
+			</div>							
+		</div>
+	</div><!-- End demo -->
+</div><!-- End demo-description -->
+</body>
+
+</html>
