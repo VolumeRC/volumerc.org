@@ -1,6 +1,3 @@
-<!--HTML versions issue-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
     <head>
         <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
@@ -251,6 +248,22 @@
             // Forces the atlas texture to be redrawn in X3DOM
             var spacing = [1.0, 1.0, 1.0];
             function doRefresh() {
+//        document.getElementById("voxelCanvas").toBlob(function(blob){
+//                //var newImg = document.createElement("img");
+//                url = URL.createObjectURL(blob);
+//                
+//                /*newImg.onload = function() {
+//                    // no longer need to read the blob so it's revoked
+//                    URL.revokeObjectURL(url);
+//                };*/
+//                console.log("URL1="+url);
+//                console.log("URL2="+document.getElementById("voxelAtlas").attributes['url'].value);
+//                document.getElementById("voxelAtlas").setAttribute('url',url);
+//                console.log("URL3="+document.getElementById("voxelAtlas").attributes['url'].value);
+//                //document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
+//            });
+                document.getElementById("tfNode").setAttribute('url',document.getElementById("tfCanvas").toDataURL());
+                document.getElementById("voxelAtlas").setAttribute('url',document.getElementById("voxelCanvas").toDataURL());
                 document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
                 spacing = spacing.map(function (x) {
                     return x / Math.max.apply(null, spacing);
@@ -301,10 +314,8 @@
                         launchRefresh();
                     });
                 }
+                console.log("DICOM loaded and TF set!");
             }
-            
-            /*$(window).load(function () {
-            });*/
             
         </script>
         
@@ -326,12 +337,10 @@
                         <Transform id="volumeTransform">
                             <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
                                 <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='207' slicesOverX='13'
-                                slicesOverY='13' hideChildren="true">
-                                    <canvas width='4096' height='4096' id='voxelCanvas'></canvas>
+                                slicesOverY='13' hideChildren="true" url="data:">
                                 </ImageTextureAtlas>
                                 <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
-                                    <ImageTexture containerField='transferFunction'>
-                                        <canvas width='256' height='10' id='tfCanvas'></canvas>
+                                    <ImageTexture containerField='transferFunction' id="tfNode" url="data:">
                                     </ImageTexture>
                                 </OpacityMapVolumeStyle>
                             </VolumeData>
@@ -605,6 +614,9 @@
             <canvas id="tfTmpCanvas"></canvas>
             <canvas id="tmpCanvas"></canvas>
             <img id="hiddenBWTF" src="../../../DATA/TF/BWTF.png"/>
+
+            <canvas width='4096' height='4096' id='voxelCanvas'></canvas>
+            <canvas width='256' height='10' id='tfCanvas'></canvas>
         </div>
 
     </body>
