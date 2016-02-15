@@ -238,30 +238,19 @@
                 var voxelImageData = new ImageData(image.width, image.height);
                 voxelImageData.data.set(rgbaPixels);
                 
-                var tmpCanvas = document.getElementById("tmpCanvas");//TODO: create new canvas for each slice to avoid concurrent access during async image load
+                var hiddenNodesDiv = document.getElementById("hiddenNodes");
+                var tmpCanvas = document.createElement("canvas");
+                hiddenNodesDiv.appendChild(tmpCanvas);
                 tmpCanvas.width = image.width;
                 tmpCanvas.height = image.height;
                 tmpCtx = tmpCanvas.getContext("2d");
                 tmpCtx.putImageData(voxelImageData, 0, 0);
+                return tmpCanvas;
             }
             
             // Forces the atlas texture to be redrawn in X3DOM
             var spacing = [1.0, 1.0, 1.0];
             function doRefresh() {
-//        document.getElementById("voxelCanvas").toBlob(function(blob){
-//                //var newImg = document.createElement("img");
-//                url = URL.createObjectURL(blob);
-//                
-//                /*newImg.onload = function() {
-//                    // no longer need to read the blob so it's revoked
-//                    URL.revokeObjectURL(url);
-//                };*/
-//                console.log("URL1="+url);
-//                console.log("URL2="+document.getElementById("voxelAtlas").attributes['url'].value);
-//                document.getElementById("voxelAtlas").setAttribute('url',url);
-//                console.log("URL3="+document.getElementById("voxelAtlas").attributes['url'].value);
-//                //document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
-//            });
                 document.getElementById("tfNode").setAttribute('url',document.getElementById("tfCanvas").toDataURL());
                 document.getElementById("voxelAtlas").setAttribute('url',document.getElementById("voxelCanvas").toDataURL());
                 document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
@@ -287,8 +276,6 @@
                 var voxelCanvas = document.getElementById("voxelCanvas");
                 var voxelContext = voxelCanvas.getContext("2d");
                 
-                //TODO: should at least read from ImageTextureAtlas node instead
-                //TODO: ... should actually be computed and written to ImageTextureAtlas instead
                 var slicesOverX = 13;
                 var slicesOverY = 13;
                 
@@ -300,10 +287,10 @@
                         var nSlice = imageIds.indexOf(image.imageId);
                         var posX = nSlice % slicesOverX;
                         var posY = Math.floor(nSlice / slicesOverX);
-                        fillImageDataWithCornerstoneImage(image);
-                        voxelContext.drawImage(document.getElementById("tmpCanvas"), 0, 0, image.width, image.height, posX * newSliceWidth, posY * newSliceHeight, newSliceWidth, newSliceHeight);
+                        var tmpCanvas = fillImageDataWithCornerstoneImage(image);
+                        voxelContext.drawImage(tmpCanvas, 0, 0, image.width, image.height, posX * newSliceWidth, posY * newSliceHeight, newSliceWidth, newSliceHeight);
+                        document.getElementById("hiddenNodes").removeChild(tmpCanvas);
                         
-                        cornerstone.imageCache.removeImagePromise(image.imageId);// Save memory by removing image from cache
                         nSliceLoaded += 1;
                         var new_width = (nSliceLoaded * 100) / imageIds.length;
                         var percentage_new_width = new_width.toFixed(2) + "%";
@@ -314,7 +301,7 @@
                         launchRefresh();
                     });
                 }
-                console.log("DICOM loaded and TF set!");
+                launchRefresh();
             }
             
         </script>
@@ -334,10 +321,33 @@
                 <background DEF='bgnd' skyColor="0 0 0"></background>
                 <group id='root' render='false'>
                     <group DEF='theScene'>
+                    <!--Shape><Sphere radius='2.0'/></Shape-->
+                    <!--Shape><Box size='4.0 4.0 4.0'/></Shape-->
+                    <!--Shape><Cylinder  radius='2.0' height="10.0"/><Appearance><Material diffuseColor="1.0 0.0 0.0"/></Appearance></Shape-->
+                    
+                        <Transform translation=' 2.1  2.1  2.1'><Shape DEF="BoxCorner"><Sphere radius='0.1'/></Shape></Transform>
+                        <Transform translation=' 2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation=' 2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation=' 2.1 -2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation='-2.1  2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation='-2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation='-2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation='-2.1 -2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation=' 2.1  0.0  2.1' rotation="0.0 0.0 1.0 0.0"><Shape DEF="BoxBorder"><Cylinder radius='0.01' height="4.0"/></Shape></Transform>
+                        <Transform translation=' 2.1  0.0 -2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-2.1  0.0  2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-2.1  0.0 -2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.0  2.1  2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.0  2.1 -2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.0 -2.1  2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.0 -2.1 -2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 2.1  2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 2.1 -2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-2.1  2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-2.1 -2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
                         <Transform id="volumeTransform">
                             <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
-                                <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='207' slicesOverX='13'
-                                slicesOverY='13' hideChildren="true" url="data:">
+                                <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='207' slicesOverX='13' slicesOverY='13' hideChildren="true" url="data:">
                                 </ImageTextureAtlas>
                                 <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
                                     <ImageTexture containerField='transferFunction' id="tfNode" url="data:">
@@ -610,9 +620,8 @@
             //http://blog.bitops.com/blog/2014/08/20/updated-firefox-vr-builds/
         </script>
 
-        <div style="display:none;">
+        <div style="display:none;" id="hiddenNodes">
             <canvas id="tfTmpCanvas"></canvas>
-            <canvas id="tmpCanvas"></canvas>
             <img id="hiddenBWTF" src="../../../DATA/TF/BWTF.png"/>
 
             <canvas width='4096' height='4096' id='voxelCanvas'></canvas>
