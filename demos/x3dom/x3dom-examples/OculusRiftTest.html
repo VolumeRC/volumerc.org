@@ -315,7 +315,7 @@
                 <Environment frustumCulling="false"></Environment>
                 <navigationInfo headlight='false' type='"EXAMINE" "WALK"'></navigationInfo>
             <!--viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='3.4625 1.73998 -5.55' orientation='0 1 0 2.99229' position='4.17102 1.00905 -6.97228' znear="0.001" zfar="300"></viewpoint-->
-                <viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="-0.63480 -1.68310 -3.84114" orientation="0.21668 0.95326 -0.21057 3.21163" znear="0.001" zfar="1000"></viewpoint>
+                <viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="-0.63480 -1.68310 3.84114" orientation="0.21668 0.95326 -0.21057 3.21163" znear="0.001" zfar="1000"></viewpoint>
             <!--viewpoint def='AOPT_CAM' centerofrotation='3.4625 1.73998 -5.55' position='3.4625 1.73998 8.69028'></viewpoint-->
                 <viewpoint def='AOPT_CAM' centerofrotation='0.0 0.0 0.0' position='0.0 0.0 0.0'></viewpoint>
                 <background DEF='bgnd' skyColor="0 0 0"></background>
@@ -324,36 +324,41 @@
                     <!--Shape><Sphere radius='2.0'/></Shape-->
                     <!--Shape><Box size='4.0 4.0 4.0'/></Shape-->
                     <!--Shape><Cylinder  radius='2.0' height="10.0"/><Appearance><Material diffuseColor="1.0 0.0 0.0"/></Appearance></Shape-->
-                    
-                        <Transform translation=' 2.1  2.1  2.1'><Shape DEF="BoxCorner"><Sphere radius='0.1'/></Shape></Transform>
-                        <Transform translation=' 2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
-                        <Transform translation=' 2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
-                        <Transform translation=' 2.1 -2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
-                        <Transform translation='-2.1  2.1  2.1'><Shape USE="BoxCorner"/></Transform>
-                        <Transform translation='-2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
-                        <Transform translation='-2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
-                        <Transform translation='-2.1 -2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
-                        <Transform translation=' 2.1  0.0  2.1' rotation="0.0 0.0 1.0 0.0"><Shape DEF="BoxBorder"><Cylinder radius='0.01' height="4.0"/></Shape></Transform>
-                        <Transform translation=' 2.1  0.0 -2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation='-2.1  0.0  2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation='-2.1  0.0 -2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.0  2.1  2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.0  2.1 -2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.0 -2.1  2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.0 -2.1 -2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 2.1  2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 2.1 -2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation='-2.1  2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation='-2.1 -2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform id="volumeTransform">
-                            <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
-                                <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='207' slicesOverX='13' slicesOverY='13' hideChildren="true" url="data:">
-                                </ImageTextureAtlas>
-                                <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
-                                    <ImageTexture containerField='transferFunction' id="tfNode" url="data:">
-                                    </ImageTexture>
-                                </OpacityMapVolumeStyle>
-                            </VolumeData>
+                        <Transform DEF="vol">
+                            <Transform translation=' 2.1  2.1  2.1'><Shape DEF="BoxCorner"><Sphere radius='0.1'/></Shape></Transform>
+                            <Transform translation=' 2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                            <Transform translation=' 2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                            <Transform translation=' 2.1 -2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                            <Transform translation='-2.1  2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                            <Transform translation='-2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                            <Transform translation='-2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                            <Transform translation='-2.1 -2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                            <Transform translation=' 2.1  0.0  2.1' rotation="0.0 0.0 1.0 0.0"><Shape DEF="BoxBorder"><Cylinder radius='0.01' height="4.0"/></Shape></Transform>
+                            <Transform translation=' 2.1  0.0 -2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation='-2.1  0.0  2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation='-2.1  0.0 -2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation=' 0.0  2.1  2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation=' 0.0  2.1 -2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation=' 0.0 -2.1  2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation=' 0.0 -2.1 -2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation=' 2.1  2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation=' 2.1 -2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation='-2.1  2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <Transform translation='-2.1 -2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <Transform id="volumeTransform">
+                                <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
+                                    <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='207' slicesOverX='13' slicesOverY='13' hideChildren="true" url="data:">
+                                    </ImageTextureAtlas>
+                                    <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
+                                        <ImageTexture containerField='transferFunction' id="tfNode" url="data:">
+                                        </ImageTexture>
+                                    </OpacityMapVolumeStyle>
+                                </VolumeData>
+                            </Transform>
+                            <TimeSensor DEF="time" cycleInterval="10" loop="true"></TimeSensor>
+                            <OrientationInterpolator DEF="rotate" key="0 0.25 0.5 0.75 1" keyValue="0 1 0 0  0 1 0 1.57  0 1 0 3.1415 0 1 0 4.7123  0 1 0 6.2831 "></OrientationInterpolator>
+                            <Route fromNode="time" fromField ="fraction_changed" toNode="rotate" toField="set_fraction"></Route>
+                            <Route fromNode="rotate" fromField ="value_changed" toNode="vol" toField="rotation"></Route>
                         </Transform>
                     </group>
                 </group>
