@@ -309,6 +309,40 @@
                 launchRefresh();
             }
             
+            // mouse interaction
+            var pickX = 0;
+            var pickY = 0;
+            var inc = 0;
+            var pickState=false;
+           
+            function handleDragging_Up(event) {
+                pickState = false;           
+                document.getElementById("navInfo").setAttribute("type", '"EXAMINE" "ANY"');
+            }       
+            function handleDragging_Down(event) {
+                pickState = true;
+                pickX = event.layerX;
+                pickY = event.layerY;
+                document.getElementById("navInfo").setAttribute("type", '"NONE"');
+            }
+            function handleDragging_Move(event) {
+                if (!pickState) return;
+                               
+                var deltaX = -(pickX - event.layerX);
+                var deltaY = -(pickY - event.layerY);
+               
+                pickX = event.layerX;
+                pickY = event.layerY;
+               
+                var nodeX = document.getElementById('vol_X');   
+                var angX = parseFloat(nodeX.getAttribute('rotation').split(',')[3]);
+                nodeX.setAttribute('rotation', '0,1,0,' + (angX + (3.14159265*deltaX)/180.0));               
+
+                var nodeY = document.getElementById('vol_Y');   
+                var angY = parseFloat(nodeY.getAttribute('rotation').split(',')[3]);
+                nodeY.setAttribute('rotation', '0,0,1,' + (angY + (3.14159265*deltaY)/180.0));               
+            }
+            
         </script>
         
     </head>
@@ -318,9 +352,9 @@
         <X3D id='x3dElement' showStat='false' showLog='false' style='width:100%; height:100%; border:0; margin:0; padding:0;'>
             <scene id='scene'>
                 <Environment frustumCulling="false"></Environment>
-                <navigationInfo headlight='false' type='"EXAMINE" "WALK"'></navigationInfo>
+                <navigationInfo id="navInfo" headlight='false' type='"EXAMINE" "WALK"'></navigationInfo>
             <!--viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='3.4625 1.73998 -5.55' orientation='0 1 0 2.99229' position='4.17102 1.00905 -6.97228' znear="0.001" zfar="300"></viewpoint-->
-                <viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="-2.31975 -2.76602 3.42432" orientation="0.29038 0.88402 -0.36632 3.44506" znear="0.001" zfar="1000"></viewpoint>
+                <viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="4.0 1.0 -6.0" orientation="0.0 0.0 0.0 3.0" znear="0.001" zfar="1000"></viewpoint>
             <!--viewpoint def='AOPT_CAM' centerofrotation='3.4625 1.73998 -5.55' position='3.4625 1.73998 8.69028'></viewpoint-->
                 <viewpoint def='AOPT_CAM' centerofrotation='0.0 0.0 0.0' position='0.0 0.0 0.0'></viewpoint>
                 <background DEF='bgnd' skyColor="0.2 0.2 0.2"></background>
@@ -329,7 +363,9 @@
                     <!--Shape><Sphere radius='2.0'/></Shape-->
                     <!--Shape><Box size='4.0 4.0 4.0'/></Shape-->
                     <!--Shape><Cylinder  radius='2.0' height="10.0"/><Appearance><Material diffuseColor="1.0 0.0 0.0"/></Appearance></Shape-->
-                    <Transform translation = " 0 0 0 " DEF="theSceneTF">
+                    <Transform translation = " 0 0 -120" scale=" 1 1 1" DEF="vol" id="vol_X">
+                    <Transform translation = " 0 0 0" scale=" 1 1 1" DEF="vol" id="vol_Y">
+                    <Transform translation = " 0 0 0 " scale = " 20 20 20" DEF="theSceneTF">
                         <Transform translation=' 2.1  2.1  2.1'><Shape DEF="BoxCorner"><Sphere radius='0.1'/></Shape></Transform>
                         <Transform translation=' 2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
                         <Transform translation=' 2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
@@ -361,10 +397,12 @@
                             </VolumeData>
                         </Transform>
                     </Transform>
-                    <timeSensor DEF="time" cycleInterval="10" loop="true"></timeSensor>
+                    </Transform>
+                    </Transform>
+                    <!--timeSensor DEF="time" cycleInterval="10" loop="true"></timeSensor>
                     <OrientationInterpolator DEF="rotate" key="0 0.25 0.5 0.75 1" keyValue="0 1 0 0  0 1 0 1.57  0 1 0 3.1415 0 1 0 4.7123  0 1 0 6.2831 "></OrientationInterpolator>
                     <Route fromNode="time" fromField ="fraction_changed" toNode="rotate" toField="set_fraction"></Route>
-                    <Route fromNode="rotate" fromField ="value_changed" toNode="theSceneTF" toField="rotation"></Route>
+                    <Route fromNode="rotate" fromField ="value_changed" toNode="theSceneTF" toField="rotation"></Route-->
                     </group>
                 </group>
                 <group render="true">
@@ -529,6 +567,11 @@
                 };
                 
                 //Added by Vicomtech:
+                // add mouse handlers
+                document.getElementById('x3dElement').addEventListener("mouseup", handleDragging_Up, true);
+                document.getElementById('x3dElement').addEventListener("mousemove", handleDragging_Move, true);
+                document.getElementById('x3dElement').addEventListener("mousedown", handleDragging_Down, true);
+                
                 create_atlas();
                 document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
             };
