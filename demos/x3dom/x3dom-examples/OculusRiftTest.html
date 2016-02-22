@@ -356,10 +356,12 @@
                         handString += "Direction: " + vectorToString(hand.direction, 2) + "<br />";
                         handString += "Palm normal: " + vectorToString(hand.palmNormal, 2) + "<br />";
                     }
+                    var nodeSceneTF = document.getElementById('theSceneTF');
+                    nodeSceneTF.setAttribute('rotation', vectorToString(hand.direction, 2)+',1,0');
                 }
             })
         </script>
-        
+        1111
     </head>
     
     <body style="width:100%; height:100%; border:0; margin:0; padding:0;">
