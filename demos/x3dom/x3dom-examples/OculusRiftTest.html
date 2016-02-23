@@ -566,13 +566,18 @@
                 document.getElementById('x3dElement').addEventListener("mousedown", handleDragging_Down, true);
                 
                 // Setup Leap loop with frame callback function
-                (new Leap.Controller({enableGestures: false})).loop(function(frame) {
-                    if (frame.hands.length > 0) {
-                        document.getElementById('vol_X').setAttribute('rotation', '0,0,1,' + ( 1.5*frame.hands[0].roll() ));
-                        document.getElementById('vol_Y').setAttribute('rotation', '1,0,0,' + ( 1.5*frame.hands[0].pitch()));
-                        document.getElementById('vol_Z').setAttribute('rotation', '0,1,0,' + (-2.5*frame.hands[0].yaw()  ));
-                    }
-                });
+                if(typeof Leap !== "undefined") {
+                    (new Leap.Controller({enableGestures: false})).loop(function(frame) {
+                        if (frame.hands.length > 0) {
+                            document.getElementById('vol_X').setAttribute('rotation', '0,0,1,' + ( 1.5*frame.hands[0].roll() ));
+                            document.getElementById('vol_Y').setAttribute('rotation', '1,0,0,' + ( 1.5*frame.hands[0].pitch()));
+                            document.getElementById('vol_Z').setAttribute('rotation', '0,1,0,' + (-2.5*frame.hands[0].yaw()  ));
+                        }
+                    });
+                }
+                else {
+                    console.log("Leap device probably not found.");
+                }
 
                 create_atlas();
                 document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
