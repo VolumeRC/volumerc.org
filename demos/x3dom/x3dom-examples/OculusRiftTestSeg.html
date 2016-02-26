@@ -1,0 +1,390 @@
+<html>
+    <head>
+        <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
+        <meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge" />
+
+        <title>X3DOM PNG Atlas - Oculus Rift - Segmented</title>
+        
+        <script src="http://x3dom.org/release/x3dom-full.js" type="text/javascript"></script>
+        <script src="http://code.jquery.com/jquery-1.11.3.js" type="text/javascript"></script>
+        <script src="https://js.leapmotion.com/leap-0.6.4.min.js"></script>
+        
+        <link rel="stylesheet" type="text/css" href="http://www.x3dom.org/download/dev/x3dom.css">
+        <style>
+            #enterVR {
+            background: rgba(0, 0, 0, .35) url("../../../imagenes/icon-goggles-white.svg") 50% 50% no-repeat;
+            background-size: 70% 70%;
+            color: #fff;
+            height: 50px;
+            width: 60px;
+            border: none;
+            background-color: rgba(120, 120, 120, .35);
+            padding: 1px 6px;
+            position:absolute;
+            bottom:10px;
+            right:10px;
+            cursor: pointer;
+            }
+            
+            #enterVR:hover {
+            background-color: rgba(120, 120, 120, .65);
+            }
+            
+            .goggles {
+            height: 30px;
+            text-align: center;
+            color: buttontext;
+            }
+            
+        </style>
+
+        <!-- External libraries needed for DICOM loading -->
+        <script src="http://rawgit.com/chafey/cornerstone/master/dist/cornerstone.js" type="text/javascript"></script>
+        <script src="http://rawgit.com/chafey/cornerstoneWADOImageLoader/master/examples/cornerstoneMath.js" type="text/javascript"></script>
+        <script src="http://rawgit.com/chafey/cornerstoneTools/master/dist/cornerstoneTools.js" type="text/javascript"></script>
+        <script src="http://rawgit.com/chafey/dicomParser/master/dist/dicomParser.min.js" type="text/javascript"></script>
+        <script src="http://rawgit.com/chafey/cornerstoneWADOImageLoader/master/examples/jpx.min.js" type="text/javascript"></script>
+        <script src="http://rawgit.com/chafey/cornerstoneWADOImageLoader/master/dist/cornerstoneWADOImageLoader.js" type="text/javascript"></script>
+        
+        <script type="text/javascript">
+        </script>
+    </head>
+    
+    <body style="width:100%; height:100%; border:0; margin:0; padding:0;">
+        
+        <X3D id='x3dElement' showStat='false' showLog='false' style='width:100%; height:100%; border:0; margin:0; padding:0;'>
+            <scene id='scene'>
+                <Environment frustumCulling="false"></Environment>
+                <navigationInfo id="navInfo" headlight='true' type='"EXAMINE" "WALK"'></navigationInfo>
+            <!--viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="0.00000 0.00000 6.89671" orientation="0.00000 0.00000 0.00000 0.00000" znear="0.001" zfar="1000.0"></viewpoint-->
+                <viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="-0.02865 0.03152 1.62389" orientation="-0.73975 -0.67265 -0.01794 0.02623" znear="0.001" zfar="1000.0"></viewpoint>
+                
+                <background DEF='bgnd' skyColor="0.9 0.9 0.9"></background>
+                <group id='root' render='false'>
+                    <group DEF='theScene'>
+                    <Transform translation="0 0 0" rotation="0.0 0.0 0.0 0.0" id="faceCamera">
+                    <Transform DEF="volX" id="vol_X">
+                    <Transform DEF="volY" id="vol_Y">
+                    <Transform DEF="volY" id="vol_Z">
+                    <Transform translation="0 0 0" scale="1 1 1" DEF="theSceneTF" id="theSceneTansform">
+                        <Transform id="volumeTransform">
+                        <Transform translation=' 0.501  0.501  0.501'><Shape DEF="BoxCorner0"><appearance><material diffuseColor='1.0,1.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
+                        <Transform translation=' 0.501  0.501 -0.501'><Shape DEF="BoxCorner1"><appearance><material diffuseColor='1.0,1.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
+                        <Transform translation=' 0.501 -0.501  0.501'><Shape DEF="BoxCorner2"><appearance><material diffuseColor='1.0,0.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
+                        <Transform translation=' 0.501 -0.501 -0.501'><Shape DEF="BoxCorner3"><appearance><material diffuseColor='1.0,0.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
+                        <Transform translation='-0.501  0.501  0.501'><Shape DEF="BoxCorner4"><appearance><material diffuseColor='0.0,1.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
+                        <Transform translation='-0.501  0.501 -0.501'><Shape DEF="BoxCorner5"><appearance><material diffuseColor='0.0,1.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
+                        <Transform translation='-0.501 -0.501  0.501'><Shape DEF="BoxCorner6"><appearance><material diffuseColor='0.0,0.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
+                        <Transform translation='-0.501 -0.501 -0.501'><Shape DEF="BoxCorner7"><appearance><material diffuseColor='0.0,0.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
+                        <Transform translation=' 0.501  0.000  0.501' rotation="0.0 0.0 1.0 0.0"><Shape DEF="BoxBorder"><appearance><material diffuseColor='0.0,0.0,0.0'></material></appearance><Cylinder radius='0.01' height="1.0"/></Shape></Transform>
+                        <Transform translation=' 0.501  0.000 -0.501' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-0.501  0.000  0.501' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-0.501  0.000 -0.501' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.000  0.501  0.501' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.000  0.501 -0.501' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.000 -0.501  0.501' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.000 -0.501 -0.501' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.501  0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.501 -0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-0.501  0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-0.501 -0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                            <SegmentedVolumeData id='volume' dimensions='1.0 1.0 1.0' numberOfMaxSegments="2.0">
+                            <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='166' slicesOverX='13' slicesOverY='13' hideChildren="true" url="../../../DATA/INCISIX/Dentascan__0.75__H60s_-_3_2048.png"></ImageTextureAtlas>
+                            <ImageTextureAtlas containerField='segmentIdentifiers' id="voxelSegmentsAtlas" numberOfSlices='166' slicesOverX='13' slicesOverY='13' hideChildren="true" url="../../../DATA/INCISIX/Bone_All_2048.png"></ImageTextureAtlas>
+                            <OpacityMapVolumeStyle opacityFactor="12.0" lightFactor="1.2"></OpacityMapVolumeStyle>
+                            <ComposedVolumeStyle>
+                                <OpacityMapVolumeStyle opacityFactor="40.0" lightFactor="0.8"></OpacityMapVolumeStyle>
+                                <EdgeEnhancementVolumeStyle gradientThreshold='1.8' edgeColor='1.0 0.8 0.5'></EdgeEnhancementVolumeStyle>
+                            </ComposedVolumeStyle>
+                            </SegmentedVolumeData>
+                        </Transform>
+                    </Transform>
+                    </Transform>
+                    </Transform>
+                    </Transform>
+                    </Transform>
+                    </group>
+                </group>
+                <group render="true">
+                    <group def='left'>
+                        <shape>
+                            <appearance>
+                                <renderedtexture id="rtLeft" stereoMode="LEFT_EYE" update='ALWAYS' dimensions='640 800 4' repeatS='false' repeatT='false'>
+                                    <viewpoint use='vp' containerfield='viewpoint'></viewpoint>
+                                    <background use='bgnd' containerfield='background'></background>
+                                    <group use='theScene' containerfield="scene"></group>
+                                </renderedtexture>
+                                <composedshader>
+                                    <field name='tex' type='SFInt32' value='0'></field>
+                                    <shaderpart type='VERTEX'>
+                                        attribute vec3 position;
+                                        attribute vec2 texcoord;
+                                        
+                                        varying vec2 fragTexCoord;
+                                        
+                                        void main()
+                                        {
+                                        vec2 pos = sign(position.xy);
+                                        fragTexCoord = texcoord;
+                                        
+                                        gl_Position = vec4((pos.x - 1.0) / 2.0, pos.y, 0.0, 1.0);
+                                        }
+                                    </shaderpart>
+                                    <shaderpart def="frag" type='FRAGMENT'>
+                                        #ifdef GL_ES
+                                        precision highp float;
+                                        #endif
+                                        
+                                        uniform sampler2D tex;
+                                        varying vec2 fragTexCoord;
+                                        
+                                        void main()
+                                        {
+                                        gl_FragColor = texture2D(tex, fragTexCoord);
+                                        }
+                                    </shaderpart>
+                                </composedshader>
+                            </appearance>
+                            <Box size='4.0 4.0 4.0' solid="false"/>
+                        </shape>
+                    </group>
+                    <group def='right'>
+                        <shape>
+                            <appearance>
+                                <renderedtexture id="rtRight" stereoMode="RIGHT_EYE" update='ALWAYS' dimensions='640 800 4' repeatS='false' repeatT='false'>
+                                    <viewpoint use='vp' containerfield='viewpoint'></viewpoint>
+                                    <background use='bgnd' containerfield='background'></background>
+                                    <group use='theScene' containerfield="scene"></group>
+                                </renderedtexture>
+                                <composedshader>
+                                    <field name='tex' type='SFInt32' value='0'></field>
+                                    <shaderpart type='VERTEX'>
+                                        attribute vec3 position;
+                                        attribute vec2 texcoord;
+                                        
+                                        varying vec2 fragTexCoord;
+                                        
+                                        void main()
+                                        {
+                                        vec2 pos = sign(position.xy);
+                                        fragTexCoord = texcoord;
+                                        
+                                        gl_Position = vec4((pos.x + 1.0) / 2.0, pos.y, 0.0, 1.0);
+                                        }
+                                    </shaderpart>
+                                    <shaderpart use="frag" type='FRAGMENT'>
+                                    </shaderpart>
+                                </composedshader>
+                            </appearance>
+                            <Box size='4.0 4.0 4.0' solid="false"/>
+                        </shape>
+                    </group>
+                </group>
+            </scene>
+        </x3d>
+        
+        <button id="enterVR" onclick="enterVR();"></button>
+        
+        <script>
+            //http://examples.x3dom.org/Demos/ClassroomVR/classroom-rift-webvr-2.html
+            // OculusRift X3DOM example original source code:
+            var runtime = null;
+            var rtLeft, rtRight;
+            var lastW, lastH;
+            
+            var vrHMD = null, vrSensor = null;
+            
+            document.onload = function ()
+            {
+                runtime = document.getElementById('x3dElement').runtime;
+                rtLeft = document.getElementById('rtLeft');
+                rtRight = document.getElementById('rtRight');
+                
+                lastW = +runtime.getWidth();
+                lastH = +runtime.getHeight();
+                
+                var hw = Math.round(lastW / 2);
+                rtLeft.setAttribute('dimensions',  hw + ' ' + lastH + ' 4');
+                rtRight.setAttribute('dimensions', hw + ' ' + lastH + ' 4');
+                
+                var viewpoint = document.getElementById('vpp');
+                var initDone = false;
+                
+                runtime.enterFrame = function () {
+                    if (!vrSensor)
+                    return;
+                    var state = vrSensor.getState();
+                    
+                    if (!initDone) {
+                        console.log(state);
+                    }
+                    
+                    if (state.orientation !== null) {
+                        
+                        var h = state.orientation;
+                        var q = new x3dom.fields.Quaternion(h.x, h.y, h.z, h.w);
+                        
+                        var aa = q.toAxisAngle();
+                        //console.log(aa[0].x + " " + aa[0].y + " " + aa[0].z + " " + aa[1]);
+                        
+                        viewpoint.setAttribute("orientation", aa[0].x + " " + aa[0].y + " " + aa[0].z + " " + aa[1]);
+                    }
+                    
+                    if (state.position !== null) {
+                        var posi = viewpoint.requestFieldRef('position');
+                        posi.x = 4.17102 + state.position.x;
+                        posi.y = 1.00905 + state.position.y;
+                        posi.z = -6.97228 + state.position.z;
+                        viewpoint.releaseFieldRef('position');
+                    }
+                };
+                
+                runtime.exitFrame = function ()
+                {
+                    var w = +runtime.getWidth() * 2;
+                    var h = +runtime.getHeight() * 2;
+                    
+                    if (w != lastW || h != lastH)
+                    {
+                        var half = Math.round(w / 2);
+                        rtLeft.setAttribute('dimensions',  half + ' ' + h + ' 4');
+                        rtRight.setAttribute('dimensions', half + ' ' + h + ' 4');
+                        
+                        console.log(w + ", " + h);
+                        
+                        lastW = w;
+                        lastH = h;
+                    }
+                    
+                    if (!initDone) {
+                        initDone = true;
+                    }
+                    
+                    runtime.triggerRedraw();
+                };
+                
+                //Added by Vicomtech:
+                // add mouse handlers
+                //document.getElementById('x3dElement').addEventListener("mouseup", handleDragging_Up, true);
+                //document.getElementById('x3dElement').addEventListener("mousemove", handleDragging_Move, true);
+                //document.getElementById('x3dElement').addEventListener("mousedown", handleDragging_Down, true);
+                
+                // Setup Leap loop with frame callback function
+                if(typeof Leap !== "undefined") {
+                    (new Leap.Controller({enableGestures: false})).loop(function(frame) {
+                        if (frame.hands.length > 0) {
+                            document.getElementById('vol_X').setAttribute('rotation', '0,0,1,' + ( 1.5*frame.hands[0].roll() ));
+                            document.getElementById('vol_Y').setAttribute('rotation', '1,0,0,' + ( 1.5*frame.hands[0].pitch()));
+                            document.getElementById('vol_Z').setAttribute('rotation', '0,1,0,' + (-2.5*frame.hands[0].yaw()  ));
+                        }
+                    });
+                }
+                else {
+                    console.log("Leap device probably not found.");
+                }
+            };
+            
+            function enterVR()
+            {
+                if(vrHMD) {
+                    
+                    var canvas = document.getElementsByTagName("canvas")[0];
+                    
+                    if (canvas.webkitRequestFullscreen) {
+                        canvas.webkitRequestFullscreen({ vrDisplay: vrHMD });
+                        } else if (canvas.mozRequestFullScreen) {
+                        canvas.mozRequestFullScreen({ vrDisplay: vrHMD });
+                    }
+                    
+                }
+            }
+            
+            /* ----------------------------------------------------------- */
+            function vrDeviceCallback(vrdevs) {
+                var i;
+                
+                // First, find a HMD -- just use the first one we find
+                for (i = 0; i < vrdevs.length; ++i) {
+                    if (vrdevs[i] instanceof HMDVRDevice) {
+                        vrHMD = vrdevs[i];
+                        console.log(vrHMD);
+                        break;
+                    }
+                }
+                
+                if (!vrHMD)
+                return;
+                
+                // Then, find that HMD's position sensor
+                for (i = 0; i < vrdevs.length; ++i) {
+                    if (vrdevs[i] instanceof PositionSensorVRDevice &&
+                    vrdevs[i].hardwareUnitId == vrHMD.hardwareUnitId) {
+                        vrSensor = vrdevs[i];
+                        console.log(vrSensor);
+                        break;
+                    }
+                }
+                
+                if (!vrHMD || !vrSensor) {
+                    alert("Didn't find a HMD and sensor!");
+                    return;
+                }
+                
+                var leftEyeParams,
+                rightEyeParams,
+                leftFOV,
+                rightFOV,
+                leftTranslation,
+                rightTranslation;
+                
+                
+                if (vrHMD.getEyeParameters !== undefined) {
+                    leftEyeParams = vrHMD.getEyeParameters("left");
+                    rightEyeParams = vrHMD.getEyeParameters("right");
+                    
+                    console.log(leftEyeParams);
+                    console.log(rightEyeParams);
+                    
+                    leftFOV = leftEyeParams.currentFieldOfView;
+                    rightFOV = rightEyeParams.currentFieldOfView;
+                    
+                    console.log(leftFOV);
+                    console.log(rightFOV);
+                    
+                    leftTranslation = leftEyeParams.eyeTranslation;
+                    rightTranslation = rightEyeParams.eyeTranslation;
+                    
+                    console.log(leftTranslation);
+                    console.log(rightTranslation);
+                    } else {
+                    leftFOV = vrHMD.getCurrentEyeFieldOfView("left");
+                    rightFOV = vrHMD.getCurrentEyeFieldOfView("right");
+                    
+                    console.log(leftFOV);
+                    console.log(rightFOV);
+                    
+                    leftTranslation = vrHMD.getEyeTranslation("left");
+                    rightTranslation = vrHMD.getEyeTranslation("right");
+                    
+                    console.log(leftTranslation);
+                    console.log(rightTranslation);
+                }
+            }
+            
+            if (navigator.getVRDevices) {
+                navigator.getVRDevices().then(vrDeviceCallback);
+            }
+            
+            //http://blog.tojicode.com/2014/07/bringing-vr-to-chrome.html
+            //http://blog.bitops.com/blog/2014/08/20/updated-firefox-vr-builds/
+        </script>
+
+        <div style="display:none;" id="hiddenNodes">
+            <canvas id="tfTmpCanvas"></canvas>
+            <img id="hiddenBWTF" src="../../../DATA/TF/BWTF.png"/>
+
+            <canvas width='4096' height='4096' id='voxelCanvas'></canvas>
+            <canvas width='256' height='10' id='tfCanvas'></canvas>
+        </div>
+    </body>
+</html>
