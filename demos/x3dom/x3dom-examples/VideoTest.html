@@ -1,0 +1,84 @@
+<html>
+    <head>
+        <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
+        <meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge" />
+        
+        <title>X3DOM Video Textures</title>
+        
+        <script src="http://x3dom.org/release/x3dom-full.js" type="text/javascript"></script>
+        <script src="http://code.jquery.com/jquery-1.11.3.js" type="text/javascript"></script>
+        
+        <link rel="stylesheet" type="text/css" href="http://www.x3dom.org/download/dev/x3dom.css">
+        <script type="text/javascript">
+            document.addEventListener('DOMContentLoaded', function(){
+                var v = document.getElementById('v');
+                var canvas = document.getElementById('c');
+                var context = canvas.getContext('2d');
+                
+                var cw = Math.floor(canvas.clientWidth / 1);
+                var ch = Math.floor(canvas.clientHeight / 1);
+                canvas.width = cw;
+                canvas.height = ch;
+                
+                v.addEventListener('play', function(){
+                    draw(this,context,cw,ch);
+                },false);
+                
+            },false);
+            
+            function draw(v,c,w,h) {
+                if(v.paused || v.ended) return false;
+                c.drawImage(v,0,0,w,h);
+                setTimeout(draw,40,v,c,w,h);
+                document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
+            }
+        </script>
+    </head>
+    
+    <body>
+        
+        <X3D id='x3dElement' showStat='false' showLog='false' style='width:100%; height:100%; border:0; margin:0; padding:0;'>
+            <scene id='scene'>
+                <Environment frustumCulling="false"></Environment>
+                <navigationInfo headlight='false' type='"EXAMINE" "WALK"'></navigationInfo>
+                <viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="-7.14075 -8.34318 -10.49217" orientation="0.29038 0.88402 -0.36632 3.44506" znear="0.001" zfar="1000"></viewpoint>
+                <viewpoint def='AOPT_CAM' centerofrotation='0.0 0.0 0.0' position='0.0 0.0 0.0'></viewpoint>
+                <background DEF='bgnd' skyColor="0.2 0.2 0.2"></background>
+                <group id='root'>
+                    <group DEF='theScene'>
+                        <Transform id="volumeTransform">
+                            <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
+                                <!--ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='76' slicesOverX='9' slicesOverY='9' hideChildren="true">
+                                    <canvas id="c" style="width:500px; height:500px;"></canvas>
+                                </ImageTextureAtlas-->
+                                <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='51' slicesOverX='8' slicesOverY='8' hideChildren="true">
+                                    <canvas id="c" style="width:500px; height:500px;"></canvas>
+                                </ImageTextureAtlas>
+                                <BoundaryEnhancementVolumeStyle boundaryOpacity="1.0" retainedOpacity="1.0" opacityFactor="150" id="boundaryStyle">
+                                    <ImageTexture containerField='transferFunction' id="tfNode" url="data/aorta/tf.png"></ImageTexture>
+                                </BoundaryEnhancementVolumeStyle>
+                                <!--OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
+                                <ImageTexture containerField='transferFunction' id="tfNode" url="data/aorta/tf.png"></ImageTexture>
+                                </OpacityMapVolumeStyle-->
+                            </VolumeData>
+                        </Transform>
+                    </group>
+                </group>
+            </scene>
+        </x3d>
+        
+        <div style="display:none;" id="hiddenNodes">
+            <video id=v autoplay loop style="width:500px; height:500px;">
+                <!--source src="../../../DATA/MAGIX/MAGIX_1FPS_1024.mp4" type="video/mp4"></source-->
+            <!--source src="../../../DATA/MAGIX/MAGIX_1FPS_2048.mp4" type="video/mp4"></source-->
+                <!--source src="../../../DATA/MAGIX/MAGIX_1FPS_4096.mp4" type="video/mp4"></source-->
+                <!--source src="../../../DATA/AGECANONIX/AGECANONIX_1FPS_2048.mp4" type="video/mp4"></source-->
+                <!--source src="../../../DATA/AGECANONIX/AGECANONIX_3FPS_2048.mp4" type="video/mp4"></source-->
+            <source src="../../../DATA/AGECANONIX/AGECANONIX_5FPS_2048.mp4" type="video/mp4"></source>
+                <!--source src="../../../DATA/AGECANONIX/AGECANONIX_10FPS_2048.mp4" type="video/mp4"></source-->
+                
+            </video>
+        </div>
+        
+    </body>
+</html>

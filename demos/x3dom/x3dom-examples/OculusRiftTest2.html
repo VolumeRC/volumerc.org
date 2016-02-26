@@ -7,7 +7,6 @@
         
         <script src="http://x3dom.org/release/x3dom-full.js" type="text/javascript"></script>
         <script src="http://code.jquery.com/jquery-1.11.3.js" type="text/javascript"></script>
-        <script src="https://js.leapmotion.com/leap-0.6.4.min.js"></script>
         
         <link rel="stylesheet" type="text/css" href="http://www.x3dom.org/download/dev/x3dom.css">
         <style>
@@ -48,7 +47,7 @@
         
         <script type="text/javascript">
             // Contains cornerstone valid links to DICOM images
-            var imageIds = [/**/
+            var imageIds = [
             'wadouri:../../../DATA/INCISIX/IM-0001-0001.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0002.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0003.dcm',
@@ -148,7 +147,7 @@
             'wadouri:../../../DATA/INCISIX/IM-0001-0097.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0098.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0099.dcm',
-            'wadouri:../../../DATA/INCISIX/IM-0001-0100.dcm',/**/
+            'wadouri:../../../DATA/INCISIX/IM-0001-0100.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0101.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0102.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0103.dcm',
@@ -164,7 +163,7 @@
             'wadouri:../../../DATA/INCISIX/IM-0001-0113.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0114.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0115.dcm',
-            'wadouri:../../../DATA/INCISIX/IM-0001-0116.dcm'/**/,
+            'wadouri:../../../DATA/INCISIX/IM-0001-0116.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0117.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0118.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0119.dcm',
@@ -214,7 +213,7 @@
             'wadouri:../../../DATA/INCISIX/IM-0001-0163.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0164.dcm',
             'wadouri:../../../DATA/INCISIX/IM-0001-0165.dcm',
-            'wadouri:../../../DATA/INCISIX/IM-0001-0166.dcm'/**/
+            'wadouri:../../../DATA/INCISIX/IM-0001-0166.dcm'
             ];
             
             var imageWindowCenter = 0, imageWindowWidth = 0;
@@ -250,18 +249,15 @@
             }
             
             // Forces the atlas texture to be redrawn in X3DOM
-            var data_spacing = [1.0, 1.0, 1.0];
-            var data_origin = [0.0, 0.0, 0.0];
+            var spacing = [1.0, 1.0, 1.0];
             function doRefresh() {
                 document.getElementById("tfNode").setAttribute('url',document.getElementById("tfCanvas").toDataURL());
                 document.getElementById("voxelAtlas").setAttribute('url',document.getElementById("voxelCanvas").toDataURL());
                 document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
-                //Normalize
-                data_spacing = data_spacing.map(function (x) {
-                    return x / Math.max.apply(null, data_spacing);
+                spacing = spacing.map(function (x) {
+                    return x / Math.max.apply(null, spacing);
                 });
-                document.getElementById("volumeTransform").setAttribute("scale", data_spacing[0] + "," + data_spacing[1] + "," + data_spacing[2]);
-                //document.getElementById("volumeTransform").setAttribute("translation", data_origin[0] + "," + data_origin[1] + "," + data_origin[2]);
+                document.getElementById("volumeTransform").setAttribute("scale", spacing[0] + "," + spacing[1] + "," + spacing[2]);
             }
             
             // Forces the atlas texture to be redrawn every 300ms
@@ -272,6 +268,7 @@
             }
             
             // Initialize the atlas creation
+            var nSliceLoaded = 0;
             function create_atlas() {
                 document.getElementById("tfCanvas").getContext("2d").drawImage(document.getElementById("hiddenBWTF"), 0, 0, 256, 10);
                 
@@ -282,10 +279,8 @@
                 var slicesOverX = Math.ceil(Math.sqrt(imageIds.length));
                 var slicesOverY = Math.ceil(Math.sqrt(imageIds.length));
                 var voxelAtlas = document.getElementById("voxelAtlas");
-                voxelAtlas.setAttribute("slicesOverX",slicesOverX);
-                voxelAtlas.setAttribute("slicesOverY",slicesOverY);
-                voxelAtlas.setAttribute("numberOfSlices",imageIds.length);
-                voxelAtlas._x3domNode.invalidateGLObject();
+                //voxelAtlas.setAttribute("slicesOverX",slicesOverX);
+                //voxelAtlas.setAttribute("slicesOverY",slicesOverY);
                 
                 var newSliceWidth = voxelCanvas.width / slicesOverX, newSliceHeight = voxelCanvas.height / slicesOverY;
                 
@@ -299,15 +294,12 @@
                         voxelContext.drawImage(tmpCanvas, 0, 0, image.width, image.height, posX * newSliceWidth, posY * newSliceHeight, newSliceWidth, newSliceHeight);
                         document.getElementById("hiddenNodes").removeChild(tmpCanvas);
                         
-                        if(nSlice == 0) {
-                            data_spacing[0] = 1.0 / image.columnPixelSpacing;
-                            data_spacing[1] = 1.0 / image.rowPixelSpacing;
-                            data_spacing[2] = 1.0 / Number(image.data.string('x00180050'));
-                            var origin = image.data.string('x00200032').split('\\');
-                            data_origin[0] = Number(origin[0]);
-                            data_origin[1] = Number(origin[1]);
-                            data_origin[2] = Number(origin[2]);
-                        }
+                        nSliceLoaded += 1;
+                        var new_width = (nSliceLoaded * 100) / imageIds.length;
+                        var percentage_new_width = new_width.toFixed(2) + "%";
+                        spacing[0] = 1.0 / image.columnPixelSpacing;
+                        spacing[1] = 1.0 / image.rowPixelSpacing;
+                        spacing[2] = 1.0 / Number(image.data.string('x00180050'));
                         
                         launchRefresh();
                     });
@@ -315,41 +307,8 @@
                 launchRefresh();
             }
             
-            // mouse interaction
-            var pickX = 0;
-            var pickY = 0;
-            var inc = 0;
-            var pickState=false;
-           
-            function handleDragging_Up(event) {
-                pickState = false;           
-                document.getElementById("navInfo").setAttribute("type", '"EXAMINE" "ANY"');
-            }       
-            function handleDragging_Down(event) {
-                pickState = true;
-                pickX = event.layerX;
-                pickY = event.layerY;
-                document.getElementById("navInfo").setAttribute("type", '"NONE"');
-            }
-            function handleDragging_Move(event) {
-                if (!pickState) return;
-                               
-                var deltaX = -(pickX - event.layerX);
-                var deltaY = -(pickY - event.layerY);
-               
-                pickX = event.layerX;
-                pickY = event.layerY;
-               
-                var nodeX = document.getElementById('vol_X');   
-                var angX = parseFloat(nodeX.getAttribute('rotation').split(',')[3]);
-                nodeX.setAttribute('rotation', '0,1,0,' + (angX + (3.14159265*deltaX)/180.0));               
-
-                var nodeY = document.getElementById('vol_Y');   
-                var angY = parseFloat(nodeY.getAttribute('rotation').split(',')[3]);
-                nodeY.setAttribute('rotation', '0,0,1,' + (angY + (3.14159265*deltaY)/180.0));               
-            }
-
         </script>
+        
     </head>
     
     <body style="width:100%; height:100%; border:0; margin:0; padding:0;">
@@ -357,61 +316,48 @@
         <X3D id='x3dElement' showStat='false' showLog='false' style='width:100%; height:100%; border:0; margin:0; padding:0;'>
             <scene id='scene'>
                 <Environment frustumCulling="false"></Environment>
-                <navigationInfo id="navInfo" headlight='true' type='"EXAMINE" "WALK"'></navigationInfo>
-            <!--viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="0.00000 0.00000 6.89671" orientation="0.00000 0.00000 0.00000 0.00000" znear="0.001" zfar="1000.0"></viewpoint-->
-                <viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="-0.02865 0.03152 1.62389" orientation="-0.73975 -0.67265 -0.01794 0.02623" znear="0.001" zfar="1000.0"></viewpoint>
-                
+                <navigationInfo headlight='false' type='"EXAMINE" "WALK"'></navigationInfo>
+            <!--viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='3.4625 1.73998 -5.55' orientation='0 1 0 2.99229' position='4.17102 1.00905 -6.97228' znear="0.001" zfar="300"></viewpoint-->
+                <viewpoint id='vpp' def='vp' description='ViewPoint 1' centerofrotation='0.0 0.0 0.0' position="-0.63480 -1.68310 -3.84114" orientation="0.21668 0.95326 -0.21057 3.21163" znear="0.001" zfar="1000"></viewpoint>
+            <!--viewpoint def='AOPT_CAM' centerofrotation='3.4625 1.73998 -5.55' position='3.4625 1.73998 8.69028'></viewpoint-->
+                <viewpoint def='AOPT_CAM' centerofrotation='0.0 0.0 0.0' position='0.0 0.0 0.0'></viewpoint>
                 <background DEF='bgnd' skyColor="0.2 0.2 0.2"></background>
                 <group id='root' render='false'>
                     <group DEF='theScene'>
-                    <Transform translation="0 0 0" rotation="0.0 0.0 0.0 0.0" id="faceCamera">
-                    <Transform DEF="volX" id="vol_X">
-                    <Transform DEF="volY" id="vol_Y">
-                    <Transform DEF="volY" id="vol_Z">
-                    <Transform translation="0 0 0" scale="1 1 1" DEF="theSceneTF" id="theSceneTansform">
-                        <Transform id="isoTransform1" rotation="1.0 0.0 0.0 0.00">
-                        <Transform id="isoTransform2" rotation="0.0 1.0 0.0 3.14">
-                        <Transform id="isoTransform3" rotation="0.0 0.0 1.0 3.14">
-                        <Transform id="isoTransform4" translation="-0.5 -0.5 -0.225" scale="0.005375 0.005375 0.00565">
-                        <Inline DEF="Bones" url="../../../DATA/INCISIX/SegIncisix.x3d" />
-                        </Transform>
-                        </Transform>
-                        </Transform>
-                        </Transform>
-                        <Transform translation=' 0.501  0.501  0.501'><Shape DEF="BoxCorner0"><appearance><material diffuseColor='1.0,1.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
-                        <Transform translation=' 0.501  0.501 -0.501'><Shape DEF="BoxCorner1"><appearance><material diffuseColor='1.0,1.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
-                        <Transform translation=' 0.501 -0.501  0.501'><Shape DEF="BoxCorner2"><appearance><material diffuseColor='1.0,0.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
-                        <Transform translation=' 0.501 -0.501 -0.501'><Shape DEF="BoxCorner3"><appearance><material diffuseColor='1.0,0.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
-                        <Transform translation='-0.501  0.501  0.501'><Shape DEF="BoxCorner4"><appearance><material diffuseColor='0.0,1.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
-                        <Transform translation='-0.501  0.501 -0.501'><Shape DEF="BoxCorner5"><appearance><material diffuseColor='0.0,1.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
-                        <Transform translation='-0.501 -0.501  0.501'><Shape DEF="BoxCorner6"><appearance><material diffuseColor='0.0,0.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
-                        <Transform translation='-0.501 -0.501 -0.501'><Shape DEF="BoxCorner7"><appearance><material diffuseColor='0.0,0.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
-                        <Transform translation=' 0.501  0.000  0.501' rotation="0.0 0.0 1.0 0.0"><Shape DEF="BoxBorder"><Cylinder radius='0.01' height="1.0"/></Shape></Transform>
-                        <Transform translation=' 0.501  0.000 -0.501' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation='-0.501  0.000  0.501' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation='-0.501  0.000 -0.501' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.000  0.501  0.501' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.000  0.501 -0.501' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.000 -0.501  0.501' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.000 -0.501 -0.501' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.501  0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation=' 0.501 -0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation='-0.501  0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                        <Transform translation='-0.501 -0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                    <!--Shape><Sphere radius='2.0'/></Shape-->
+                    <!--Shape><Box size='4.0 4.0 4.0'/></Shape-->
+                    <!--Shape><Cylinder  radius='2.0' height="10.0"/><Appearance><Material diffuseColor="1.0 0.0 0.0"/></Appearance></Shape-->
+                    
+                        <Transform translation=' 2.1  2.1  2.1'><Shape DEF="BoxCorner"><Sphere radius='0.1'/></Shape></Transform>
+                        <Transform translation=' 2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation=' 2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation=' 2.1 -2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation='-2.1  2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation='-2.1  2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation='-2.1 -2.1  2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation='-2.1 -2.1 -2.1'><Shape USE="BoxCorner"/></Transform>
+                        <Transform translation=' 2.1  0.0  2.1' rotation="0.0 0.0 1.0 0.0"><Shape DEF="BoxBorder"><Cylinder radius='0.01' height="4.0"/></Shape></Transform>
+                        <Transform translation=' 2.1  0.0 -2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-2.1  0.0  2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-2.1  0.0 -2.1' rotation="0.0 0.0 1.0 0.0"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.0  2.1  2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.0  2.1 -2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.0 -2.1  2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 0.0 -2.1 -2.1' rotation="0.0 0.0 1.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 2.1  2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation=' 2.1 -2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-2.1  2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
+                        <Transform translation='-2.1 -2.1  0.0' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
                         <Transform id="volumeTransform">
-                            <VolumeData id='volume' dimensions='1.0 1.0 1.0'>
-                            <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='169' slicesOverX='13' slicesOverY='13' hideChildren="true" url="data/aorta/aorta1024.png"></ImageTextureAtlas>
+                            <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
+                                <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='207' slicesOverX='10' slicesOverY='10' hideChildren="true" url="data/aorta/aorta1024.png">
+                                </ImageTextureAtlas>
                                 <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
                                     <ImageTexture containerField='transferFunction' id="tfNode" url="data/aorta/tf.png">
                                     </ImageTexture>
                                 </OpacityMapVolumeStyle>
                             </VolumeData>
                         </Transform>
-                    </Transform>
-                    </Transform>
-                    </Transform>
-                    </Transform>
-                    </Transform>
                     </group>
                 </group>
                 <group render="true">
@@ -429,6 +375,7 @@
                                         attribute vec3 position;
                                         attribute vec2 texcoord;
                                         
+                                        uniform mat4 modelViewProjectionMatrix;
                                         varying vec2 fragTexCoord;
                                         
                                         void main()
@@ -454,7 +401,7 @@
                                     </shaderpart>
                                 </composedshader>
                             </appearance>
-                            <Box size='4.0 4.0 4.0' solid="false"/>
+                            
                         </shape>
                     </group>
                     <group def='right'>
@@ -471,6 +418,7 @@
                                         attribute vec3 position;
                                         attribute vec2 texcoord;
                                         
+                                        uniform mat4 modelViewProjectionMatrix;
                                         varying vec2 fragTexCoord;
                                         
                                         void main()
@@ -485,7 +433,7 @@
                                     </shaderpart>
                                 </composedshader>
                             </appearance>
-                            <Box size='4.0 4.0 4.0' solid="false"/>
+                            
                         </shape>
                     </group>
                 </group>
@@ -518,7 +466,7 @@
                 
                 var viewpoint = document.getElementById('vpp');
                 var initDone = false;
-                var aa_init = null;
+                
                 runtime.enterFrame = function () {
                     if (!vrSensor)
                     return;
@@ -534,27 +482,20 @@
                         var q = new x3dom.fields.Quaternion(h.x, h.y, h.z, h.w);
                         
                         var aa = q.toAxisAngle();
-                        if(aa_init) {
-                            var aa_diff = aa.subtract(aa_init);
-                            //console.log(aa[0].x + " " + aa[0].y + " " + aa[0].z + " " + aa[1]);
-                            
-                            var orii = viewpoint.requestFieldRef('orientation');
-                            orii['x'] += aa_diff[0].x;
-                            orii['y'] += aa_diff[0].y;
-                            orii['z'] += aa_diff[0].z;
-                            orii['w'] += aa_diff[1];
-                            
-                            viewpoint.setAttribute("orientation", orii['x'] + " " + orii['y'] + " " + orii['z'] + " " + orii['w']);
-                        }
-                        aa_init = aa;
+                        //console.log(aa[0].x + " " + aa[0].y + " " + aa[0].z + " " + aa[1]);
+                        
+                        viewpoint.setAttribute("orientation", aa[0].x + " " + aa[0].y + " " + aa[0].z + " " + aa[1]);
+                        
                     }
                     
                     if (state.position !== null) {
+                        
                         var posi = viewpoint.requestFieldRef('position');
                         posi.x = 4.17102 + state.position.x;
                         posi.y = 1.00905 + state.position.y;
                         posi.z = -6.97228 + state.position.z;
                         viewpoint.releaseFieldRef('position');
+                        
                     }
                 };
                 
@@ -583,25 +524,6 @@
                 };
                 
                 //Added by Vicomtech:
-                // add mouse handlers
-                //document.getElementById('x3dElement').addEventListener("mouseup", handleDragging_Up, true);
-                //document.getElementById('x3dElement').addEventListener("mousemove", handleDragging_Move, true);
-                //document.getElementById('x3dElement').addEventListener("mousedown", handleDragging_Down, true);
-                
-                // Setup Leap loop with frame callback function
-                if(typeof Leap !== "undefined") {
-                    (new Leap.Controller({enableGestures: false})).loop(function(frame) {
-                        if (frame.hands.length > 0) {
-                            document.getElementById('vol_X').setAttribute('rotation', '0,0,1,' + ( 1.5*frame.hands[0].roll() ));
-                            document.getElementById('vol_Y').setAttribute('rotation', '1,0,0,' + ( 1.5*frame.hands[0].pitch()));
-                            document.getElementById('vol_Z').setAttribute('rotation', '0,1,0,' + (-2.5*frame.hands[0].yaw()  ));
-                        }
-                    });
-                }
-                else {
-                    console.log("Leap device probably not found.");
-                }
-
                 create_atlas();
                 document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
             };
@@ -708,5 +630,6 @@
             <canvas width='4096' height='4096' id='voxelCanvas'></canvas>
             <canvas width='256' height='10' id='tfCanvas'></canvas>
         </div>
+
     </body>
 </html>
