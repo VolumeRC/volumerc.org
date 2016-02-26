@@ -66,7 +66,6 @@
                     <Transform DEF="volX" id="vol_X">
                     <Transform DEF="volY" id="vol_Y">
                     <Transform DEF="volY" id="vol_Z">
-                    <Transform translation="0 0 0" scale="1 1 1" DEF="theSceneTF" id="theSceneTansform">
                         <Transform id="volumeTransform">
                         <Transform translation=' 0.501  0.501  0.501'><Shape DEF="BoxCorner0"><appearance><material diffuseColor='1.0,1.0,1.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
                         <Transform translation=' 0.501  0.501 -0.501'><Shape DEF="BoxCorner1"><appearance><material diffuseColor='1.0,1.0,0.0'></material></appearance><Sphere radius='0.05'/></Shape></Transform>
@@ -88,7 +87,8 @@
                         <Transform translation=' 0.501 -0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
                         <Transform translation='-0.501  0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
                         <Transform translation='-0.501 -0.501  0.000' rotation="1.0 0.0 0.0 1.5708"><Shape USE="BoxBorder"/></Transform>
-                            <SegmentedVolumeData id='volume' dimensions='1.0 1.0 1.0' numberOfMaxSegments="2.0">
+                        <Transform translation="0 0 0" scale="1.0 1.0 0.8" DEF="theSceneTF" id="theSceneTansform">
+                            <SegmentedVolumeData id='volume' dimensions='1.0 1.0 0.72' numberOfMaxSegments="2.0">
                             <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='166' slicesOverX='13' slicesOverY='13' hideChildren="true" url="../../../DATA/INCISIX/Dentascan__0.75__H60s_-_3_2048.png"></ImageTextureAtlas>
                             <ImageTextureAtlas containerField='segmentIdentifiers' id="voxelSegmentsAtlas" numberOfSlices='166' slicesOverX='13' slicesOverY='13' hideChildren="true" url="../../../DATA/INCISIX/Bone_All_2048.png"></ImageTextureAtlas>
                             <OpacityMapVolumeStyle opacityFactor="12.0" lightFactor="1.2"></OpacityMapVolumeStyle>
