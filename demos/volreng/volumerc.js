@@ -1,24 +1,3 @@
-// initWebGL
-//
-// Initialize WebGL, returning the GL context or null if
-// WebGL isn't available or could not be initialized.
-//
-function initWebGL(canvas) {
-  gl = null;
-  
-  try {
-    gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
-  }
-  catch(e) {
-  }
-  
-  // If there is no GL context
-  if (!gl) {
-    alert("Unable to initialize WebGL. Your browser may not support it.");
-  }
-  return gl;
-}
-
 function load_resource(url) {
 	var req = new XMLHttpRequest();
 	req.open('GET', url, false);
@@ -328,7 +307,7 @@ var tick;
 function volumerc_main()
 {
 	var canvas = document.getElementById("canvas_win");
-	var gl = initWebGL(canvas);//, {premultipliedAlpha:true,alpha:true});
+	var gl = canvas.getContext("experimental-webgl");//, {premultipliedAlpha:true,alpha:true});
 
 	gl.shaderProgram_BackCoord = initShaders(gl,'./simple.vert?x'+Math.random(),'./simple.frag?x'+Math.random());
 	gl.shaderProgram_RayCast = initShaders(gl,'./raycast.vert?d'+Math.random(),'./raycast.frag?x='+Math.random());

@@ -112,7 +112,7 @@ text-align: center;
   function initGL(canvas)
   {
     try {
-      gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});;
+      gl = canvas.getContext("experimental-webgl");
       gl.viewportWidth = canvas.width;
       gl.viewportHeight = canvas.height;
     } catch(e) {
