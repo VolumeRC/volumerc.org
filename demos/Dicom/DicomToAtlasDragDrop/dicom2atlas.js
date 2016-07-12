@@ -50,9 +50,9 @@ function fillImageDataWithCornerstoneImage(image) {
 // Refreshes X3DOM to take into account new atlas contents and dimensions
 function doRefresh() {
     document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
-    CURRENT_IMAGE_SPACING = CURRENT_IMAGE_SPACING.map(function (x) {
-        return x / Math.max.apply(null, CURRENT_IMAGE_SPACING);
-    });
+    // Normalize spacing to fit in a 1.0^3 box
+    var maxCurrentImageSpacing = Math.max.apply(null, CURRENT_IMAGE_SPACING);
+    CURRENT_IMAGE_SPACING = CURRENT_IMAGE_SPACING.map(function (x) { return x / maxCurrentImageSpacing; });
     document.getElementById("volumeTransform").setAttribute("scale", CURRENT_IMAGE_SPACING[0] + "," + CURRENT_IMAGE_SPACING[1] + "," + CURRENT_IMAGE_SPACING[2]);
 }
 
@@ -117,10 +117,10 @@ function filesToAtlas(files, atlas2DContext, atlas_width, atlas_height, invisibl
             //invisibleDiv.removeChild(tmpCanvas);
             cornerstone.imageCache.removeImagePromise(image.imageId);// Save memory by removing image from cache
 
-            // Adjusts spacing for volume's 3D aspect ratio
-            CURRENT_IMAGE_SPACING[0] = 1.0 / image.columnPixelSpacing;
-            CURRENT_IMAGE_SPACING[1] = 1.0 / image.rowPixelSpacing;
-            CURRENT_IMAGE_SPACING[2] = 1.0 / Number(image.data.string('x00180050'));
+            // Adjusts spacing for volume's 3D aspect ratio (according to current image only)
+            CURRENT_IMAGE_SPACING[0] = image.columns * image.columnPixelSpacing;
+            CURRENT_IMAGE_SPACING[1] = image.rows * image.rowPixelSpacing;
+            CURRENT_IMAGE_SPACING[2] = files.length * Number(image.data.string('x00180050'));
 
             // Trigger delayed refresh
             launchRefresh();
