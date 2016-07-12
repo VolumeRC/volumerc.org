@@ -43,7 +43,7 @@ function init()
 	var canvas = document.getElementById("canvas_win");
 	var gl;
 	try {
-		gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
+		gl = canvas.getContext("experimental-webgl");
 	} catch (e) {}
 	if (!gl) {alert("Could not initialise WebGL, sorry :-(");}
 

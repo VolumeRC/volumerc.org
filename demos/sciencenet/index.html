@@ -125,7 +125,7 @@ function handleMouseMove(event){if (mouseDown) {var newX = event.clientX;var new
 
 var drawVolume;var volume;
 
-function init(){var canvas = document.getElementById("canvas_win");var gl;try {gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});} catch (e) {}if (!gl) {alert("Could not initialise WebGL, sorry :-(");}
+function init(){var canvas = document.getElementById("canvas_win");var gl;try {gl = canvas.getContext("experimental-webgl");} catch (e) {}if (!gl) {alert("Could not initialise WebGL, sorry :-(");}
 
 var data = new Array();
 data[0] = "./ResultJPGs/01_01_z000.jpg";
