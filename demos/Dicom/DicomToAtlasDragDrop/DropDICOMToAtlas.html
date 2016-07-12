@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drag&Drop your DICOM files here to create a Volume Rendering X3DOM compatible atlas.</title>
+    <script type="text/javascript" src="jquery-3.0.0.js"></script>
+    <script type="text/javascript" src="jquery-migrate-1.4.1.min.js"></script>
+    <script type="text/javascript" src="dicomParser.js"></script>
+    <script type="text/javascript" src="cornerstone.js"></script>
+    <script type="text/javascript" src="cornerstoneWADOImageLoader.js"></script>
+    <script type="text/javascript" src="dicom2atlas.js"></script>
+
+        <script type="text/javascript">
+        // Prevents the drop target element from triggering default action on dropped files (download)
+        function divallowdrop(event) {
+            event.preventDefault();
+            event.target.style.background = "#FF0000";
+        }
+
+        // Handles multiple DICOM files drop on element and converts them into an atlas
+        function divondrop(event) {
+            // Also needed to prevent the drop target element from triggering default action on dropped files (download)
+            event.stopPropagation();
+            event.preventDefault();
+
+            event.target.style.background = "#000000";
+            event.target.style.color = "#00FF00";
+            event.target.innerHTML = "Something was dropped.";
+
+            // Resulting canvas containing atlas
+            var voxelCanvas = document.getElementById("voxelCanvas");
+            var voxelContext = voxelCanvas.getContext("2d");
+
+            //Now process the dropped files with dicomParser
+            filesToAtlas(event.dataTransfer.files, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"));
+            event.target.innerHTML = "" + event.dataTransfer.files.length + " files processed. Drop something else here.";
+
+            event.target.style.background = "#000";
+            event.target.style.color = "aqua";
+        }
+
+        function bodyonload() {
+            // Set handlers for required drop events
+            document.getElementById("DropArea").addEventListener("drop", divondrop);
+            document.getElementById("DropArea").addEventListener("dragover", divallowdrop);
+        }
+        window.addEventListener("load", bodyonload, false);
+    </script>
+</head>
+<body>
+
+<!-- This DIV is the area where to drop the DICOM files -->
+<div id="DropArea" style="background:#000;color:aqua;height:80px;width:80px; font-size:12px;">Drop something here.</div>
+
+<!-- This canvas is actually intended to be contained in a X3DOM node -->
+<canvas width='4096' height='4096' id='voxelCanvas'></canvas>
+
+<!-- The following div is made invisible in order to hide temporary images needed for computation -->
+<div id="InvisibleDiv" style="background:#888888;display:none;width:50%;height:50%">
+    <canvas width='256' height='10' id="tfTmpCanvas"></canvas>
+    <canvas width='31' height='32' id="tmpCanvas"></canvas>
+</div>
+</body>
+</html>

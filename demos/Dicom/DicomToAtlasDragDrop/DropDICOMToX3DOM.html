@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drag&Drop your DICOM files here to create a Volume Rendering X3DOM compatible atlas.</title>
+    <script type="text/javascript" src="jquery-3.0.0.js"></script>
+    <script type="text/javascript" src="jquery-migrate-1.4.1.min.js"></script>
+    <script type="text/javascript" src="dicomParser.js"></script>
+    <script type="text/javascript" src="cornerstone.js"></script>
+    <script type="text/javascript" src="cornerstoneWADOImageLoader.js"></script>
+    <script type="text/javascript" src="x3dom-full.js" ></script>
+    <script type="text/javascript" src="dicom2atlas.js"></script>
+
+        <script type="text/javascript">
+        // Prevents the drop target element from triggering default action on dropped files (download)
+        function divallowdrop(event) {
+            event.preventDefault();
+            event.target.style.background = "#FF0000";
+        }
+
+        // Handles multiple DICOM files drop on element and converts them into an atlas
+        function divondrop(event) {
+            // Also needed to prevent the drop target element from triggering default action on dropped files (download)
+            event.stopPropagation();
+            event.preventDefault();
+
+            event.target.style.background = "#000000";
+            event.target.style.color = "#00FF00";
+            event.target.innerHTML = "Something was dropped.";
+
+            // Get the number of slices info, to update the ImageTextureAtlass
+            var numberOfSlices = event.dataTransfer.files.length;
+            var slicesOverX = Math.ceil(Math.sqrt(numberOfSlices)),
+                slicesOverY = slicesOverX;
+
+            // Reset the X3D scene declaration, and reload the scene;
+            resetScene(numberOfSlices,slicesOverX,slicesOverY);
+
+            // Resulting canvas containing atlas
+            var voxelCanvas = document.getElementById("voxelCanvas");
+            var voxelContext = voxelCanvas.getContext("2d");
+
+            //Now process the dropped files with dicomParser
+            filesToAtlas(event.dataTransfer.files, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"));
+            event.target.innerHTML = "" + event.dataTransfer.files.length + " files processed. Drop something else here.";
+            event.target.style.background = "#000";
+            event.target.style.color = "aqua";
+        }
+        
+        /*
+        * Reset all the scene declaration and reload
+        */
+        function resetScene(numberOfSlices, slicesOverX, slicesOverY)
+        {
+            var x3d = document.getElementsByTagName("x3d")[0];
+            x3d.parentNode.removeChild(x3d);
+            var div = document.getElementById("placeholder");
+            div.innerHTML =
+            "<x3d id='X3DNode' xmlns='http://www.web3d.org/specifications/x3d-namespace' showStat='false' showLog='false' width='1024px' height='640px'>"+
+            "    <Scene id='X3DScene'>"+
+            "        <Background skyColor='0.3 0.3 0.3'></Background>"+
+            "        <Viewpoint description='Default' zNear='0.0001' zFar='100'></Viewpoint>"+
+            "        <Transform id='volumeTransform'>"+
+            "        <VolumeData id='volume' dimensions='4.0 4.0 4.0'>"+
+            "            <ImageTextureAtlas containerField='voxels' id='voxelAtlas' numberOfSlices='"+numberOfSlices+"' slicesOverX='"+slicesOverX+"' slicesOverY='"+slicesOverY+"' hideChildren='true'>"+
+            "                <canvas width='4096' height='4096' id='voxelCanvas'></canvas>"+
+            "            </ImageTextureAtlas>"+
+            "            <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>"+
+            "                <ImageTexture containerField='transferFunction'>"+
+            "                    <canvas width='256' height='10' id='tfCanvas'></canvas>"+
+            "                </ImageTexture>"+
+            "            </OpacityMapVolumeStyle>"+
+            "        </VolumeData>"+
+            "        </Transform>"+
+            "    </Scene>"+
+            "</x3d>";
+            // Force reload of scene
+            x3dom.reload();
+        }
+
+        /*
+        * Add a new transform node, NOTE: Not working!
+        */
+        function resetTransform(numberOfSlices, slicesOverX, slicesOverY)
+        {
+            var transformNode = document.getElementById("volumeTransform");
+            transformNode.parentNode.removeChild(transformNode);
+
+            var t = document.createElement('Transform');
+            t.setAttribute('id', 'volumeTransform');
+            t.innerHTML =
+            "        <VolumeData id='volume' dimensions='4.0 4.0 4.0'>"+
+            "            <ImageTextureAtlas containerField='voxels' id='voxelAtlas' numberOfSlices='"+numberOfSlices+"' slicesOverX='"+slicesOverX+"' slicesOverY='"+slicesOverY+"' hideChildren='true'>"+
+            "                <canvas width='4096' height='4096' id='voxelCanvas'></canvas>"+
+            "            </ImageTextureAtlas>"+
+            "            <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>"+
+            "                <ImageTexture containerField='transferFunction'>"+
+            "                    <canvas width='256' height='10' id='tfCanvas'></canvas>"+
+            "                </ImageTexture>"+
+            "            </OpacityMapVolumeStyle>"+
+            "        </VolumeData>";
+            var scene = document.getElementsByTagName("Scene")[0];
+            scene.appendChild(t);
+
+            var voxelAtlas = document.getElementById("voxelAtlas");
+            voxelAtlas._x3domNode.invalidateGLObject();
+            // Reload the scene graph
+            x3dom.reload();
+        }
+
+        /*
+        * Update only the VolumeData declaration, NOTE: Not working!
+        */
+        function resetVolume(numberOfSlices, slicesOverX, slicesOverY)
+        {
+            var originalVolumeNode = document.getElementById("volume");
+            originalVolumeNode.parentNode.removeChild(originalVolumeNode);
+
+            var t = document.createElement('VolumeData');
+            t.setAttribute('id', 'volume');
+            t.setAttribute('dimensions', '4.0 4.0 4.0');
+            t.innerHTML =
+            "            <ImageTextureAtlas containerField='voxels' id='voxelAtlas' numberOfSlices='"+numberOfSlices+"' slicesOverX='"+slicesOverX+"' slicesOverY='"+slicesOverY+"' hideChildren='true'>"+
+            "                <canvas width='4096' height='4096' id='voxelCanvas'></canvas>"+
+            "            </ImageTextureAtlas>"+
+            "            <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>"+
+            "                <ImageTexture containerField='transferFunction'>"+
+            "                    <canvas width='256' height='10' id='tfCanvas'></canvas>"+
+            "                </ImageTexture>"+
+            "            </OpacityMapVolumeStyle>";
+            document.getElementById("volumeTransform").appendChild(t);
+            //voxelAtlas._x3domNode.invalidateGLObject();
+            x3dom.reload();
+        }
+
+        function bodyonload() {
+            // Set handlers for required drop events
+            document.getElementById("DropArea").addEventListener("drop", divondrop);
+            document.getElementById("DropArea").addEventListener("dragover", divallowdrop);
+
+            readTF("TeethJawsSkin_OSIRIX_ONLY.tf");
+            document.getElementById("tfCanvas").getContext("2d").drawImage(document.getElementById("hiddenBWTF"),0,0,256,10);
+        }
+        window.addEventListener("load", bodyonload, false);
+    </script>
+</head>
+<body>
+
+<!-- This DIV is the area where to drop the DICOM files -->
+<div id="DropArea" style="background:#000;color:aqua;height:80px;width:80px; font-size:12px;">Drop something here.</div>
+
+<div id="placeholder">
+    <!-- X3DOM node -->
+    <x3d id="X3DNode" xmlns='http://www.web3d.org/specifications/x3d-namespace' showStat='false' showLog='false' width='1024px' height='640px'>
+        <Scene id="X3DScene">
+            <Background skyColor='0.3 0.3 0.3'></Background>
+            <Viewpoint description='Default' zNear='0.0001' zFar='100'></Viewpoint>
+            <Transform id="volumeTransform">
+                <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
+                    <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='1' slicesOverX='1' slicesOverY='1' hideChildren="true">
+                        <canvas width='4096' height='4096' id='voxelCanvas'></canvas>
+                    </ImageTextureAtlas>
+                    <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
+                        <ImageTexture containerField='transferFunction'>
+                            <canvas width='256' height='10' id='tfCanvas'></canvas>
+                        </ImageTexture>
+                    </OpacityMapVolumeStyle>
+                </VolumeData>
+            </Transform>
+        </Scene>
+    </x3d>
+</div>
+
+<!-- The following div is made invisible in order to hide temporary images needed for computation -->
+<div id="InvisibleDiv" style="display:none;background:#888888;width:50%;height:50%">
+    <canvas width='256' height='10' id="tfTmpCanvas"></canvas>
+    <canvas width='32' height='32' id="tmpCanvas"></canvas>
+    <img id="hiddenBWTF" src="transfer.png"/>
+</div>
+</body>
+</html>

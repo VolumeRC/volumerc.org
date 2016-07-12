@@ -311,8 +311,8 @@ function volumerc_main()
 	var fpsElem = document.getElementById("fps");
 
 	var canvas = document.getElementById("canvas_win");
-	var gl = canvas.getContext("webgl", {premultipliedAlpha: false}) || canvas.getContext("experimental-webgl",{premultipliedAlpha: false});
-	
+	var gl = canvas.getContext("experimental-webgl");//, {premultipliedAlpha:true,alpha:true});
+
 	gl.shaderProgram_BackCoord = initShaders(gl,'./simple.vert?x'+Math.random(),'./simple.frag?x'+Math.random());
 	gl.shaderProgram_RayCast = initShaders(gl,'./raycast.vert?d'+Math.random(),'./raycast.frag?x='+Math.random());
 	
