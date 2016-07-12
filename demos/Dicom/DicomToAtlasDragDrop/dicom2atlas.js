@@ -118,9 +118,9 @@ function filesToAtlas(files, atlas2DContext, atlas_width, atlas_height, invisibl
             cornerstone.imageCache.removeImagePromise(image.imageId);// Save memory by removing image from cache
 
             // Adjusts spacing for volume's 3D aspect ratio (according to current image only)
-            CURRENT_IMAGE_SPACING[0] = /* 1.0 / */ image.columns * image.columnPixelSpacing;
-            CURRENT_IMAGE_SPACING[1] = /* 1.0 / */ image.rows * image.rowPixelSpacing;
-            CURRENT_IMAGE_SPACING[2] = /* 1.0 / */ files.length * Number(image.data.string('x00180050'));
+            CURRENT_IMAGE_SPACING[0] = image.columns * image.columnPixelSpacing;
+            CURRENT_IMAGE_SPACING[1] = image.rows * image.rowPixelSpacing;
+            CURRENT_IMAGE_SPACING[2] = files.length * Number(image.data.string('x00180050'));
 
             // Trigger delayed refresh
             launchRefresh();
