@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drag&Drop DICOM - X3DOM - 2Color TF Editor.</title>
+    <script type="text/javascript" src="jquery-3.0.0.js"></script>
+    <script type="text/javascript" src="jquery-migrate-1.4.1.min.js"></script>
+    <script type="text/javascript" src="dicomParser.js"></script>
+    <script type="text/javascript" src="cornerstone.js"></script>
+    <script type="text/javascript" src="cornerstoneWADOImageLoader.js"></script>
+    <script type="text/javascript" src="x3dom-full.js"></script>
+    <script type="text/javascript" src="dicom2atlas.js"></script>
+    <script type="text/javascript" src="dat.gui.min.js"></script>
+    <script type='text/javascript' src='tinycolor.js'></script>
+
+
+    <script type="text/javascript">
+        // Prevents the drop target element from triggering default action on dropped files (download)
+        function divallowdrop(event) {
+            event.preventDefault();
+        }
+
+        var CURRENT_FILES;
+        // Handles multiple DICOM files drop on element and converts them into an atlas
+        function divondrop(event) {
+            // Also needed to prevent the drop target element from triggering default action on dropped files (download)
+            event.stopPropagation();
+            event.preventDefault();
+
+            // Get the number of slices info, to update the ImageTextureAtlas
+            CURRENT_FILES = event.dataTransfer.files;
+            var numberOfSlices = event.dataTransfer.files.length;
+            var slicesOverX = Math.ceil(Math.sqrt(numberOfSlices)),
+                    slicesOverY = slicesOverX;
+
+            // Reset the X3D scene declaration, and reload the scene;
+            resetScene(numberOfSlices, slicesOverX, slicesOverY);
+
+            // Resulting canvas containing atlas
+            var voxelCanvas = document.getElementById("voxelCanvas");
+            var voxelContext = voxelCanvas.getContext("2d");
+
+            //Now process the dropped files with dicomParser
+            filesToAtlas(event.dataTransfer.files, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"));
+        }
+
+        /*
+         * Reset all the scene declaration and reload
+         */
+        function resetScene(numberOfSlices, slicesOverX, slicesOverY) {
+            var myX3D = document.getElementById("MyX3D");
+            var myX3DPlaceHolder = document.getElementById("MyX3DPlaceHolder");
+            //var ORIGINAL_X3DNODE_HTML = myX3DPlaceHolder.innerHTML;// NOTE: If we get it here everything goes black!
+            myX3D.parentNode.removeChild(myX3D);
+            // Replace original numberOfSlices/slicesOverX/slicesOverY values with current ones
+            myX3DPlaceHolder.innerHTML = ORIGINAL_X3DNODE_HTML
+                    .replace(/numberOfSlices=.[\d]*./i, "numberOfSlices='" + numberOfSlices + "'")
+                    .replace(/slicesOverX=.[\d]*./i, "slicesOverX='" + slicesOverX + "'")
+                    .replace(/slicesOverY=.[\d]*./i, "slicesOverY='" + slicesOverY + "'");
+            // Force reload of scene
+            x3dom.reload();
+        }
+
+
+        function updateLinearTF(value) {
+            USE_TF_FROMFILE = false;
+            var tfCanvas = document.getElementById("tfCanvas");
+            var ctxTfCanvas = tfCanvas.getContext("2d");
+
+            ctxTfCanvas.clearRect(0, 0, tfCanvas.width, tfCanvas.height);
+            var gradient = ctxTfCanvas.createLinearGradient(0, 0, tfCanvas.width, 0);
+            gradient.addColorStop(0, tinycolor(x3domcontrols.colorMin).setAlpha(x3domcontrols.opacityMin).toRgbString());
+            gradient.addColorStop(1, tinycolor(x3domcontrols.colorMax).setAlpha(x3domcontrols.opacityMax).toRgbString());
+            ctxTfCanvas.fillStyle = gradient;
+            ctxTfCanvas.fillRect(0, 0, tfCanvas.width, tfCanvas.height);
+
+            // Refreshes X3DOM to take into account new TF contents
+            document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
+        }
+
+        function updateWL(value) {
+            if(CURRENT_FILES !== undefined) {
+                var voxelCanvas = document.getElementById("voxelCanvas");
+                var voxelContext = voxelCanvas.getContext("2d");
+                filesToAtlas(CURRENT_FILES, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"), x3domcontrols.windowCenter, x3domcontrols.windowWidth);
+            }
+        }
+
+        var x3domcontrols;
+        var ORIGINAL_X3DNODE_HTML;
+        function bodyonload() {
+            // Set handlers for required drop events
+            document.getElementById("DropArea").addEventListener("drop", divondrop);
+            document.getElementById("DropArea").addEventListener("dragover", divallowdrop);
+
+            //readTF("TeethJawsSkin_OSIRIX_ONLY.tf");
+
+            document.getElementById("tfCanvas").getContext("2d").drawImage(document.getElementById("hiddenBWTF"), 0, 0, 256, 10);
+
+            x3domcontrols = new X3DOMControls();
+            var guiTF = new dat.GUI({load: JSON,preset: 'Default'});
+
+            var linearTF = guiTF.addFolder('Linear TF');
+            var colorMin = linearTF.addColor(x3domcontrols, 'colorMin');
+            var opacityMin = linearTF.add(x3domcontrols, 'opacityMin', 0.0, 1.0, 0.1);
+            var colorMax = linearTF.addColor(x3domcontrols, 'colorMax');
+            var opacityMax = linearTF.add(x3domcontrols, 'opacityMax', 0.0, 1.0, 0.1);
+            linearTF.open();
+
+            colorMin.onChange(updateLinearTF);
+            opacityMin.onFinishChange(updateLinearTF);
+            colorMax.onChange(updateLinearTF);
+            opacityMax.onFinishChange(updateLinearTF);
+
+            guiTF.remember(x3domcontrols);
+
+            var guiWL = new dat.GUI();
+            var wlFolder = guiWL.addFolder('W/L');
+            var windowCenter = wlFolder.add(x3domcontrols,'windowCenter',-2500,5000,1).listen();
+            var windowWidth = wlFolder.add(x3domcontrols,'windowWidth',0,7500,1).listen();
+            windowCenter.onFinishChange(updateWL);
+            windowWidth.onFinishChange(updateWL);
+            wlFolder.open();
+        }
+        window.addEventListener("load", bodyonload, false);
+    </script>
+</head>
+<body>
+
+<!-- This DIV is the area where to drop the DICOM files -->
+Drop something straight into the following X3DOM canvas.
+<div id="DropArea">
+    <div id="MyX3DPlaceHolder">
+        <!-- X3DOM node -->
+        <X3D id="MyX3D" xmlns='http://www.web3d.org/specifications/x3d-namespace' showStat='false' showLog='false'
+             width='1024px' height='640px'>
+            <Scene id="X3DScene">
+                <Background skyColor='0.3 0.3 0.3'></Background>
+                <Viewpoint description='Default' zNear='0.0001' zFar='100'></Viewpoint>
+                <Transform id="volumeTransform">
+                    <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
+                        <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='1' slicesOverX='1'
+                                           slicesOverY='1' hideChildren="true">
+                            <canvas width='4096' height='4096' id='voxelCanvas'></canvas>
+                        </ImageTextureAtlas>
+                        <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
+                            <ImageTexture containerField='transferFunction' hideChildren="true">
+                                <canvas width='256' height='10' id='tfCanvas'></canvas>
+                            </ImageTexture>
+                        </OpacityMapVolumeStyle>
+                    </VolumeData>
+                </Transform>
+            </Scene>
+        </X3D>
+    </div>
+</div>
+<script type="application/javascript">
+    // Here we pick up the original HTML Code of our X3D Node
+    ORIGINAL_X3DNODE_HTML = document.getElementById("MyX3DPlaceHolder").innerHTML;
+</script>
+<!-- The following div is made invisible in order to hide temporary images needed for computation -->
+<div id="InvisibleDiv" style="display:none;background:#888888;width:50%;height:50%">
+    <canvas width='256' height='10' id="tfTmpCanvas"></canvas>
+    <canvas width='32' height='32' id="tmpCanvas"></canvas>
+    <img id="hiddenBWTF" src="transfer.png"/>
+</div>
+</body>
+</html>

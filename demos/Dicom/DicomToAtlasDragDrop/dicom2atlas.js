@@ -2,6 +2,15 @@
  * Created by lkabongo on 05/07/2016.
  * Requires jQuery and X3DOM.
  */
+var X3DOMControls = function () {
+    this.colorMin = "#000000";
+    this.opacityMin = 0.1;
+    this.colorMax = "#ffffff";
+    this.opacityMax = 1.0;
+
+    this.windowCenter = 0;
+    this.windowWidth = 0;
+};
 
 // Store the DICOM images Window Center and Window With for all series (last one kept) for TF adjustments
 var CURRENT_IMAGE_WINDOWCENTER = 0, CURRENT_IMAGE_WINDOWWIDTH = 0;
@@ -16,8 +25,6 @@ var CURRENT_TIMEOUT_ATLAS, CURRENT_TIMEOUT_TF;
 function fillImageDataWithCornerstoneImage(image) {
     var dicomPixels = image.getPixelData();
     var rgbaPixels = new Uint8ClampedArray(4 * dicomPixels.length);
-    CURRENT_IMAGE_WINDOWCENTER = image.windowCenter;
-    CURRENT_IMAGE_WINDOWWIDTH = image.windowWidth;
 
     // For each pixel in current image
     for (var i = 0; i < dicomPixels.length; i++) {
@@ -58,25 +65,32 @@ function doRefresh() {
 
 // Applies the corresponding portion of the TF depending on current WW/WC values
 function applyColor() {
-    var tfCanvas = document.getElementById("tfCanvas");
-    var ctxTfCanvas = tfCanvas.getContext("2d");
+    if(USE_TF_FROMFILE) {
+        var tfCanvas = document.getElementById("tfCanvas");
+        var ctxTfCanvas = tfCanvas.getContext("2d");
 
-    ctxTfCanvas.clearRect(0,0,tfCanvas.width,tfCanvas.height);
-    ctxTfCanvas.drawImage(document.getElementById("tfTmpCanvas"),
-        (CURRENT_IMAGE_WINDOWCENTER - (CURRENT_IMAGE_WINDOWWIDTH / 2.0)) - CURRENT_TF_MIN,  0,
-        (CURRENT_IMAGE_WINDOWCENTER + (CURRENT_IMAGE_WINDOWWIDTH / 2.0)) - CURRENT_TF_MIN, 10,
-        Math.min(255.0,Math.max(0.0,(((CURRENT_TF_MIN - (CURRENT_IMAGE_WINDOWCENTER - 0.5)) / (CURRENT_IMAGE_WINDOWWIDTH - 1.0)) + 0.5) * 255.0)),               0,
-        Math.min(255.0,Math.max(0.0,(((CURRENT_TF_MAX - (CURRENT_IMAGE_WINDOWCENTER - 0.5)) / (CURRENT_IMAGE_WINDOWWIDTH - 1.0)) + 0.5) * 255.0)), tfCanvas.height
-    );
+        ctxTfCanvas.clearRect(0,0,tfCanvas.width,tfCanvas.height);
+        ctxTfCanvas.drawImage(document.getElementById("tfTmpCanvas"),
+            (CURRENT_IMAGE_WINDOWCENTER - (CURRENT_IMAGE_WINDOWWIDTH / 2.0)) - CURRENT_TF_MIN,  0,
+            (CURRENT_IMAGE_WINDOWCENTER + (CURRENT_IMAGE_WINDOWWIDTH / 2.0)) - CURRENT_TF_MIN, 10,
+            Math.min(255.0,Math.max(0.0,(((CURRENT_TF_MIN - (CURRENT_IMAGE_WINDOWCENTER - 0.5)) / (CURRENT_IMAGE_WINDOWWIDTH - 1.0)) + 0.5) * 255.0)),               0,
+            Math.min(255.0,Math.max(0.0,(((CURRENT_TF_MAX - (CURRENT_IMAGE_WINDOWCENTER - 0.5)) / (CURRENT_IMAGE_WINDOWWIDTH - 1.0)) + 0.5) * 255.0)), tfCanvas.height
+        );
 
-    // Refreshes X3DOM to take into account new TF contents
-    document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
+        // Refreshes X3DOM to take into account new TF contents
+        document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
 
-    // WORKAROUND: Not sure why, first pixels never appear transparent.
-    ctxTfCanvas.fillStyle="rgba(0,0,0,0)";
-    ctxTfCanvas.fillRect(0,0,10,10);
-    ctxTfCanvas.fillStyle="rgba(255,255,255,255)";
-    ctxTfCanvas.fillRect(tfCanvas.width-10,0,tfCanvas.width,10);
+        // WORKAROUND: Not sure why, first pixels never appear transparent.
+        ctxTfCanvas.fillStyle="rgba(0,0,0,0)";
+        ctxTfCanvas.fillRect(0,0,10,10);
+        ctxTfCanvas.fillStyle="rgba(255,255,255,255)";
+        ctxTfCanvas.fillRect(tfCanvas.width-10,0,tfCanvas.width,10);
+    }
+    else updateLinearTF(0);
+    if(x3domcontrols !== undefined) { //TODO: should be defined in this file
+        x3domcontrols.windowCenter = CURRENT_IMAGE_WINDOWCENTER;
+        x3domcontrols.windowWidth = CURRENT_IMAGE_WINDOWWIDTH;
+    }
 }
 
 // Triggers delayed refresh of TF and ATLAS
@@ -88,7 +102,7 @@ function launchRefresh() {
 }
 
 // Draws a list of files into an 2D context with given width/height
-function filesToAtlas(files, atlas2DContext, atlas_width, atlas_height, invisibleDiv) {
+function filesToAtlas(files, atlas2DContext, atlas_width, atlas_height, invisibleDiv, desiredWindowCenter, desiredWindowWidth) {
     // Compute how many slices fit along X and Y axis
     var slicesOverX = Math.ceil(Math.sqrt(files.length));
     var slicesOverY = Math.ceil(Math.sqrt(files.length));
@@ -109,6 +123,14 @@ function filesToAtlas(files, atlas2DContext, atlas_width, atlas_height, invisibl
             var nSlice = imageIds.indexOf(image.imageId);
             var posX = nSlice % slicesOverX;
             var posY = Math.floor(nSlice / slicesOverX);
+
+            // Take current image WW/WC
+            if(desiredWindowCenter === undefined)
+                CURRENT_IMAGE_WINDOWCENTER = image.windowCenter;
+            else CURRENT_IMAGE_WINDOWCENTER = desiredWindowCenter;
+            if(desiredWindowWidth === undefined)
+                CURRENT_IMAGE_WINDOWWIDTH = image.windowWidth;
+            else CURRENT_IMAGE_WINDOWWIDTH = desiredWindowWidth;
 
             // Fills a temporary canvas with DICOM pixels converted to gray image
             var tmpCanvas = fillImageDataWithCornerstoneImage(image);
@@ -147,6 +169,7 @@ function isTHLine(value) {
 
 // Parses a TF file
 var CURRENT_TF_MIN = 0, CURRENT_TF_MAX = 0;
+var USE_TF_FROMFILE = false;
 function readTF(url) {
     function drawTF(tfPoints) {
         var tfTmpCanvas = document.getElementById("tfTmpCanvas");
@@ -178,4 +201,5 @@ function readTF(url) {
         });
         drawTF(tfPoints);
     });
+    USE_TF_FROMFILE = true;
 }
