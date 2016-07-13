@@ -125,7 +125,9 @@ function drawHistogram(){
         var pct = (CURRENT_SERIES_HISTOGRAM[bin] / binMax) * 100;
         ctx.fillRect(bin-CURRENT_SERIES_MIN, $("#histcanvas")[0].height, 1, -Math.round(pct));
     }
-
+    ctx.strokeText(binMax,20,20);
+    ctx.strokeText(CURRENT_SERIES_MIN,$("#histcanvas")[0].height-20,20);
+    ctx.strokeText(CURRENT_SERIES_MAX,$("#histcanvas")[0].height-20,$("#histcanvas")[0].width-20);
     $("#histcanvas")[0].style= "width: inherit; height:inherit";
     $("#histogramHolder")[0].style['display']="block";
 }
