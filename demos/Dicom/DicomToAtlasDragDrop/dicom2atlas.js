@@ -1,6 +1,6 @@
 /**
  * Created by lkabongo on 05/07/2016.
- * Requires jQuery and X3DOM.
+ * Requires jQuery, dat.GUI and X3DOM.
  */
 var X3DOMControls = function () {
     this.colorMin = "#000000";
@@ -21,15 +21,28 @@ var CURRENT_IMAGE_SPACING = [1.0, 1.0, 1.0];
 // Store the global javascript timeouts used for triggering X3DOM refresh
 var CURRENT_TIMEOUT_ATLAS, CURRENT_TIMEOUT_TF;
 
+// Store the series minimum and maximum values
+// NOTE: we store the value after applying slope/intercept that could change in different slices of the same series
+var CURRENT_SERIES_MIN, CURRENT_SERIES_MAX;
+
+// Histogram bins of current series
+var CURRENT_SERIES_HISTOGRAM;
+
 // Converts DICOM pixel data to image gray pixels and puts then into an HTML Image Canvas
 function fillImageDataWithCornerstoneImage(image) {
     var dicomPixels = image.getPixelData();
     var rgbaPixels = new Uint8ClampedArray(4 * dicomPixels.length);
 
+    CURRENT_SERIES_MIN = Math.min(CURRENT_SERIES_MIN, image.slope * image.minPixelValue + image.intercept);
+    CURRENT_SERIES_MAX = Math.max(CURRENT_SERIES_MAX, image.slope * image.maxPixelValue + image.intercept);
+
     // For each pixel in current image
     for (var i = 0; i < dicomPixels.length; i++) {
         // To Hounsfield Units (for CT)
         var HU = image.slope * dicomPixels[i] + image.intercept;
+        if(CURRENT_SERIES_HISTOGRAM[HU] === undefined)
+            CURRENT_SERIES_HISTOGRAM[HU]=1;
+        else CURRENT_SERIES_HISTOGRAM[HU]+=1;
 
         // Apply Window/Level
         var wlHU = (((HU - (CURRENT_IMAGE_WINDOWCENTER - 0.5)) / (CURRENT_IMAGE_WINDOWWIDTH - 1.0)) + 0.5) * 255.0;
@@ -87,10 +100,34 @@ function applyColor() {
         ctxTfCanvas.fillRect(tfCanvas.width-10,0,tfCanvas.width,10);
     }
     else updateLinearTF(0);
+
+    drawHistogram();
+
     if(x3domcontrols !== undefined) { //TODO: should be defined in this file
         x3domcontrols.windowCenter = CURRENT_IMAGE_WINDOWCENTER;
         x3domcontrols.windowWidth = CURRENT_IMAGE_WINDOWWIDTH;
     }
+}
+
+function drawHistogram(){
+    if($("#histcanvas")[0] === undefined)return;
+    var ctx = $("#histcanvas")[0].getContext("2d");
+
+    var binMax = 0;
+    for(bin in CURRENT_SERIES_HISTOGRAM){
+        binMax = Math.max(binMax,CURRENT_SERIES_HISTOGRAM[bin]);
+    }
+    $("#histcanvas")[0].width = CURRENT_SERIES_MAX-CURRENT_SERIES_MIN;
+    ctx.fillStyle = "#dddddd";
+    ctx.fillRect(0,0,$("#histcanvas")[0].width, $("#histcanvas")[0].height);
+    ctx.fillStyle = "#000000";
+    for(bin in CURRENT_SERIES_HISTOGRAM) {
+        var pct = (CURRENT_SERIES_HISTOGRAM[bin] / binMax) * 100;
+        ctx.fillRect(bin-CURRENT_SERIES_MIN, $("#histcanvas")[0].height, 1, -Math.round(pct));
+    }
+
+    $("#histcanvas")[0].style= "width: inherit; height:inherit";
+    $("#histogramHolder")[0].style['display']="block";
 }
 
 // Triggers delayed refresh of TF and ATLAS
@@ -131,6 +168,11 @@ function filesToAtlas(files, atlas2DContext, atlas_width, atlas_height, invisibl
             if(desiredWindowWidth === undefined)
                 CURRENT_IMAGE_WINDOWWIDTH = image.windowWidth;
             else CURRENT_IMAGE_WINDOWWIDTH = desiredWindowWidth;
+
+            // Initialize current series histogram, min and max values
+            CURRENT_SERIES_HISTOGRAM = {};
+            CURRENT_SERIES_MIN = Number.MAX_SAFE_INTEGER;
+            CURRENT_SERIES_MAX = Number.MIN_SAFE_INTEGER;
 
             // Fills a temporary canvas with DICOM pixels converted to gray image
             var tmpCanvas = fillImageDataWithCornerstoneImage(image);
