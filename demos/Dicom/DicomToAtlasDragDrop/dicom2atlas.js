@@ -109,27 +109,30 @@ function applyColor() {
     }
 }
 
-function drawHistogram(){
-    if($("#histcanvas")[0] === undefined)return;
+function drawHistogram() {
+    if ($("#histcanvas")[0] === undefined)return;
     var ctx = $("#histcanvas")[0].getContext("2d");
 
     var binMax = 0;
-    for(bin in CURRENT_SERIES_HISTOGRAM){
-        binMax = Math.max(binMax,CURRENT_SERIES_HISTOGRAM[bin]);
+    for (bin in CURRENT_SERIES_HISTOGRAM) {
+        binMax = Math.max(binMax, CURRENT_SERIES_HISTOGRAM[bin]);
     }
-    $("#histcanvas")[0].width = CURRENT_SERIES_MAX-CURRENT_SERIES_MIN;
+    $("#histcanvas")[0].width = CURRENT_SERIES_MAX - CURRENT_SERIES_MIN;
     ctx.fillStyle = "#dddddd";
-    ctx.fillRect(0,0,$("#histcanvas")[0].width, $("#histcanvas")[0].height);
+    ctx.fillRect(0, 0, $("#histcanvas")[0].width, $("#histcanvas")[0].height);
     ctx.fillStyle = "#000000";
-    for(bin in CURRENT_SERIES_HISTOGRAM) {
+    for (bin in CURRENT_SERIES_HISTOGRAM) {
         var pct = (CURRENT_SERIES_HISTOGRAM[bin] / binMax) * 100;
-        ctx.fillRect(bin-CURRENT_SERIES_MIN, $("#histcanvas")[0].height, 1, -Math.round(pct));
+        ctx.fillRect(bin - CURRENT_SERIES_MIN, $("#histcanvas")[0].height, 1, -Math.round(pct));
     }
-    ctx.strokeText(binMax,20,20);
-    ctx.strokeText(CURRENT_SERIES_MIN,$("#histcanvas")[0].height-20,20);
-    ctx.strokeText(CURRENT_SERIES_MAX,$("#histcanvas")[0].height-20,$("#histcanvas")[0].width-20);
-    $("#histcanvas")[0].style= "width: inherit; height:inherit";
-    $("#histogramHolder")[0].style['display']="block";
+    //ctx.strokeText(binMax, 20, 20);
+    //ctx.strokeText(CURRENT_SERIES_MIN, $("#histcanvas")[0].height - 20, 20);
+    //ctx.strokeText(CURRENT_SERIES_MAX, $("#histcanvas")[0].height - 20, $("#histcanvas")[0].width - 20);
+    $("#histcanvas")[0].style = "width: inherit; height:inherit";
+    $("#histogramHolder")[0].style['display'] = "block";
+
+    //if (Raphael === undefined) return;
+    //var paper = Raphael("canvas", 255, 100);/
 }
 
 // Triggers delayed refresh of TF and ATLAS
