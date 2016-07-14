@@ -13,7 +13,6 @@
     <script type="text/javascript" src="dicom2atlas.js"></script>
     <script type="text/javascript" src="dat.gui.min.js"></script>
     <script type="text/javascript" src="tinycolor.js"></script>
-    <!--script type="text/javascript" src="two.min.js"></script-->
 
     <script type="text/javascript">
         // Prevents the drop target element from triggering default action on dropped files (download)
@@ -63,22 +62,6 @@
         }
 
 
-        function updateLinearTF(value) {
-            USE_TF_FROMFILE = false;
-            var tfCanvas = document.getElementById("tfCanvas");
-            var ctxTfCanvas = tfCanvas.getContext("2d");
-
-            ctxTfCanvas.clearRect(0, 0, tfCanvas.width, tfCanvas.height);
-            var gradient = ctxTfCanvas.createLinearGradient(0, 0, tfCanvas.width, 0);
-            gradient.addColorStop(0, tinycolor(x3domcontrols.colorMin).setAlpha(x3domcontrols.opacityMin).toRgbString());
-            gradient.addColorStop(1, tinycolor(x3domcontrols.colorMax).setAlpha(x3domcontrols.opacityMax).toRgbString());
-            ctxTfCanvas.fillStyle = gradient;
-            ctxTfCanvas.fillRect(0, 0, tfCanvas.width, tfCanvas.height);
-
-            // Refreshes X3DOM to take into account new TF contents
-            document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
-        }
-
         function updateWL(value) {
             if (CURRENT_FILES !== undefined) {
                 var voxelCanvas = document.getElementById("voxelCanvas");
@@ -87,7 +70,7 @@
             }
         }
 
-        var x3domcontrols;
+        //var x3domcontrols;
         var ORIGINAL_X3DNODE_HTML;
         function bodyonload() {
             // Set handlers for required drop events
@@ -98,22 +81,7 @@
 
             document.getElementById("tfCanvas").getContext("2d").drawImage(document.getElementById("hiddenBWTF"), 0, 0, 256, 10);
 
-            x3domcontrols = new X3DOMControls();
-            var guiTF = new dat.GUI({load: JSON, preset: 'Default'});
-
-            var linearTF = guiTF.addFolder('Linear TF');
-            var colorMin = linearTF.addColor(x3domcontrols, 'colorMin');
-            var opacityMin = linearTF.add(x3domcontrols, 'opacityMin', 0.0, 1.0, 0.1);
-            var colorMax = linearTF.addColor(x3domcontrols, 'colorMax');
-            var opacityMax = linearTF.add(x3domcontrols, 'opacityMax', 0.0, 1.0, 0.1);
-            linearTF.open();
-
-            colorMin.onChange(updateLinearTF);
-            opacityMin.onFinishChange(updateLinearTF);
-            colorMax.onChange(updateLinearTF);
-            opacityMax.onFinishChange(updateLinearTF);
-
-            guiTF.remember(x3domcontrols);
+            //x3domcontrols = new X3DOMControls();
 
             var guiWL = new dat.GUI();
             var wlFolder = guiWL.addFolder('W/L');
@@ -165,7 +133,7 @@ Drop something straight into the following X3DOM canvas.
 </div>
 
 <!-- The following div is made invisible in order to hide temporary images needed for computation -->
-<div id="InvisibleDiv" style="display:block;background:#888888;width:50%;height:50%">
+<div id="InvisibleDiv" style="display:none;background:#888888;width:50%;height:50%">
     <canvas width='256' height='10' id="tfTmpCanvas"></canvas>
     <canvas width='32' height='32' id="tmpCanvas"></canvas>
     <img id="hiddenBWTF" src="transfer.png"/>
@@ -177,137 +145,148 @@ Drop something straight into the following X3DOM canvas.
 <input id="html5colorpicker" value="#ff0000" type="color">
 
 <script type="application/javascript">
-    var W = 1024;
-    var H = 150;
-    var r = Raphael("holder", W, H);
-    var values = [];
-    var gradientColors=[];
-    var N_CONTROL_POINTS = 10;
-    var maxOpacity = 1.0;
-    for (var i = 0; i < N_CONTROL_POINTS; i++) {
-        values.push((i+1)*0.1*maxOpacity);
-        //gradientColors.push("hsb(240°, 0, "+(i+1)*0.1+")");
-        var gray = 255*(i+1)*0.1;
-        gradientColors.push("rgb("+gray+","+gray+","+gray+")");
-    }
-
-    function translate(x, y) {
-        return [ W / (values.length - 1) * x, H - H / maxOpacity * y ];
-    }
-
-    function drawPath() {
-        var p = ["M", X[0], Y[0], "R"];
-        for (var j = 1, jj = X.length; j < jj; j++) {
-            p.push(X[j], Y[j]);
+    function createTFEditor(nControlPoints){
+        var r = Raphael("holder", 1024, 150);
+        var W = r.width;
+        var H = r.height;
+        var values = [];
+        var gradientColors=[];
+        var MAX_OPACITY = 1.0;
+        var colorInactivePoint = "hsb(240°, 1, 1)";
+        var colorLine = "hsb(200°, 0.5, 1.0)";
+        var colorActivePoint = "hsb(140°, 1, 1)";
+        var X = [];
+        var Y = [];
+        var blankets = r.set();
+        var buttons = r.set();
+        var isDrag = -1;
+        var start = null;
+        var unhighlight = function () {};
+        var colorGradient;
+        var w;
+        var sub;
+        var path;
+        function initValues(){
+            var gray = 0;
+            for (var i = 0; i < nControlPoints; i++) {
+                values.push((i+1)*MAX_OPACITY/nControlPoints);
+                gray = 255*(i+1)/nControlPoints;
+                gradientColors.push("rgb("+gray+","+gray+","+gray+")");
+            }
+            colorGradient = [0].concat(gradientColors).join("-");
+            w = W / values.length;
+            sub = r.path().attr({stroke: "none", fill: colorGradient, opacity: 0});
+            path = r.path().attr({stroke: colorLine, "stroke-width": 2});
         }
-        var subaddon = "L" + W + "," + H + ",0," + H + "z";
-        path.attr({path: p});
-        sub.attr({path: p + subaddon});
-    }
 
-    //var p = [["M"].concat(translate(0, values[0]))];
-    var colorLeft = "hsb(240°, 0, 0)";
-    var colorRight = "hsb(240°, 0, 1)";
-    var colorInactivePoint = "hsb(240°, 1, 1)";
-    var colorLine = "hsb(200°, 0.5, 1.0)";
-    var colorActivePoint = "hsb(140°, 1, 1)";
-    var colorGradient = [0].concat(gradientColors).join("-");
-    var X = [];
-    var Y = [];
-    var blankets = r.set();
-    var buttons = r.set();
-    var w = (W - 60) / values.length;
-    var isDrag = -1;
-    var start = null;
-    var sub = r.path().attr({stroke: "none", fill: colorGradient, opacity: 0});
-    var path = r.path().attr({stroke: colorLine, "stroke-width": 2});
-    var unhighlight = function () {};
+        function translate(x, y) {
+            return [ W / (values.length - 1) * x, H - H / MAX_OPACITY * y ];
+        }
 
-    var ii = values.length - 1;
-    for (i = 0; i < ii; i++) {
-        var xy = translate(i, values[i]);
-        var xy1 = translate(i + 1, values[i + 1]);
-        var f;
-        X[i] = xy[0];
-        Y[i] = xy[1];
-        (f = function (i, xy) {
-            buttons.push(r.circle(xy[0], xy[1], 5).attr({fill: colorInactivePoint, stroke: "none"}));
-            blankets.push(r.circle(xy[0], xy[1], w / 2).attr({
-                stroke: "none",
-                fill: "#fff",
-                opacity: 0
-            }).mouseover(function () {
-                if (isDrag + 1) {
-                    unhighlight = function () {
-                    };
-                } else {
-                    buttons.items[i].animate({r: 10,fill: colorActivePoint}, 200);
+        function drawPath(X,Y,W,H) {
+            var p = ["M", X[0], Y[0], "R"];
+            for (var j = 1; j < X.length; j++) {
+                p.push(X[j], Y[j]);
+            }
+            var subaddon = "L" + W + "," + H + ",0," + H + "z";
+            path.attr({path: p});
+            sub.attr({path: p + subaddon});
+        }
+
+
+        function initPath() {
+            var ii = values.length - 1;
+            for (i = 0; i < ii; i++) {
+                var xy = translate(i, values[i]);
+                var xy1 = translate(i + 1, values[i + 1]);
+                var f;
+                X[i] = xy[0];
+                Y[i] = xy[1];
+                (f = function (i, xy) {
+                    buttons.push(r.circle(xy[0], xy[1], 5).attr({fill: colorInactivePoint, stroke: "none"}));
+                    blankets.push(r.circle(xy[0], xy[1], w / 2).attr({
+                        stroke: "none",
+                        fill: "#fff",
+                        opacity: 0
+                    }).mouseover(function () {
+                        if (isDrag + 1) {
+                            unhighlight = function () {
+                            };
+                        } else {
+                            buttons.items[i].animate({r: 10,fill: colorActivePoint}, 200);
+                        }
+                    }).mouseout(function () {
+                        if (isDrag + 1) {
+                            unhighlight = function () {
+                                buttons.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
+                            };
+                        } else {
+                            buttons.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
+                        }
+                    }).drag(function (dx, dy) {
+                        var start = this.start;
+                        start && update(start.i, start.p + dy);
+                    }, function (x, y) {
+                        this.start = {i: i, m: y, p: Y[i]};
+                    }).dblclick(function(){
+                        gradientColors[i] = document.getElementById("html5colorpicker").value;
+                        sub.animate({fill : [0].concat(gradientColors).join("-")},100);
+                        setNewTF();
+                    }));
+                    blankets.items[blankets.items.length - 1].node.style.cursor = "move";
+                })(i, xy);
+                if (i == ii - 1) {
+                    f(i + 1, xy1);
                 }
-            }).mouseout(function () {
-                if (isDrag + 1) {
-                    unhighlight = function () {
-                        buttons.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
-                    };
-                } else {
-                    buttons.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
-                }
-            }).drag(function (dx, dy) {
-                var start = this.start;
-                start && update(start.i, start.p + dy);
-            }, function (x, y) {
-                this.start = {i: i, m: y, p: Y[i]};
-            }).dblclick(function(){
-                gradientColors[i] = document.getElementById("html5colorpicker").value;
-                sub.animate({fill : [0].concat(gradientColors).join("-")},100);
-                setNewTF();
-            }));
-            blankets.items[blankets.items.length - 1].node.style.cursor = "move";
-        })(i, xy);
-        if (i == ii - 1) {
-            f(i + 1, xy1);
+            }
+            xy = translate(ii, values[ii]);
+            X.push(xy[0]);
+            Y.push(xy[1]);
         }
-    }
-    xy = translate(ii, values[ii]);
-    X.push(xy[0]);
-    Y.push(xy[1]);
 
-    drawPath();
+        function setNewTF(){
+            //SINCE RAPHAEL IS SVG AND NOT CANVAS WE CAN'T COPY STRAIGHT INTO A CANVAS
+            var tfTmpCanvas = document.getElementById("tfTmpCanvas");
+            var ctx = tfTmpCanvas.getContext("2d");
+            ctx.clearRect(0, 0, tfTmpCanvas.width, tfTmpCanvas.height);
+            var rangeWidth = Math.floor(tfTmpCanvas.width/nControlPoints);
+            for (var i = 1; i < values.length; i++) {
+                var color1 = Raphael.color(gradientColors[i-1]);
+                var color2 = Raphael.color(gradientColors[i]);
+                //"rgba("+color.r+","+color.g+","+color.b+","+values[i]+")";
 
-    var r1 = Raphael("blabla", 256, 10);
-    function setNewTF(){
-        r1.clear();
-        var fill = [];
-        for (var i = 0; i < values.length; i++) {
-            var color = Raphael.color(gradientColors[i]);
-            fill.push("rgba("+color.r+","+color.g+","+color.b+","+values[i]+")");
+                var grd = ctx.createLinearGradient((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
+                grd.addColorStop(0, "rgba(" + Math.floor(color1.r) + "," + Math.floor(color1.g) + "," + Math.floor(color1.b) + "," + values[i-1] + ")");
+                grd.addColorStop(1, "rgba(" + Math.floor(color2.r) + "," + Math.floor(color2.g) + "," + Math.floor(color2.b) + "," + values[i] + ")");
+                ctx.fillStyle = grd;
+                ctx.fillRect((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
+            }
+
+            USE_TF_FROMEDITOR = true;
+            applyColor();
         }
-        r1.path("M0,10L0,0L256,0L256,10z").attr({stroke: "none", fill: [0].concat(fill).join("-")});
 
-        var DOMURL = window.URL || window.webkitURL || window;
-        var img = new Image();
-        var url = DOMURL.createObjectURL(new Blob([r1.canvas.parentNode.innerHTML], {type: 'image/svg+xml;charset=utf-8'}));
-        img.onload = function () {
-            document.getElementById("tfTmpCanvas").getContext("2d").drawImage(img, 0, 0);
-            DOMURL.revokeObjectURL(url);
-        }
-        img.src = url;
-        USE_TF_FROMFILE = true;
-        applyColor();
+        // Handle when a point gets moved
+        var update = function (i, d) {
+            (d > H ) && (d = H );
+            (d < 0) && (d = 0);
+            Y[i] = d;
+            values[i] = -1 / MAX_OPACITY*((Y[i]/H)-1);
+            drawPath(X,Y,W,H);
+            buttons.items[i].attr({cy: d});
+            blankets.items[i].attr({cy: d});
+            setNewTF();
+        };
+        initValues();
+        initPath();
+        drawPath(X,Y,W,H);
+
+        return r;
     }
 
-    // Handle when a point gets moved
-    var update = function (i, d) {
-        (d > H ) && (d = H );
-        (d < 0) && (d = 0);
-        Y[i] = d;
-        values[i] = -1 / maxOpacity*((Y[i]/H)-1);
-        drawPath();
-        buttons.items[i].attr({cy: d});
-        blankets.items[i].attr({cy: d});
-        //console.log(values);
-        setNewTF();
-        //r.safari();
-    };
+    var r = createTFEditor(16);
+    r.clear();
+    r = createTFEditor(10);
 
 </script>
 

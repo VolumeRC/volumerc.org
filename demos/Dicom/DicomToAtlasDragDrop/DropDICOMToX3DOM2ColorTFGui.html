@@ -62,22 +62,6 @@
         }
 
 
-        function updateLinearTF(value) {
-            USE_TF_FROMFILE = false;
-            var tfCanvas = document.getElementById("tfCanvas");
-            var ctxTfCanvas = tfCanvas.getContext("2d");
-
-            ctxTfCanvas.clearRect(0, 0, tfCanvas.width, tfCanvas.height);
-            var gradient = ctxTfCanvas.createLinearGradient(0, 0, tfCanvas.width, 0);
-            gradient.addColorStop(0, tinycolor(x3domcontrols.colorMin).setAlpha(x3domcontrols.opacityMin).toRgbString());
-            gradient.addColorStop(1, tinycolor(x3domcontrols.colorMax).setAlpha(x3domcontrols.opacityMax).toRgbString());
-            ctxTfCanvas.fillStyle = gradient;
-            ctxTfCanvas.fillRect(0, 0, tfCanvas.width, tfCanvas.height);
-
-            // Refreshes X3DOM to take into account new TF contents
-            document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
-        }
-
         function updateWL(value) {
             if(CURRENT_FILES !== undefined) {
                 var voxelCanvas = document.getElementById("voxelCanvas");

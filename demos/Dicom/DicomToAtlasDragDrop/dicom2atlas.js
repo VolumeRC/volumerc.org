@@ -11,6 +11,7 @@ var X3DOMControls = function () {
     this.windowCenter = 0;
     this.windowWidth = 0;
 };
+var x3domcontrols = new X3DOMControls();
 
 // Store the DICOM images Window Center and Window With for all series (last one kept) for TF adjustments
 var CURRENT_IMAGE_WINDOWCENTER = 0, CURRENT_IMAGE_WINDOWWIDTH = 0;
@@ -76,6 +77,22 @@ function doRefresh() {
     document.getElementById("volumeTransform").setAttribute("scale", CURRENT_IMAGE_SPACING[0] + "," + CURRENT_IMAGE_SPACING[1] + "," + CURRENT_IMAGE_SPACING[2]);
 }
 
+function updateLinearTF(value) {
+    USE_TF_FROMFILE = false;
+    var tfCanvas = document.getElementById("tfCanvas");
+    var ctxTfCanvas = tfCanvas.getContext("2d");
+
+    ctxTfCanvas.clearRect(0, 0, tfCanvas.width, tfCanvas.height);
+    var gradient = ctxTfCanvas.createLinearGradient(0, 0, tfCanvas.width, 0);
+    gradient.addColorStop(0, tinycolor(x3domcontrols.colorMin).setAlpha(x3domcontrols.opacityMin).toRgbString());
+    gradient.addColorStop(1, tinycolor(x3domcontrols.colorMax).setAlpha(x3domcontrols.opacityMax).toRgbString());
+    ctxTfCanvas.fillStyle = gradient;
+    ctxTfCanvas.fillRect(0, 0, tfCanvas.width, tfCanvas.height);
+
+    // Refreshes X3DOM to take into account new TF contents
+    document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
+}
+
 // Applies the corresponding portion of the TF depending on current WW/WC values
 function applyColor() {
     if(USE_TF_FROMFILE) {
@@ -99,7 +116,21 @@ function applyColor() {
         ctxTfCanvas.fillStyle="rgba(255,255,255,255)";
         ctxTfCanvas.fillRect(tfCanvas.width-10,0,tfCanvas.width,10);
     }
-    else updateLinearTF(0);
+    else if(USE_TF_FROMEDITOR){
+        var tfCanvas = document.getElementById("tfCanvas");
+        var ctxTfCanvas = tfCanvas.getContext("2d");
+        var tfTmpCanvas = document.getElementById("tfTmpCanvas")
+
+        ctxTfCanvas.clearRect(0,0,tfCanvas.width,tfCanvas.height);
+
+        // tfTmpCanvas should fit exactly within tfCanvas dimensions or otherwise the contents will be truncated.
+        ctxTfCanvas.drawImage(document.getElementById("tfTmpCanvas"), 0, 0, tfTmpCanvas.width, tfTmpCanvas.height,
+            0,0,tfTmpCanvas.width, tfTmpCanvas.height);
+
+        // Refreshes X3DOM to take into account new TF contents
+        document.getElementById("voxelAtlas")._x3domNode.invalidateGLObject();
+    }
+    else if(updateLinearTF !== undefined) updateLinearTF(0);
 
     drawHistogram();
 
@@ -217,6 +248,7 @@ function isTHLine(value) {
 // Parses a TF file
 var CURRENT_TF_MIN = 0, CURRENT_TF_MAX = 0;
 var USE_TF_FROMFILE = false;
+var USE_TF_FROMEDITOR = false;
 function readTF(url) {
     function drawTF(tfPoints) {
         var tfTmpCanvas = document.getElementById("tfTmpCanvas");
