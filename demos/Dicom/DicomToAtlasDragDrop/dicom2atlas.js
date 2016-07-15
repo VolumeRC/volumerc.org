@@ -10,6 +10,8 @@ var X3DOMControls = function () {
 
     this.windowCenter = 0;
     this.windowWidth = 0;
+
+    this.numberOfHistogramPoints = 10;
 };
 var x3domcontrols = new X3DOMControls();
 
@@ -140,6 +142,7 @@ function applyColor() {
     }
 }
 
+var R_HISTOGRAM_BARS;
 function drawHistogram() {
     if ($("#histcanvas")[0] === undefined)return;
     var ctx = $("#histcanvas")[0].getContext("2d");
@@ -161,17 +164,25 @@ function drawHistogram() {
     //ctx.strokeText(CURRENT_SERIES_MAX, $("#histcanvas")[0].height - 20, $("#histcanvas")[0].width - 20);
     $("#histcanvas")[0].style = "width: inherit; height:inherit";
     if(r !== undefined) {
-        var bars = r.set();
+        if(R_HISTOGRAM_BARS !== undefined){
+            R_HISTOGRAM_BARS.remove();
+        }
+        R_HISTOGRAM_BARS = r.set();
         var lowerBound = (CURRENT_IMAGE_WINDOWCENTER - (CURRENT_IMAGE_WINDOWWIDTH / 2.0));
         var upperBound = (CURRENT_IMAGE_WINDOWCENTER + (CURRENT_IMAGE_WINDOWWIDTH / 2.0));
+        var binMaxWithinInBounds = 0;
         var w = r.width/(upperBound-lowerBound);
         for (bin in CURRENT_SERIES_HISTOGRAM) {
             if(bin>lowerBound && bin<upperBound){
+                binMaxWithinInBounds = Math.max(binMaxWithinInBounds, CURRENT_SERIES_HISTOGRAM[bin]);
                 var h = (CURRENT_SERIES_HISTOGRAM[bin] / binMax) * r.height;
-                bars.push(r.rect((bin-lowerBound)*w,r.height-h,w,h));
+                R_HISTOGRAM_BARS.push(r.rect((bin-lowerBound)*w,r.height-h,w,h));
             }
         }
-        bars.attr({stroke: "none",fill: "blue"});
+        R_HISTOGRAM_BARS.attr({stroke: "none",fill: "rgba(255,0,0,0.5)"});
+        //
+        R_HISTOGRAM_BARS.scale(1.0,binMax/binMaxWithinInBounds,0,r.height);
+        //R_HISTOGRAM_BARS.toBack();
     }
     //$("#histogramHolder")[0].style['display'] = "block";
 

@@ -52,7 +52,7 @@
             var myX3DPlaceHolder = document.getElementById("MyX3DPlaceHolder");
             //var ORIGINAL_X3DNODE_HTML = myX3DPlaceHolder.innerHTML;// NOTE: If we get it here everything goes black!
             myX3D.parentNode.removeChild(myX3D);
-            // Replace original numberOfSlices/slicesOverX/slicesOverY values with current ones
+            // Replace original numberOfSlices/slicesOverX/slicesOverY CURRENT_TF_VALUES with current ones
             myX3DPlaceHolder.innerHTML = ORIGINAL_X3DNODE_HTML
                     .replace(/numberOfSlices=.[\d]*./i, "numberOfSlices='" + numberOfSlices + "'")
                     .replace(/slicesOverX=.[\d]*./i, "slicesOverX='" + slicesOverX + "'")
@@ -69,9 +69,162 @@
                 filesToAtlas(CURRENT_FILES, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"), x3domcontrols.windowCenter, x3domcontrols.windowWidth);
             }
         }
+        function setNewTF(values, gradientColors){
+            //SINCE RAPHAEL IS SVG AND NOT CANVAS WE CAN'T COPY STRAIGHT INTO A CANVAS
+            var tfTmpCanvas = document.getElementById("tfTmpCanvas");
+            var ctx = tfTmpCanvas.getContext("2d");
+            ctx.clearRect(0, 0, tfTmpCanvas.width, tfTmpCanvas.height);
+            var rangeWidth = Math.floor(tfTmpCanvas.width/x3domcontrols.numberOfHistogramPoints);
+            for (var i = 1; i < values.length; i++) {
+                var color1 = Raphael.color(gradientColors[i-1]);
+                var color2 = Raphael.color(gradientColors[i]);
+                //"rgba("+color.r+","+color.g+","+color.b+","+CURRENT_TF_VALUES[i]+")";
 
-        //var x3domcontrols;
+                var grd = ctx.createLinearGradient((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
+                grd.addColorStop(0, "rgba(" + Math.floor(color1.r) + "," + Math.floor(color1.g) + "," + Math.floor(color1.b) + "," + values[i-1] + ")");
+                grd.addColorStop(1, "rgba(" + Math.floor(color2.r) + "," + Math.floor(color2.g) + "," + Math.floor(color2.b) + "," + values[i] + ")");
+                ctx.fillStyle = grd;
+                ctx.fillRect((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
+            }
+
+            USE_TF_FROMEDITOR = true;
+            applyColor();
+        }
+
+
+        var CURRENT_TF_COLORS = [];
+        var CURRENT_TF_VALUES = [];
+        var MAX_OPACITY = 1.0;
+
+        // Predefined colors for TF editor elements
+        var colorInactivePoint = "hsb(240°, 1, 1)";
+        var colorLine = "hsb(200°, 0.5, 1.0)";
+        var colorActivePoint = "hsb(140°, 1, 1)";
+        var opacityUnderLine = 1.0;
+
+        // Raphael control elements
+        var R_TF_CONTROLPOINTAREAS;
+        var R_TF_CONTROLPOINTBUTTONS;
+
+        function createTFEditor(nControlPoints){
+            if(r !== undefined){
+                r.clear();
+                r.remove();
+            }
+            r = Raphael("holder", 1024, 150);
+            var TF_WIDTH = r.width;
+            var TF_HEIGHT = r.height;
+            var X = [];
+            var Y = [];
+            R_TF_CONTROLPOINTAREAS = r.set();
+            R_TF_CONTROLPOINTBUTTONS = r.set();
+            var isDrag = -1;
+            var start = null;
+            var unhighlight = function () {};
+            var R_SPACE_BETWEEN_POINTS;
+            var R_TF_UNDERLINE;
+            var R_TF_LINE;
+            function initTFWithBWGradient(){
+                CURRENT_TF_VALUES = [];
+                CURRENT_TF_COLORS = [];
+                for (var i = 0; i < nControlPoints; i++) {
+                    CURRENT_TF_VALUES.push((i+1)*MAX_OPACITY/nControlPoints);
+                    var gray = Math.floor(255*(i)/(nControlPoints-1));
+                    CURRENT_TF_COLORS.push("rgba("+gray+","+gray+","+gray+","+opacityUnderLine+")");
+                }
+                //var colorGradient = ;
+                R_SPACE_BETWEEN_POINTS = TF_WIDTH / CURRENT_TF_VALUES.length;
+                R_TF_UNDERLINE = r.path().attr({stroke: "none", fill: [0].concat(CURRENT_TF_COLORS).join("-"), opacity: 0});
+                R_TF_LINE = r.path().attr({stroke: colorLine, "stroke-width": 2});
+            }
+
+            function translate(x, y) {
+                return [ TF_WIDTH / (CURRENT_TF_VALUES.length - 1) * x, TF_HEIGHT - TF_HEIGHT / MAX_OPACITY * y ];
+            }
+
+            function drawPath(X,Y,W,H) {
+                var p = ["M", X[0], Y[0], "R"];
+                for (var j = 1; j < X.length; j++) {
+                    p.push(X[j], Y[j]);
+                }
+                var subaddon = "L" + W + "," + H + ",0," + H + "z";
+                R_TF_LINE.attr({path: p});
+                R_TF_UNDERLINE.attr({path: p + subaddon});
+            }
+
+
+            function initPath() {
+                var ii = CURRENT_TF_VALUES.length - 1;
+                for (i = 0; i < ii; i++) {
+                    var xy = translate(i, CURRENT_TF_VALUES[i]);
+                    var xy1 = translate(i + 1, CURRENT_TF_VALUES[i + 1]);
+                    var f;
+                    X[i] = xy[0];
+                    Y[i] = xy[1];
+                    (f = function (i, xy) {
+                        R_TF_CONTROLPOINTBUTTONS.push(r.circle(xy[0], xy[1], 5).attr({fill: colorInactivePoint, stroke: "none"}));
+                        R_TF_CONTROLPOINTAREAS.push(r.circle(xy[0], xy[1], R_SPACE_BETWEEN_POINTS / 2).attr({
+                            stroke: "none",
+                            fill: "#fff",
+                            opacity: 0
+                        }).mouseover(function () {
+                            if (isDrag + 1) {
+                                unhighlight = function () {
+                                };
+                            } else {
+                                R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 10,fill: colorActivePoint}, 200);
+                            }
+                        }).mouseout(function () {
+                            if (isDrag + 1) {
+                                unhighlight = function () {
+                                    R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
+                                };
+                            } else {
+                                R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
+                            }
+                        }).drag(function (dx, dy) {
+                            var start = this.start;
+                            start && update(start.i, start.p + dy);
+                        }, function (x, y) {
+                            this.start = {i: i, m: y, p: Y[i]};
+                        }).dblclick(function(){
+                            var currentColor = Raphael.color(document.getElementById("html5colorpicker").value);
+                            CURRENT_TF_COLORS[i] = "rgba("+currentColor.r+","+currentColor.g+","+currentColor.b+","+opacityUnderLine+")";
+                            R_TF_UNDERLINE.animate({fill : [0].concat(CURRENT_TF_COLORS).join("-")},100);
+                            setNewTF(CURRENT_TF_VALUES, CURRENT_TF_COLORS);
+                        }));
+                        R_TF_CONTROLPOINTAREAS.items[R_TF_CONTROLPOINTAREAS.items.length - 1].node.style.cursor = "move";
+                    })(i, xy);
+                    if (i == ii - 1) {
+                        f(i + 1, xy1);
+                    }
+                }
+                xy = translate(ii, CURRENT_TF_VALUES[ii]);
+                X.push(xy[0]);
+                Y.push(xy[1]);
+            }
+
+            // Handle when a point gets moved
+            var update = function (i, d) {
+                (d > TF_HEIGHT ) && (d = TF_HEIGHT );
+                (d < 0) && (d = 0);
+                Y[i] = d;
+                CURRENT_TF_VALUES[i] = -1 / MAX_OPACITY*((Y[i]/TF_HEIGHT)-1);
+                drawPath(X,Y,TF_WIDTH,TF_HEIGHT);
+                R_TF_CONTROLPOINTBUTTONS.items[i].attr({cy: d});
+                R_TF_CONTROLPOINTAREAS.items[i].attr({cy: d});
+                setNewTF(CURRENT_TF_VALUES, CURRENT_TF_COLORS);
+            };
+
+            initTFWithBWGradient();
+            initPath();
+            drawPath(X,Y,TF_WIDTH,TF_HEIGHT);
+
+            return r;
+        }
+
         var ORIGINAL_X3DNODE_HTML;
+        var r;
         function bodyonload() {
             // Set handlers for required drop events
             document.getElementById("DropArea").addEventListener("drop", divondrop);
@@ -90,6 +243,12 @@
             windowCenter.onFinishChange(updateWL);
             windowWidth.onFinishChange(updateWL);
             wlFolder.open();
+
+            var tfFolder = guiWL.addFolder('TF Editor options');
+            var numberOfHistogramPoints = tfFolder.add(x3domcontrols, 'numberOfHistogramPoints').min(3).max(32).step(1);
+            numberOfHistogramPoints.onChange(function(value){r = createTFEditor(value);setNewTF(CURRENT_TF_VALUES,CURRENT_TF_COLORS);});
+
+            r = createTFEditor(x3domcontrols.numberOfHistogramPoints);
         }
         window.addEventListener("load", bodyonload, false);
     </script>
@@ -142,153 +301,7 @@ Drop something straight into the following X3DOM canvas.
 <div id="canvas"></div>
 <div id="holder"></div>
 <div id="blabla"></div>
-<input id="html5colorpicker" value="#ff0000" type="color">
-
-<script type="application/javascript">
-    function createTFEditor(nControlPoints){
-        var r = Raphael("holder", 1024, 150);
-        var W = r.width;
-        var H = r.height;
-        var values = [];
-        var gradientColors=[];
-        var MAX_OPACITY = 1.0;
-        var colorInactivePoint = "hsb(240°, 1, 1)";
-        var colorLine = "hsb(200°, 0.5, 1.0)";
-        var colorActivePoint = "hsb(140°, 1, 1)";
-        var X = [];
-        var Y = [];
-        var blankets = r.set();
-        var buttons = r.set();
-        var isDrag = -1;
-        var start = null;
-        var unhighlight = function () {};
-        var colorGradient;
-        var w;
-        var sub;
-        var path;
-        function initValues(){
-            var gray = 0;
-            for (var i = 0; i < nControlPoints; i++) {
-                values.push((i+1)*MAX_OPACITY/nControlPoints);
-                gray = 255*(i+1)/nControlPoints;
-                gradientColors.push("rgb("+gray+","+gray+","+gray+")");
-            }
-            colorGradient = [0].concat(gradientColors).join("-");
-            w = W / values.length;
-            sub = r.path().attr({stroke: "none", fill: colorGradient, opacity: 0});
-            path = r.path().attr({stroke: colorLine, "stroke-width": 2});
-        }
-
-        function translate(x, y) {
-            return [ W / (values.length - 1) * x, H - H / MAX_OPACITY * y ];
-        }
-
-        function drawPath(X,Y,W,H) {
-            var p = ["M", X[0], Y[0], "R"];
-            for (var j = 1; j < X.length; j++) {
-                p.push(X[j], Y[j]);
-            }
-            var subaddon = "L" + W + "," + H + ",0," + H + "z";
-            path.attr({path: p});
-            sub.attr({path: p + subaddon});
-        }
-
-
-        function initPath() {
-            var ii = values.length - 1;
-            for (i = 0; i < ii; i++) {
-                var xy = translate(i, values[i]);
-                var xy1 = translate(i + 1, values[i + 1]);
-                var f;
-                X[i] = xy[0];
-                Y[i] = xy[1];
-                (f = function (i, xy) {
-                    buttons.push(r.circle(xy[0], xy[1], 5).attr({fill: colorInactivePoint, stroke: "none"}));
-                    blankets.push(r.circle(xy[0], xy[1], w / 2).attr({
-                        stroke: "none",
-                        fill: "#fff",
-                        opacity: 0
-                    }).mouseover(function () {
-                        if (isDrag + 1) {
-                            unhighlight = function () {
-                            };
-                        } else {
-                            buttons.items[i].animate({r: 10,fill: colorActivePoint}, 200);
-                        }
-                    }).mouseout(function () {
-                        if (isDrag + 1) {
-                            unhighlight = function () {
-                                buttons.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
-                            };
-                        } else {
-                            buttons.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
-                        }
-                    }).drag(function (dx, dy) {
-                        var start = this.start;
-                        start && update(start.i, start.p + dy);
-                    }, function (x, y) {
-                        this.start = {i: i, m: y, p: Y[i]};
-                    }).dblclick(function(){
-                        gradientColors[i] = document.getElementById("html5colorpicker").value;
-                        sub.animate({fill : [0].concat(gradientColors).join("-")},100);
-                        setNewTF();
-                    }));
-                    blankets.items[blankets.items.length - 1].node.style.cursor = "move";
-                })(i, xy);
-                if (i == ii - 1) {
-                    f(i + 1, xy1);
-                }
-            }
-            xy = translate(ii, values[ii]);
-            X.push(xy[0]);
-            Y.push(xy[1]);
-        }
-
-        function setNewTF(){
-            //SINCE RAPHAEL IS SVG AND NOT CANVAS WE CAN'T COPY STRAIGHT INTO A CANVAS
-            var tfTmpCanvas = document.getElementById("tfTmpCanvas");
-            var ctx = tfTmpCanvas.getContext("2d");
-            ctx.clearRect(0, 0, tfTmpCanvas.width, tfTmpCanvas.height);
-            var rangeWidth = Math.floor(tfTmpCanvas.width/nControlPoints);
-            for (var i = 1; i < values.length; i++) {
-                var color1 = Raphael.color(gradientColors[i-1]);
-                var color2 = Raphael.color(gradientColors[i]);
-                //"rgba("+color.r+","+color.g+","+color.b+","+values[i]+")";
-
-                var grd = ctx.createLinearGradient((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
-                grd.addColorStop(0, "rgba(" + Math.floor(color1.r) + "," + Math.floor(color1.g) + "," + Math.floor(color1.b) + "," + values[i-1] + ")");
-                grd.addColorStop(1, "rgba(" + Math.floor(color2.r) + "," + Math.floor(color2.g) + "," + Math.floor(color2.b) + "," + values[i] + ")");
-                ctx.fillStyle = grd;
-                ctx.fillRect((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
-            }
-
-            USE_TF_FROMEDITOR = true;
-            applyColor();
-        }
-
-        // Handle when a point gets moved
-        var update = function (i, d) {
-            (d > H ) && (d = H );
-            (d < 0) && (d = 0);
-            Y[i] = d;
-            values[i] = -1 / MAX_OPACITY*((Y[i]/H)-1);
-            drawPath(X,Y,W,H);
-            buttons.items[i].attr({cy: d});
-            blankets.items[i].attr({cy: d});
-            setNewTF();
-        };
-        initValues();
-        initPath();
-        drawPath(X,Y,W,H);
-
-        return r;
-    }
-
-    var r = createTFEditor(16);
-    r.clear();r.remove();
-    r = createTFEditor(10);
-
-</script>
+<input id="html5colorpicker" value="#ffff00" type="color">
 
 </body>
 </html>
