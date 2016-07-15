@@ -144,47 +144,48 @@ function applyColor() {
 
 var R_HISTOGRAM_BARS;
 function drawHistogram() {
-    if ($("#histcanvas")[0] === undefined)return;
-    var ctx = $("#histcanvas")[0].getContext("2d");
+    if ($("#fullHistogramCanvas")[0] === undefined)return;
+    var ctx = $("#fullHistogramCanvas")[0].getContext("2d");
 
     var binMax = 0;
     for (bin in CURRENT_SERIES_HISTOGRAM) {
         binMax = Math.max(binMax, CURRENT_SERIES_HISTOGRAM[bin]);
     }
-    $("#histcanvas")[0].width = CURRENT_SERIES_MAX - CURRENT_SERIES_MIN;
+    $("#fullHistogramCanvas")[0].width = CURRENT_SERIES_MAX - CURRENT_SERIES_MIN;
     ctx.fillStyle = "#dddddd";
-    ctx.fillRect(0, 0, $("#histcanvas")[0].width, $("#histcanvas")[0].height);
+    ctx.fillRect(0, 0, $("#fullHistogramCanvas")[0].width, $("#fullHistogramCanvas")[0].height);
     ctx.fillStyle = "#000000";
     for (bin in CURRENT_SERIES_HISTOGRAM) {
         var pct = (CURRENT_SERIES_HISTOGRAM[bin] / binMax) * 100;
-        ctx.fillRect(bin - CURRENT_SERIES_MIN, $("#histcanvas")[0].height, 1, -Math.round(pct));
+        ctx.fillRect(bin - CURRENT_SERIES_MIN, $("#fullHistogramCanvas")[0].height, 1, -Math.round(pct));
     }
     //ctx.strokeText(binMax, 20, 20);
-    //ctx.strokeText(CURRENT_SERIES_MIN, $("#histcanvas")[0].height - 20, 20);
-    //ctx.strokeText(CURRENT_SERIES_MAX, $("#histcanvas")[0].height - 20, $("#histcanvas")[0].width - 20);
-    $("#histcanvas")[0].style = "width: inherit; height:inherit";
-    if(r !== undefined) {
+    //ctx.strokeText(CURRENT_SERIES_MIN, $("#fullHistogramCanvas")[0].height - 20, 20);
+    //ctx.strokeText(CURRENT_SERIES_MAX, $("#fullHistogramCanvas")[0].height - 20, $("#fullHistogramCanvas")[0].width - 20);
+    $("#fullHistogramCanvas")[0].style = "width: inherit; height:inherit";
+    if(R_TF_EDITOR !== undefined) {
         if(R_HISTOGRAM_BARS !== undefined){
             R_HISTOGRAM_BARS.remove();
         }
-        R_HISTOGRAM_BARS = r.set();
+        R_HISTOGRAM_BARS = R_TF_EDITOR.set();
         var lowerBound = (CURRENT_IMAGE_WINDOWCENTER - (CURRENT_IMAGE_WINDOWWIDTH / 2.0));
         var upperBound = (CURRENT_IMAGE_WINDOWCENTER + (CURRENT_IMAGE_WINDOWWIDTH / 2.0));
         var binMaxWithinInBounds = 0;
-        var w = r.width/(upperBound-lowerBound);
+        var w = R_TF_EDITOR.width/(upperBound-lowerBound);
         for (bin in CURRENT_SERIES_HISTOGRAM) {
             if(bin>lowerBound && bin<upperBound){
                 binMaxWithinInBounds = Math.max(binMaxWithinInBounds, CURRENT_SERIES_HISTOGRAM[bin]);
-                var h = (CURRENT_SERIES_HISTOGRAM[bin] / binMax) * r.height;
-                R_HISTOGRAM_BARS.push(r.rect((bin-lowerBound)*w,r.height-h,w,h));
+                var h = (CURRENT_SERIES_HISTOGRAM[bin] / binMax) * R_TF_EDITOR.height;
+                R_HISTOGRAM_BARS.push(R_TF_EDITOR.rect((bin-lowerBound)*w,R_TF_EDITOR.height-h,w,h));
             }
         }
         R_HISTOGRAM_BARS.attr({stroke: "none",fill: "rgba(255,0,0,0.5)"});
         //
-        R_HISTOGRAM_BARS.scale(1.0,binMax/binMaxWithinInBounds,0,r.height);
+        R_HISTOGRAM_BARS.scale(1.0,binMax/binMaxWithinInBounds,0,R_TF_EDITOR.height);
         //R_HISTOGRAM_BARS.toBack();
+        R_TF_CONTROLPOINTAREAS.toFront();
     }
-    //$("#histogramHolder")[0].style['display'] = "block";
+    //$("#fullHistogramHolder")[0].style['display'] = "block";
 
     //if (Raphael === undefined) return;
     //var paper = Raphael("canvas", 255, 100);/
