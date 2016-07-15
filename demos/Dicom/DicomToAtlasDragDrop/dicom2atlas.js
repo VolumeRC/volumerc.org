@@ -160,7 +160,20 @@ function drawHistogram() {
     //ctx.strokeText(CURRENT_SERIES_MIN, $("#histcanvas")[0].height - 20, 20);
     //ctx.strokeText(CURRENT_SERIES_MAX, $("#histcanvas")[0].height - 20, $("#histcanvas")[0].width - 20);
     $("#histcanvas")[0].style = "width: inherit; height:inherit";
-    $("#histogramHolder")[0].style['display'] = "block";
+    if(r !== undefined) {
+        var bars = r.set();
+        var lowerBound = (CURRENT_IMAGE_WINDOWCENTER - (CURRENT_IMAGE_WINDOWWIDTH / 2.0));
+        var upperBound = (CURRENT_IMAGE_WINDOWCENTER + (CURRENT_IMAGE_WINDOWWIDTH / 2.0));
+        var w = r.width/(upperBound-lowerBound);
+        for (bin in CURRENT_SERIES_HISTOGRAM) {
+            if(bin>lowerBound && bin<upperBound){
+                var h = (CURRENT_SERIES_HISTOGRAM[bin] / binMax) * r.height;
+                bars.push(r.rect((bin-lowerBound)*w,r.height-h,w,h));
+            }
+        }
+        bars.attr({stroke: "none",fill: "blue"});
+    }
+    //$("#histogramHolder")[0].style['display'] = "block";
 
     //if (Raphael === undefined) return;
     //var paper = Raphael("canvas", 255, 100);/
