@@ -78,7 +78,7 @@
             for (var i = 1; i < values.length; i++) {
                 var color1 = Raphael.color(gradientColors[i-1]);
                 var color2 = Raphael.color(gradientColors[i]);
-                //"rgba("+color.r+","+color.g+","+color.b+","+CURRENT_TF_VALUES[i]+")";
+                //"rgba("+color.R_TF_EDITOR+","+color.g+","+color.b+","+CURRENT_TF_VALUES[i]+")";
 
                 var grd = ctx.createLinearGradient((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
                 grd.addColorStop(0, "rgba(" + Math.floor(color1.r) + "," + Math.floor(color1.g) + "," + Math.floor(color1.b) + "," + values[i-1] + ")");
@@ -97,6 +97,7 @@
         var MAX_OPACITY = 1.0;
 
         // Predefined colors for TF editor elements
+        var colorBackground = "#aad";
         var colorInactivePoint = "hsb(240°, 1, 1)";
         var colorLine = "hsb(200°, 0.5, 1.0)";
         var colorActivePoint = "hsb(140°, 1, 1)";
@@ -107,17 +108,18 @@
         var R_TF_CONTROLPOINTBUTTONS;
 
         function createTFEditor(nControlPoints){
-            if(r !== undefined){
-                r.clear();
-                r.remove();
+            if(R_TF_EDITOR !== undefined){
+                R_TF_EDITOR.clear();
+                R_TF_EDITOR.remove();
             }
-            r = Raphael("holder", 1024, 150);
-            var TF_WIDTH = r.width;
-            var TF_HEIGHT = r.height;
+            R_TF_EDITOR = Raphael("tfEditorHolder", 1024, 150);
+            var TF_WIDTH = R_TF_EDITOR.width;
+            var TF_HEIGHT = R_TF_EDITOR.height;
+            R_TF_EDITOR.rect(0, 0, TF_WIDTH, TF_HEIGHT).attr({fill: colorBackground, stroke: "none"});
             var X = [];
             var Y = [];
-            R_TF_CONTROLPOINTAREAS = r.set();
-            R_TF_CONTROLPOINTBUTTONS = r.set();
+            R_TF_CONTROLPOINTAREAS = R_TF_EDITOR.set();
+            R_TF_CONTROLPOINTBUTTONS = R_TF_EDITOR.set();
             var isDrag = -1;
             var start = null;
             var unhighlight = function () {};
@@ -134,8 +136,8 @@
                 }
                 //var colorGradient = ;
                 R_SPACE_BETWEEN_POINTS = TF_WIDTH / CURRENT_TF_VALUES.length;
-                R_TF_UNDERLINE = r.path().attr({stroke: "none", fill: [0].concat(CURRENT_TF_COLORS).join("-"), opacity: 0});
-                R_TF_LINE = r.path().attr({stroke: colorLine, "stroke-width": 2});
+                R_TF_UNDERLINE = R_TF_EDITOR.path().attr({stroke: "none", fill: [0].concat(CURRENT_TF_COLORS).join("-"), opacity: 0});
+                R_TF_LINE = R_TF_EDITOR.path().attr({stroke: colorLine, "stroke-width": 2});
             }
 
             function translate(x, y) {
@@ -162,8 +164,8 @@
                     X[i] = xy[0];
                     Y[i] = xy[1];
                     (f = function (i, xy) {
-                        R_TF_CONTROLPOINTBUTTONS.push(r.circle(xy[0], xy[1], 5).attr({fill: colorInactivePoint, stroke: "none"}));
-                        R_TF_CONTROLPOINTAREAS.push(r.circle(xy[0], xy[1], R_SPACE_BETWEEN_POINTS / 2).attr({
+                        R_TF_CONTROLPOINTBUTTONS.push(R_TF_EDITOR.circle(xy[0], xy[1], 5).attr({fill: colorInactivePoint, stroke: "none"}));
+                        R_TF_CONTROLPOINTAREAS.push(R_TF_EDITOR.circle(xy[0], xy[1], R_SPACE_BETWEEN_POINTS / 2).attr({
                             stroke: "none",
                             fill: "#fff",
                             opacity: 0
@@ -220,21 +222,15 @@
             initPath();
             drawPath(X,Y,TF_WIDTH,TF_HEIGHT);
 
-            return r;
+            return R_TF_EDITOR;
         }
 
         var ORIGINAL_X3DNODE_HTML;
-        var r;
+        var R_TF_EDITOR;
         function bodyonload() {
             // Set handlers for required drop events
             document.getElementById("DropArea").addEventListener("drop", divondrop);
             document.getElementById("DropArea").addEventListener("dragover", divallowdrop);
-
-            //readTF("TeethJawsSkin_OSIRIX_ONLY.tf");
-
-            document.getElementById("tfCanvas").getContext("2d").drawImage(document.getElementById("hiddenBWTF"), 0, 0, 256, 10);
-
-            //x3domcontrols = new X3DOMControls();
 
             var guiWL = new dat.GUI();
             var wlFolder = guiWL.addFolder('W/L');
@@ -246,9 +242,9 @@
 
             var tfFolder = guiWL.addFolder('TF Editor options');
             var numberOfHistogramPoints = tfFolder.add(x3domcontrols, 'numberOfHistogramPoints').min(3).max(32).step(1);
-            numberOfHistogramPoints.onChange(function(value){r = createTFEditor(value);setNewTF(CURRENT_TF_VALUES,CURRENT_TF_COLORS);});
+            numberOfHistogramPoints.onChange(function(value){R_TF_EDITOR = createTFEditor(value);setNewTF(CURRENT_TF_VALUES,CURRENT_TF_COLORS);});
 
-            r = createTFEditor(x3domcontrols.numberOfHistogramPoints);
+            R_TF_EDITOR = createTFEditor(x3domcontrols.numberOfHistogramPoints);
         }
         window.addEventListener("load", bodyonload, false);
     </script>
@@ -286,22 +282,21 @@ Drop something straight into the following X3DOM canvas.
     // Here we pick up the original HTML Code of our X3D Node
     ORIGINAL_X3DNODE_HTML = document.getElementById("MyX3DPlaceHolder").innerHTML;
 </script>
-<div id="histogramHolder" style="width:1024px;height:200px;display:none;">
-    Here goes the histogram:
-    <canvas id="histcanvas" width="255" height="100"></canvas>
-</div>
 
-<!-- The following div is made invisible in order to hide temporary images needed for computation -->
+
+<!-- The following div is made invisible in order to hide temporary images needed for atlas and TF computation -->
 <div id="InvisibleDiv" style="display:none;background:#888888;width:50%;height:50%">
     <canvas width='256' height='10' id="tfTmpCanvas"></canvas>
     <canvas width='32' height='32' id="tmpCanvas"></canvas>
-    <img id="hiddenBWTF" src="transfer.png"/>
+    <div id="fullHistogramHolder" style="width:1024px;height:200px;display:none;">
+        <canvas id="fullHistogramCanvas" width="255" height="100"></canvas>
+    </div>
 </div>
 
-<div id="canvas"></div>
-<div id="holder"></div>
-<div id="blabla"></div>
+<div id="tfEditor">
+<div id="tfEditorHolder"></div>
 <input id="html5colorpicker" value="#ffff00" type="color">
+</div>
 
 </body>
 </html>
