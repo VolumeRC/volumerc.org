@@ -14,6 +14,23 @@
     <script type="text/javascript" src="../js/dat.gui.min.js"></script>
     <script type="text/javascript" src="../js/tinycolor.js"></script>
 
+<!---->
+    <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/pace.css" rel="stylesheet">
+    <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/pace.min.js"></script>
+
+    <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/bootstrap-theme.min.css" rel="stylesheet">
+    <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/bootstrap.min.js" async></script>
+    <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/bootstrap-slider.min.css" rel="stylesheet">
+    <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/bootstrap-slider.min.js" async></script>
+
+    <script type="text/javascript" src="EmscriptenDebug.js"></script>
+    <script type="text/javascript" src="CoherenceEnhancingDiffusion.js" async></script>
+    <script type="text/javascript" src="FileSaver.min.js" async></script>
+    <script type="text/javascript" src="Runner.js" async></script>
+
+<!---->
+
     <script type="text/javascript">
         // Prevents the drop target element from triggering default action on dropped files (download)
         function divallowdrop(event) {
@@ -189,7 +206,7 @@
                             start && update(start.i, start.p + dy);
                         }, function (x, y) {
                             this.start = {i: i, m: y, p: Y[i]};
-                        }).dblclick(function(){
+                        }).click(function(){
                             var currentColor = Raphael.color(document.getElementById("html5colorpicker").value);
                             CURRENT_TF_COLORS[i] = "rgba("+currentColor.r+","+currentColor.g+","+currentColor.b+","+opacityUnderLine+")";
                             R_TF_UNDERLINE.animate({fill : [0].concat(CURRENT_TF_COLORS).join("-")},100);
@@ -280,9 +297,9 @@ Drop something straight into the following X3DOM canvas.
 </div>
 <script type="application/javascript">
     // Here we pick up the original HTML Code of our X3D Node
+    // Here we pick up the original HTML Code of our X3D Node
     ORIGINAL_X3DNODE_HTML = document.getElementById("MyX3DPlaceHolder").innerHTML;
 </script>
-
 
 <!-- The following div is made invisible in order to hide temporary images needed for atlas and TF computation -->
 <div id="InvisibleDiv" style="display:none;background:#888888;width:50%;height:50%">
@@ -297,6 +314,14 @@ Drop something straight into the following X3DOM canvas.
 <div id="tfEditorHolder"></div>
 <input id="html5colorpicker" value="#ffff00" type="color">
 </div>
+<div class="progress-bar" role="progressbar"
+     aria-valuenow="0" arias-valuemin="0" aria-valuemax="100"
+     style="width: 0%;" id="execution-progress"></div>
+<br>
+<img src="../../../imagenes/siggraph.png" class="img-responsive center-block" alt="Input image"
+     id="input-image" style="visibility:hidden;">
+<img src="../../../imagenes/siggraph.png" class="img-responsive center-block"
+     alt="Output image" id="output-image" style="visibility:hidden;">
 
 </body>
 </html>
