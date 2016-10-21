@@ -119,7 +119,7 @@ Runner.Filter.prototype.setInputFile = function (input_file) {
     input_filename = input_file.name;
   }
   this.parameters.input_filename = input_filename;
-  $('#input-filename').html(input_filename);
+  //$('#input-filename').html(input_filename);
 
   var input_filepath = '/raw/' + input_filename;
   var input_display_filepath = '/display/' + input_filename + '.png';
@@ -527,7 +527,7 @@ Runner.Filter.prototype.setFigure = function(figure, subfigure) {
 Runner.initialize = function () {
   Runner.filter = new Runner.Filter();
   Runner.filter.setUpFilterControls();
-  Runner.filter.setInputFile('InputImage.png');
+  //Runner.filter.setInputFile('InputImage.png');
 };
 
 

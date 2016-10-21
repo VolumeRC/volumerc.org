@@ -1,6 +1,6 @@
 var FilterWorker = FilterWorker || {};
 
-importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.js');
+importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.1.pretty.js');
 
 // Where to put the raw input and output images.
 FS.mkdir('/raw');

@@ -25,7 +25,7 @@
     <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/bootstrap-slider.min.js" async></script>
 
     <script type="text/javascript" src="EmscriptenDebug.js"></script>
-    <script type="text/javascript" src="CoherenceEnhancingDiffusion.js" async></script>
+    <script type="text/javascript" src="CoherenceEnhancingDiffusion.1.pretty.js" async></script>
     <script type="text/javascript" src="FileSaver.min.js" async></script>
     <script type="text/javascript" src="Runner.js" async></script>
 
@@ -43,6 +43,8 @@
             // Also needed to prevent the drop target element from triggering default action on dropped files (download)
             event.stopPropagation();
             event.preventDefault();
+
+            Runner.filter.setInputFile(event.dataTransfer.files[0]);
 
             // Get the number of slices info, to update the ImageTextureAtlas
             CURRENT_FILES = event.dataTransfer.files;
