@@ -10,6 +10,7 @@
 //#include "itkDCMTKImageIOFactory.h"
 #include "itkGDCMImageIOFactory.h"
 
+
 /** Convert the input image to a PNG and resample it for display. */
 template< typename TPixelType >
 int ConvertAndResample( char * inputFileName, char * outputFileName )

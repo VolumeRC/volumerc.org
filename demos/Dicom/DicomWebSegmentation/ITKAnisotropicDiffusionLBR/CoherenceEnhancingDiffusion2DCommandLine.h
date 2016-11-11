@@ -116,7 +116,9 @@ int Execute(int argc, char * argv[])
   const unsigned int imageDimension = imageIO->GetNumberOfDimensions();
   const itk::ImageIOBase::IOComponentType componentType = imageIO->GetComponentType();
   const unsigned int nComponents = imageIO->GetNumberOfComponents();
-
+  
+  std::cout << "imageDimension=" << imageDimension << " componentType=" << componentType << " nComponents=" << nComponents <<std::endl;
+  
   switch( imageDimension )
     {
     case 2:
