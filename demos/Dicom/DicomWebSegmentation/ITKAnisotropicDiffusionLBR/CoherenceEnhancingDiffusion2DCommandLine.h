@@ -116,15 +116,15 @@ int Execute(int argc, char * argv[])
   const unsigned int imageDimension = imageIO->GetNumberOfDimensions();
   const itk::ImageIOBase::IOComponentType componentType = imageIO->GetComponentType();
   const unsigned int nComponents = imageIO->GetNumberOfComponents();
-  
+
   std::cout << "imageDimension=" << imageDimension << " componentType=" << componentType << " nComponents=" << nComponents <<std::endl;
-  
+
   switch( imageDimension )
     {
     case 2:
       return Execute<2>(argc,argv,componentType,nComponents);
-    //case 3:
-      //return Execute<3>(argc,argv,componentType,nComponents);
+    case 3:
+      return Execute<3>(argc,argv,componentType,nComponents);
     default:
       itkGenericExceptionMacro("Sorry, unsupported image dimension.");
     }
@@ -137,10 +137,25 @@ int Execute(int argc, char * argv[], itk::ImageIOBase::IOComponentType component
     {
     case itk::ImageIOBase::UCHAR:
       return Execute<Dimension, float, unsigned char>(argc,argv,nComponents);
-    //case itk::ImageIOBase::FLOAT:
-      //return Execute<Dimension, float, float>(argc,argv,nComponents);
-    //case itk::ImageIOBase::DOUBLE:
-      //return Execute<Dimension, double, double>(argc,argv,nComponents);
+    case itk::ImageIOBase::CHAR:
+      return Execute<Dimension, float, char>(argc,argv,nComponents);
+    case itk::ImageIOBase::USHORT:
+      return Execute<Dimension, float, unsigned short>(argc,argv,nComponents);
+    case itk::ImageIOBase::SHORT:
+      return Execute<Dimension, float, short>(argc,argv,nComponents);
+    case itk::ImageIOBase::UINT:
+      return Execute<Dimension, float, unsigned int>(argc,argv,nComponents);
+    case itk::ImageIOBase::INT:
+      return Execute<Dimension, float, int>(argc,argv,nComponents);
+    case itk::ImageIOBase::ULONG:
+      return Execute<Dimension, double, unsigned long>(argc,argv,nComponents);
+    case itk::ImageIOBase::LONG:
+      return Execute<Dimension, double, long>(argc,argv,nComponents);
+    case itk::ImageIOBase::FLOAT:
+      return Execute<Dimension, float, float>(argc,argv,nComponents);
+    case itk::ImageIOBase::DOUBLE:
+      return Execute<Dimension, double, double>(argc,argv,nComponents);
+    case itk::ImageIOBase::UNKNOWNCOMPONENTTYPE:
     default:
       itkGenericExceptionMacro("Sorry, unsupported component type");
     }
@@ -153,8 +168,8 @@ int Execute(int argc, char * argv[], int nComponents)
     {
     case 1:
       return Execute<Dimension,ScalarType,ScalarType,ComponentType>(argc,argv);
-    //case 2:
-      //return Execute<Dimension,ScalarType,Vector<ScalarType,2>,Vector<ComponentType,2> >(argc,argv);
+    case 2:
+      return Execute<Dimension,ScalarType,Vector<ScalarType,2>,Vector<ComponentType,2> >(argc,argv);
     case 3:
       return Execute<Dimension,ScalarType,Vector<ScalarType,3>,Vector<ComponentType,3> >(argc,argv);
     case 4:
