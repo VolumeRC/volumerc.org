@@ -48,7 +48,8 @@
             event.stopPropagation();
             event.preventDefault();
 
-            Runner.filter.setInputFile(event.dataTransfer.files[0]);
+            document.getElementById("input-previews").innerHTML="";
+            Runner.filter.setInputFile(event.dataTransfer.files);
 
             // Get the number of slices info, to update the ImageTextureAtlas
             CURRENT_FILES = event.dataTransfer.files;
@@ -328,6 +329,7 @@ Drop something straight into the following X3DOM canvas.
      id="input-image" style="visibility:hidden;">
 <img src="../../../imagenes/siggraph.png" class="img-responsive center-block"
      alt="Output image" id="output-image" style="visibility:hidden;">
+<div id="input-previews"></div>
 
 </body>
 </html>

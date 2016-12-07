@@ -17,7 +17,7 @@ self.addEventListener('message', function(e) {
   case 'run_filter':
     var parameters = e.data.parameters;
     var output_filename = '/raw/' + parameters.output_filename;
-    var args = ['/raw/' + parameters.input_filename,
+    var args = [parameters.input_filenames.map(function(a){return '/raw/' +a;}).toString(),//'/raw/' + parameters.input_filename,
       output_filename,
       parameters.diffusion_time.toString(),
       parameters.lambda.toString(),

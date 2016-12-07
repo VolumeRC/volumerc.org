@@ -24,15 +24,42 @@
 #ifndef itkDiffusion_CoherenceEnhancingDiffusion2DCommandLine_h
 #define itkDiffusion_CoherenceEnhancingDiffusion2DCommandLine_h
 
-#include "itkImageFileReader.h"
+//#include "itkImageFileReader.h"
+#include "itkImageSeriesReader.h"
 #include "itkImageFileWriter.h"
 #include "itkCoherenceEnhancingDiffusionFilter.h"
 #include "LinearAnisotropicDiffusionCommandLine.h"
 #include "itkTimeProbe.h"
 #include "itkPNGImageIOFactory.h"
+//#include "itkDCMTKImageIOFactory.h"
+#include "itkGDCMImageIOFactory.h"
 #include "itkCommand.h"
 
 #include "emscripten.h"
+
+/***/
+
+#include <string>
+#include <sstream>
+#include <vector>
+
+void split(const std::string &s, char delim, std::vector<std::string> &elems) {
+  std::stringstream ss;
+  ss.str(s);
+  std::string item;
+  while (std::getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+  std::vector<std::string> elems;
+  split(s, delim, elems);
+  return elems;
+}
+/***/
+
 
 namespace CoherenceEnhancingDiffusion2DCommandLine
 {
@@ -100,9 +127,13 @@ int Execute(int argc, char * argv[])
     return EXIT_SUCCESS;
     }
 
-  const char * imageFileName = argv[1];
+  std::vector< std::string > imageFileNames = split(argv[1], ',');
+  const char * imageFileName = imageFileNames[0].c_str();//const char * imageFileName = argv[1];
+  std::cout << "Checking type with first file in list:" << imageFileName << "(" << imageFileNames.size() << ")" << std::endl;
 
   itk::ObjectFactoryBase::RegisterFactory( itk::PNGImageIOFactory::New() );
+  //itk::ObjectFactoryBase::RegisterFactory( itk::DCMTKImageIOFactory::New() );
+  itk::ObjectFactoryBase::RegisterFactory(itk::GDCMImageIOFactory::New());
 
   itk::ImageIOBase::Pointer imageIO = itk::ImageIOFactory::CreateImageIO( imageFileName, itk::ImageIOFactory::ReadMode );
   if( imageIO.IsNull() )
@@ -184,13 +215,13 @@ int Execute(int argc, char * argv[])
 {
   typedef Image<PixelType,Dimension> ImageType;
 
-  typedef ImageFileReader<ImageType> ReaderType;
+  typedef ImageSeriesReader<ImageType> ReaderType;//typedef ImageFileReader<ImageType> ReaderType;
   typename ReaderType::Pointer reader = ReaderType::New();
 
-  const char * imageFileName = argv[1];
+  std::vector< std::string > imageFileNames = split(argv[1], ',');//const char * imageFileName = argv[1];
   const char * outputFileName = argv[2];
 
-  reader->SetFileName(imageFileName);
+  reader->SetFileNames(imageFileNames);//reader->SetFileName(imageFileName);
 
   typedef CoherenceEnhancingDiffusionFilter<ImageType,ScalarType> DiffusionFilterType;
   typename DiffusionFilterType::Pointer diffusionFilter = DiffusionFilterType::New();

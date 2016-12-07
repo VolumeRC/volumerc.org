@@ -79,15 +79,19 @@ Runner.Filter.prototype.execute = function () {
   progress_element.addClass('progress-bar-striped active');
   progress_element.html('Starting...');
 
-  var input_filename = this.parameters.input_filename;
-  var basename = input_filename.substr(0, input_filename.lastIndexOf('.'));
-  var extension = input_filename.substr(input_filename.lastIndexOf('.'));
-  this.parameters.output_filename = basename + 'Filtered' + extension;
+  this.parameters.output_filename = [];
+  var input_filenames=[];
+  for(var idx=0;idx<this.parameters.input_filenames.length;idx++){
+      var input_filename = this.parameters.input_filenames[idx];
+      var basename = input_filename.substr(0, input_filename.lastIndexOf('.'));
+      var extension = input_filename.substr(input_filename.lastIndexOf('.'));
+      input_filenames.push('/raw/' + input_filename);
+  }
+  this.parameters.output_filename = "output.mha";////basename + 'Filtered' + extension;
   $('#output-filename').html(this.parameters.output_filename);
-
   var output_filename = '/raw/' + this.parameters.output_filename;
 
-  var args = ['/raw/' + this.parameters.input_filename,
+  var args = [input_filenames,//'/raw/' + this.parameters.input_filename,
     output_filename,
     this.parameters.diffusion_time.toString(),
     this.parameters.lambda.toString(),
@@ -107,82 +111,90 @@ Runner.Filter.prototype.execute = function () {
 
 Runner.Filter.prototype.displayInput = function (filepath) {
   var input_data = FS.readFile(filepath, { encoding: 'binary' });
-  var input_img = document.getElementById("input-image");
+  var input_img = document.createElement("img"); //document.getElementById("input-image");
+  input_img.className = "img-responsive center-block";
+  input_img.alt = filepath;
   input_img.src = Runner.binaryToPng(input_data);
   input_img.style.visibility = 'visible';
+  
+  var input_previews = document.getElementById("input-previews");
+  input_previews.appendChild(input_img);
 };
 
 
-Runner.Filter.prototype.setInputFile = function (input_file) {
-  var input_filename = input_file;
-  if(typeof input_file === 'object') {
-    input_filename = input_file.name;
-  }
-  this.parameters.input_filename = input_filename;
-  //$('#input-filename').html(input_filename);
+Runner.Filter.prototype.setInputFile = function (input_files) {
+  this.parameters.input_filenames = [];
+  for(var idx=0;idx<input_files.length;idx++) {
+      var input_filename = input_files[idx];
+      if(typeof input_files[idx] === 'object') {
+        input_filename = input_files[idx].name;
+      }
+      this.parameters.input_filenames.push(input_filename);
+      //$('#input-filename').html(input_filename);
 
-  var input_filepath = '/raw/' + input_filename;
-  var input_display_filepath = '/display/' + input_filename + '.png';
-  // Re-use the file it has already been downloaded.
-  try {
-    FS.stat(input_filepath);
-    this.displayInput(input_display_filepath);
-    if(this.worker) {
-      this.worker.postMessage({'cmd': 'run_filter', 'parameters': this.parameters});
-    }
-    else {
-      Runner.filter.execute();
-    }
-  }
-  catch(err) {
-    if(typeof input_file === 'string') {
-      console.log('Downloading ' + input_filename);
-      xhr = new XMLHttpRequest();
-      /***/xhr.open('GET', '../../../imagenes/siggraph.png');//xhr.open('GET', 'images/' + input_filename);
-      xhr.responseType = 'arraybuffer';
-      xhr.overrideMimeType('application/octet-stream');
-      var that = this;
-      xhr.onload = function() {
-        console.log('Installing ' + input_filename);
-        var data = new Uint8Array(xhr.response);
-        FS.writeFile(input_filepath, data, { encoding: 'binary' });
-        Module.ccall('ConvertAndResample', 'number',
-          ['string', 'string'],
-          [input_filepath, input_display_filepath]);
-        that.displayInput(input_display_filepath);
-        if(that.worker) {
-          that.worker.postMessage({'cmd': 'install_input',
-            'input_filepath': input_filepath,
-            'data': data});
+      var input_filepath = '/raw/' + input_filename;
+      var input_display_filepath = '/display/' + input_filename + '.png';
+      // Re-use the file it has already been downloaded.
+      /*try {
+        FS.stat(input_filepath);
+        this.displayInput(input_display_filepath);
+        if(this.worker) {
+          this.worker.postMessage({'cmd': 'run_filter', 'parameters': this.parameters});
         }
         else {
           Runner.filter.execute();
         }
-      };
-      xhr.send();
-    }
-    else { // A File object
-      var reader = new FileReader();
-      var that = this;
-      reader.onload = (function(file) {
-        return function(e) {
-          var data = new Uint8Array(e.target.result);
-          FS.writeFile(input_filepath, data, { encoding: 'binary' });
-          Module.ccall('ConvertAndResample', 'number',
-            ['string', 'string'],
-            [input_filepath, input_display_filepath]);
-          that.displayInput(input_display_filepath);
-          if(that.worker) {
-            that.worker.postMessage({'cmd': 'install_input',
-              'input_filepath': input_filepath,
-              'data': data});
-          }
-          else {
-            Runner.filter.execute();
-          }
+      }
+      catch(err)*/ {
+        /*if(typeof input_files[0] === 'string') {
+          console.log('Downloading ' + input_filename);
+          xhr = new XMLHttpRequest();
+          xhr.open('GET', '../../../imagenes/siggraph.png');////xhr.open('GET', 'images/' + input_filename);
+          xhr.responseType = 'arraybuffer';
+          xhr.overrideMimeType('application/octet-stream');
+          var that = this;
+          xhr.onload = function() {
+            console.log('Installing ' + input_filename);
+            var data = new Uint8Array(xhr.response);
+            FS.writeFile(input_filepath, data, { encoding: 'binary' });
+            Module.ccall('ConvertAndResample', 'number',
+              ['string', 'string'],
+              [input_filepath, input_display_filepath]);
+            that.displayInput(input_display_filepath);
+            if(that.worker) {
+              that.worker.postMessage({'cmd': 'install_input',
+                'input_filepath': input_filepath,
+                'data': data});
+            }
+            else {
+              Runner.filter.execute();
+            }
+          };
+          xhr.send();
         }
-      })(input_file);
-      reader.readAsArrayBuffer(input_file);
+        else*/ { // A File object
+          var reader = new FileReader();
+          var that = this;
+          reader.onload = (function(file) {
+            return function(e) {
+              var data = new Uint8Array(e.target.result);
+              FS.writeFile(input_filepath, data, { encoding: 'binary' });
+              Module.ccall('ConvertAndResample', 'number',
+                ['string', 'string'],
+                [input_filepath, input_display_filepath]);
+              that.displayInput(input_display_filepath);
+              /*if(that.worker) {
+                that.worker.postMessage({'cmd': 'install_input',
+                  'input_filepath': input_filepath,
+                  'data': data});
+              }
+              else {
+                Runner.filter.execute();
+              }*/
+            }
+          })(input_files[idx]);
+          reader.readAsArrayBuffer(input_files[idx]);
+      }
     }
   }
 };
@@ -282,244 +294,6 @@ Runner.Filter.prototype.setUpFilterControls = function () {
         Runner.filter.postExecute();
       }
     }, false);
-  }
-};
-
-
-Runner.Filter.prototype.setFigure = function(figure, subfigure) {
-  switch(figure) {
-  // PacMan
-  case 2:
-    switch(subfigure) {
-    // cEED
-    case 2:
-      $('#diffusion-time-slider').slider('setValue', 20.0);
-      Runner.filter.parameters.diffusion_time = 20.0;
-      $('#lambda-slider').slider('setValue', 0.05);
-      Runner.filter.parameters.lambda = 0.05;
-      $('#diffusion-type').val('cEED');
-      Runner.filter.parameters.diffusion_type = 'cEED';
-      $('#noise-scale').slider('setValue', 3.0);
-      Runner.filter.parameters.noise_scale = 3.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      break;
-    // cCED
-    case 3:
-      $('#diffusion-time-slider').slider('setValue', 20.0);
-      Runner.filter.parameters.diffusion_time = 20.0;
-      $('#lambda-slider').slider('setValue', 0.05);
-      Runner.filter.parameters.lambda = 0.05;
-      $('#diffusion-type').val('cCED');
-      Runner.filter.parameters.diffusion_type = 'cCED';
-      $('#noise-scale').slider('setValue', 3.0);
-      Runner.filter.parameters.noise_scale = 3.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      break;
-    // Isotropic
-    case 4:
-      $('#diffusion-time-slider').slider('setValue', 20.0);
-      Runner.filter.parameters.diffusion_time = 20.0;
-      $('#lambda-slider').slider('setValue', 0.05);
-      Runner.filter.parameters.lambda = 0.05;
-      $('#diffusion-type').val('Isotropic');
-      Runner.filter.parameters.diffusion_type = 'Isotropic';
-      $('#noise-scale').slider('setValue', 3.0);
-      Runner.filter.parameters.noise_scale = 3.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      break;
-    default:
-      console.error('Unknown subfigure: ' + figure);
-    }
-    Runner.filter.setInputFile('InputImage.png');
-    break;
-  // FingerPrint
-  case 3:
-    switch(subfigure) {
-    // cEED
-    case 2:
-      $('#diffusion-time-slider').slider('setValue', 20.0);
-      Runner.filter.parameters.diffusion_time = 20.0;
-      $('#lambda-slider').slider('setValue', 0.02);
-      Runner.filter.parameters.lambda = 0.02;
-      $('#diffusion-type').val('cEED');
-      Runner.filter.parameters.diffusion_type = 'cEED';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      break;
-    // cCED
-    case 3:
-      $('#diffusion-time-slider').slider('setValue', 20.0);
-      Runner.filter.parameters.diffusion_time = 20.0;
-      $('#lambda-slider').slider('setValue', 0.02);
-      Runner.filter.parameters.lambda = 0.02;
-      $('#diffusion-type').val('cCED');
-      Runner.filter.parameters.diffusion_type = 'cCED';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      break;
-    // Isotropic
-    case 4:
-      $('#diffusion-time-slider').slider('setValue', 20.0);
-      Runner.filter.parameters.diffusion_time = 20.0;
-      $('#lambda-slider').slider('setValue', 0.02);
-      Runner.filter.parameters.lambda = 0.02;
-      $('#diffusion-type').val('Isotropic');
-      Runner.filter.parameters.diffusion_type = 'Isotropic';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      break;
-    default:
-      console.error('Unknown subfigure: ' + figure);
-    }
-    Runner.filter.setInputFile('FingerPrint.png');
-    break;
-  // Lena
-  case 6:
-    switch(subfigure) {
-    // cEED
-    case 2:
-      $('#diffusion-time-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.diffusion_time = 2.0;
-      $('#lambda-slider').slider('setValue', 0.003);
-      Runner.filter.parameters.lambda = 0.003;
-      $('#diffusion-type').val('cEED');
-      Runner.filter.parameters.diffusion_type = 'cEED';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 4.0);
-      Runner.filter.parameters.exponent = 4.0;
-      break;
-    // cCED
-    case 3:
-      $('#diffusion-time-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.diffusion_time = 2.0;
-      $('#lambda-slider').slider('setValue', 0.003);
-      Runner.filter.parameters.lambda = 0.003;
-      $('#diffusion-type').val('cCED');
-      Runner.filter.parameters.diffusion_type = 'cCED';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 4.0);
-      Runner.filter.parameters.exponent = 4.0;
-      break;
-    // Isotropic
-    case 4:
-      $('#diffusion-time-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.diffusion_time = 2.0;
-      $('#lambda-slider').slider('setValue', 0.003);
-      Runner.filter.parameters.lambda = 0.003;
-      $('#diffusion-type').val('Isotropic');
-      Runner.filter.parameters.diffusion_type = 'Isotropic';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 4.0);
-      Runner.filter.parameters.exponent = 4.0;
-      break;
-    default:
-      console.error('Unknown subfigure: ' + figure);
-    }
-    Runner.filter.setInputFile('Lena_Detail.png');
-    break;
-  // Oscillations and Triangle
-  case 8:
-    switch(subfigure) {
-    // Oscillations cCED
-    case 2:
-      $('#diffusion-time-slider').slider('setValue', 20.0);
-      Runner.filter.parameters.diffusion_time = 20.0;
-      $('#lambda-slider').slider('setValue', 0.03);
-      Runner.filter.parameters.lambda = 0.03;
-      $('#diffusion-type').val('cCED');
-      Runner.filter.parameters.diffusion_type = 'cCED';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      Runner.filter.setInputFile('Oscillations_Noisy.png');
-      break;
-    // Oscillations CED
-    case 3:
-      $('#diffusion-time-slider').slider('setValue', 20.0);
-      Runner.filter.parameters.diffusion_time = 20.0;
-      $('#lambda-slider').slider('setValue', 0.03);
-      Runner.filter.parameters.lambda = 0.03;
-      $('#diffusion-type').val('CED');
-      Runner.filter.parameters.diffusion_type = 'CED';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      Runner.filter.setInputFile('Oscillations_Noisy.png');
-      break;
-    // Triangle cCED
-    case 5:
-      $('#diffusion-time-slider').slider('setValue', 5.0);
-      Runner.filter.parameters.diffusion_time = 5.0;
-      $('#lambda-slider').slider('setValue', 0.05);
-      Runner.filter.parameters.lambda = 0.05;
-      $('#diffusion-type').val('cEED');
-      Runner.filter.parameters.diffusion_type = 'cEED';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      Runner.filter.setInputFile('Triangle.png');
-      break;
-    // Triangle CED
-    case 6:
-      $('#diffusion-time-slider').slider('setValue', 5.0);
-      Runner.filter.parameters.diffusion_time = 5.0;
-      $('#lambda-slider').slider('setValue', 0.05);
-      Runner.filter.parameters.lambda = 0.05;
-      $('#diffusion-type').val('EED');
-      Runner.filter.parameters.diffusion_type = 'EED';
-      $('#noise-scale').slider('setValue', 1.0);
-      Runner.filter.parameters.noise_scale = 1.0;
-      $('#feature-scale').slider('setValue', 2.0);
-      Runner.filter.parameters.feature_scale = 2.0;
-      $('#exponent-slider').slider('setValue', 2.0);
-      Runner.filter.parameters.exponent = 2.0;
-      Runner.filter.setInputFile('Triangle.png');
-      break;
-    default:
-      console.error('Unknown subfigure: ' + figure);
-    }
-    break;
-  default:
-    console.error('Unknown figure: ' + figure);
   }
 };
 
