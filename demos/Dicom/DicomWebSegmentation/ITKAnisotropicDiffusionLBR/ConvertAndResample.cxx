@@ -9,6 +9,7 @@
 #include "itkPNGImageIOFactory.h"
 //#include "itkDCMTKImageIOFactory.h"
 #include "itkGDCMImageIOFactory.h"
+#include "itkMetaImageIOFactory.h"
 
 
 /** Convert the input image to a PNG and resample it for display. */
@@ -97,8 +98,9 @@ extern "C"
 int ConvertAndResample(char *inputFileName, char *outputFileName) {
     try {
         itk::ObjectFactoryBase::RegisterFactory(itk::PNGImageIOFactory::New());
-        //itk::ObjectFactoryBase::RegisterFactory( itk::DCMTKImageIOFactory::New() );
+        //itk::ObjectFactoryBase::RegisterFactory(itk::DCMTKImageIOFactory::New());
         itk::ObjectFactoryBase::RegisterFactory(itk::GDCMImageIOFactory::New());
+        itk::ObjectFactoryBase::RegisterFactory(itk::MetaImageIOFactory::New());
 
         itk::ImageIOBase::Pointer imageIO = itk::ImageIOFactory::CreateImageIO(inputFileName,
                                                                                itk::ImageIOFactory::ReadMode);
@@ -140,9 +142,11 @@ int ConvertAndResample(char *inputFileName, char *outputFileName) {
                         return EXIT_FAILURE;
                 }
             case 3:
-                return ConvertAndResample<itk::RGBPixel<unsigned char>, itk::RGBAPixel<unsigned char> >(inputFileName, outputFileName);
+                return ConvertAndResample<itk::RGBPixel<unsigned char>, itk::RGBAPixel<unsigned char> >(inputFileName,
+                                                                                                        outputFileName);
             case 4:
-                return ConvertAndResample<itk::RGBAPixel<unsigned char>, itk::RGBAPixel<unsigned char> >(inputFileName, outputFileName);
+                return ConvertAndResample<itk::RGBAPixel<unsigned char>, itk::RGBAPixel<unsigned char> >(inputFileName,
+                                                                                                         outputFileName);
             default:
                 std::cerr << "Sorry, unsupported number of components." << std::endl;
                 return EXIT_FAILURE;

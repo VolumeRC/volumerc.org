@@ -14,10 +14,10 @@
     <script type="text/javascript" src="../js/dat.gui.min.js"></script>
     <script type="text/javascript" src="../js/tinycolor.js"></script>
 
-<!---->
+<!--
     <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/pace.css" rel="stylesheet">
     <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/pace.min.js"></script>
-
+-->
     <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/bootstrap.min.css" rel="stylesheet">
     <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/bootstrap-theme.min.css" rel="stylesheet">
     <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/bootstrap.min.js" async></script>
@@ -25,13 +25,15 @@
     <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/bootstrap-slider.min.js" async></script>
 
     <script type="text/javascript" src="EmscriptenDebug.js"></script>
-<!--script type="text/javascript" src="CoherenceEnhancingDiffusion.js" async></script-->
+<script type="text/javascript" src="CoherenceEnhancingDiffusion.js" async></script>
 <!--script type="text/javascript" src="CoherenceEnhancingDiffusion.pretty.js" async></script-->
 <!--script type="text/javascript" src="CoherenceEnhancingDiffusion.1.js" async></script-->
 <!--script type="text/javascript" src="CoherenceEnhancingDiffusion.1.pretty.js" async></script-->
-<script type="text/javascript" src="CoherenceEnhancingDiffusion.2.js" async></script>
-    <script type="text/javascript" src="FileSaver.min.js" async></script>
-    <script type="text/javascript" src="Runner.js" async></script>
+<!--script type="text/javascript" src="CoherenceEnhancingDiffusion.2.js" ></script-->
+    <script type="text/javascript" src="ConvertAndResample.js" ></script>
+    <script type="text/javascript" src="CTThresholdSegmentation.js" ></script>
+    <script type="text/javascript" src="FileSaver.min.js"></script>
+    <script type="text/javascript" src="Runner.js"></script>
 
 <!---->
 
@@ -136,7 +138,7 @@
                 R_TF_EDITOR.clear();
                 R_TF_EDITOR.remove();
             }
-            R_TF_EDITOR = Raphael("tfEditorHolder", 1024, 150);
+            R_TF_EDITOR = Raphael("tfEditorHolder", 512, 75);
             var TF_WIDTH = R_TF_EDITOR.width;
             var TF_HEIGHT = R_TF_EDITOR.height;
             R_TF_EDITOR.rect(0, 0, TF_WIDTH, TF_HEIGHT).attr({fill: colorBackground, stroke: "none"});
@@ -281,7 +283,7 @@ Drop something straight into the following X3DOM canvas.
     <div id="MyX3DPlaceHolder">
         <!-- X3DOM node -->
         <X3D id="MyX3D" xmlns='http://www.web3d.org/specifications/x3d-namespace' showStat='false' showLog='false'
-             width='1024px' height='640px'>
+             width='512px' height='320px'>
             <Scene id="X3DScene">
                 <Background skyColor='0.3 0.3 0.3'></Background>
                 <Viewpoint description='Default' zNear='0.0001' zFar='100'></Viewpoint>
@@ -289,7 +291,7 @@ Drop something straight into the following X3DOM canvas.
                     <VolumeData id='volume' dimensions='4.0 4.0 4.0'>
                         <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='1' slicesOverX='1'
                                            slicesOverY='1' hideChildren="true">
-                            <canvas width='4096' height='4096' id='voxelCanvas'></canvas>
+                            <canvas width='1024' height='1024' id='voxelCanvas'></canvas>
                         </ImageTextureAtlas>
                         <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='6.0'>
                             <ImageTexture containerField='transferFunction' hideChildren="true">
@@ -312,7 +314,7 @@ Drop something straight into the following X3DOM canvas.
 <div id="InvisibleDiv" style="display:none;background:#888888;width:50%;height:50%">
     <canvas width='256' height='10' id="tfTmpCanvas"></canvas>
     <canvas width='32' height='32' id="tmpCanvas"></canvas>
-    <div id="fullHistogramHolder" style="width:1024px;height:200px;display:none;">
+    <div id="fullHistogramHolder" style="width:512px;height:100px;display:none;">
         <canvas id="fullHistogramCanvas" width="255" height="100"></canvas>
     </div>
 </div>
