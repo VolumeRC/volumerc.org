@@ -241,7 +241,7 @@ namespace CTThresholdSegmentationCommandLine {
         if (argIndex < argc) {
             itkGenericExceptionMacro("Error: excessive number of arguments");
         }
-		segmentationFilter->SetInsideValue(255);
+		segmentationFilter->SetInsideValue(127);
 		segmentationFilter->SetOutsideValue(0);
 
 
