@@ -21,14 +21,15 @@
 //
 //
 
-#ifndef itkDiffusion_CTThresholdSegmentationCommandLine_h
-#define itkDiffusion_CTThresholdSegmentationCommandLine_h
+#ifndef itkCTThresholdSegmentationCommandLine_h
+#define itkCTThresholdSegmentationCommandLine_h
 
 //#include "itkImageFileReader.h"
 #include "itkImageSeriesReader.h"
 #include "itkImageFileWriter.h"
-#include "itkCoherenceEnhancingDiffusionFilter.h"
-#include "LinearAnisotropicDiffusionCommandLine.h"
+#include "itkBinaryThresholdImageFilter.h"
+#include "itkCastImageFilter.h"
+//#include "LinearAnisotropicDiffusionCommandLine.h"
 #include "itkTimeProbe.h"
 #include "itkPNGImageIOFactory.h"
 //#include "itkDCMTKImageIOFactory.h"
@@ -70,12 +71,8 @@ namespace CTThresholdSegmentationCommandLine {
         std::cerr <<
                   "Input image filename -     2D and 3D images supported. Required.\n" <<
                   "Output image filename -    Required.\n" <<
-                  "Diffusion time -           Suggested range: 0.5-5, up to 50 for strong noise. Default: 2.\n" <<
-                  "Lambda -                   Small values detect more edges. Suggested range: 0.05, 0.0001. Default: 0.01\n"
-                  <<
-                  "Weickert diffusion type -  Accepted values: Edge, Coherence. Default: Edge.\n" <<
-                  "Noise scale -              Suggested range: 0.5 - 4. Default 1.\n" <<
-                  "Feature scale -            Suggested range: 2-6. Default 2.\n"
+                  "Lower threshold -          500.\n" <<
+                  "Upper threshold -          1500.\n"
                   << "\n";
     }
 
@@ -89,11 +86,8 @@ namespace CTThresholdSegmentationCommandLine {
     template<int VDimension, typename ScalarType, typename ComponentType>
     int Execute(int argc, char *argv[], int nComponents);
 
-    template<int VDimension, typename ScalarType, typename PixelType, typename ExportPixelType>
+    template<int VDimension, typename PixelType, typename ExportPixelType>
     int Execute(int argc, char *argv[]);
-
-
-    typedef LinearAnisotropicDiffusionCommandLine::ReportProgressToCOutType ReportProgressToCOutType;
 
     class EmscriptenProgressUpdate : public itk::Command {
     public:
@@ -196,24 +190,25 @@ namespace CTThresholdSegmentationCommandLine {
     int Execute(int argc, char *argv[], int nComponents) {
         switch (nComponents) {
             case 1:
-                return Execute<Dimension, ScalarType, ScalarType, ComponentType>(argc, argv);
-            case 2:
-                return Execute<Dimension, ScalarType, Vector < ScalarType, 2>, Vector < ComponentType, 2 > >
-                                                                                                       (argc, argv);
-            case 3:
-                return Execute<Dimension, ScalarType, Vector < ScalarType, 3>, Vector < ComponentType, 3 > >
-                                                                                                       (argc, argv);
-            case 4:
-                return Execute<Dimension, ScalarType, Vector < ScalarType, 4>, Vector < ComponentType, 4 > >
-                                                                                                       (argc, argv);
+                return Execute<Dimension, ScalarType, ComponentType>(argc, argv);
+//            case 2:
+//                return Execute<Dimension, Vector < ScalarType, 2>, Vector < ComponentType, 2 > >
+//                                                                                                       (argc, argv);
+//            case 3:
+//                return Execute<Dimension, Vector < ScalarType, 3>, Vector < ComponentType, 3 > >
+//                                                                                                       (argc, argv);
+//            case 4:
+//                return Execute<Dimension, Vector < ScalarType, 4>, Vector < ComponentType, 4 > >
+//                                                                                                       (argc, argv);
             default:
                 itkGenericExceptionMacro("Sorry, unsupported number of components");
         }
     }
 
-    template<int Dimension, typename ScalarType, typename PixelType, typename ExportPixelType>
+    template<int Dimension, typename PixelType, typename ExportPixelType>
     int Execute(int argc, char *argv[]) {
         typedef Image <PixelType, Dimension> ImageType;
+		typedef Image <ExportPixelType, Dimension> OutputImageType;
 
         typedef ImageSeriesReader <ImageType> ReaderType;//typedef ImageFileReader<ImageType> ReaderType;
         typename ReaderType::Pointer reader = ReaderType::New();
@@ -223,74 +218,39 @@ namespace CTThresholdSegmentationCommandLine {
 
         reader->SetFileNames(imageFileNames);//reader->SetFileName(imageFileName);
 
-        typedef CoherenceEnhancingDiffusionFilter <ImageType, ScalarType> DiffusionFilterType;
-        typename DiffusionFilterType::Pointer diffusionFilter = DiffusionFilterType::New();
-        diffusionFilter->SetInput(reader->GetOutput());
-
-        ReportProgressToCOutType::Pointer reportDiffusionProgress = ReportProgressToCOutType::New();
-        diffusionFilter->AddObserver(ProgressEvent(), reportDiffusionProgress);
+        typedef BinaryThresholdImageFilter <ImageType, OutputImageType> SegmentationFilterType;
+        typename SegmentationFilterType::Pointer segmentationFilter = SegmentationFilterType::New();
+        segmentationFilter->SetInput(reader->GetOutput());
 
         EmscriptenProgressUpdate::Pointer emscriptenProgress = EmscriptenProgressUpdate::New();
-        diffusionFilter->AddObserver(ProgressEvent(), emscriptenProgress);
+        //segmentationFilter->AddObserver(ProgressEvent(), emscriptenProgress);
 
         int argIndex = 3;
         if (argIndex < argc) {
             const double diffusionTime = atof(argv[argIndex++]);
-            if (diffusionTime == 0) itkGenericExceptionMacro("Error: Unrecognized diffusion time (third argument).\n");
-            diffusionFilter->SetDiffusionTime(diffusionTime);
+            if (diffusionTime == 0) itkGenericExceptionMacro("Error: Unrecognized lower threshold (third argument).\n");
+            segmentationFilter->SetLowerThreshold(500);
         }
 
         if (argIndex < argc) {
             const double lambda = atof(argv[argIndex++]);
-            if (lambda == 0.) itkGenericExceptionMacro("Error: Unrecognized lambda (fourth argument).\n");
-            diffusionFilter->SetLambda(lambda);
-        }
-
-        if (argIndex < argc) {
-            const char *enhancement = argv[argIndex++];
-            if (!strcmp(enhancement, "EED"))
-                diffusionFilter->SetEnhancement(DiffusionFilterType::EED); // Weickert's exponent : 4.
-            else if (!strcmp(enhancement, "cEED"))
-                diffusionFilter->SetEnhancement(DiffusionFilterType::cEED); // Weickert's exponent : 4.
-            else if (!strcmp(enhancement, "CED"))
-                diffusionFilter->SetEnhancement(DiffusionFilterType::CED); // Weickert's exponent : 2.
-            else if (!strcmp(enhancement, "cCED"))
-                diffusionFilter->SetEnhancement(DiffusionFilterType::cCED); // Weickert's exponent : 2.
-            else if (!strcmp(enhancement, "Isotropic"))
-                diffusionFilter->SetEnhancement(DiffusionFilterType::Isotropic); //Perona-Mali's exponent: 2.
-            else
-                itkGenericExceptionMacro("Error: Unrecognized enhancement (fifth argument).\n");
-        }
-
-        if (argIndex < argc) {
-            const double noiseScale = atof(argv[argIndex++]);
-            if (noiseScale == 0.) itkGenericExceptionMacro("Error: Unrecognized noiseScale (sixth argument).\n");
-            diffusionFilter->SetNoiseScale(noiseScale);
-        }
-
-        if (argIndex < argc) {
-            const double featureScale = atof(argv[argIndex++]);
-            if (featureScale == 0.) itkGenericExceptionMacro("Error: Unrecognized featureScale (seventh argument).\n");
-            diffusionFilter->SetFeatureScale(featureScale);
-        }
-
-        if (argIndex < argc) {
-            const double exponent = atof(argv[argIndex++]);
-            if (exponent == 0.) itkGenericExceptionMacro("Error: Unrecognized exponent (eighth argument).\n");
-            diffusionFilter->SetExponent(exponent);
+            if (lambda == 0.) itkGenericExceptionMacro("Error: Unrecognized upper threshold (fourth argument).\n");
+            segmentationFilter->SetUpperThreshold(1500);
         }
 
         if (argIndex < argc) {
             itkGenericExceptionMacro("Error: excessive number of arguments");
         }
+		segmentationFilter->SetInsideValue(255);
+		segmentationFilter->SetOutsideValue(0);
 
 
         typedef Image <ExportPixelType, Dimension> ExportImageType;
-        typedef CastImageFilter <ImageType, ExportImageType> CasterType;
+        typedef CastImageFilter <OutputImageType, ExportImageType> CasterType;
         typename CasterType::Pointer caster = CasterType::New();
-        caster->SetInput(diffusionFilter->GetOutput());
+        caster->SetInput(segmentationFilter->GetOutput());
 
-        //typedef typename DiffusionFilterType::ScalarImageType ScalarImageType;
+        //typedef typename SegmentationFilterType::ScalarImageType ScalarImageType;
         typedef ImageFileWriter <ExportImageType> WriterType;
         typename WriterType::Pointer writer = WriterType::New();
         writer->SetInput(caster->GetOutput());

@@ -1,0 +1,1 @@
+Cannot load CMake project: Neither MinGW nor Cygwin is selected

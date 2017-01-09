@@ -3,9 +3,14 @@ var FilterWorker = FilterWorker || {};
 //importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.js');
 //importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.1.js');
 //importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.1.pretty.js');
-importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.2.js');
-importScripts('EmscriptenDebug.js', 'ConvertAndResample.js');
-importScripts('EmscriptenDebug.js', 'CTThresholdSegmentation.js');
+//importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.2.js');
+//var ModuleCE = ModuleCE;
+//importScripts('EmscriptenDebug.js', 'ConvertAndResample.js');
+//var ModuleCR = ModuleCR;
+//importScripts('EmscriptenDebug.js', 'CTThresholdSegmentation.js');
+//var ModuleCT = ModuleCT;
+
+importScripts('EmscriptenDebug.js', 'CTThresholdSegmentationAll.js');
 
 // Where to put the raw input and output images.
 FS.mkdir('/raw');
@@ -23,13 +28,14 @@ self.addEventListener('message', function (e) {
                 return '/raw/' + a;
             }).toString(),//'/raw/' + parameters.input_filename,
                 output_filename,
-                parameters.diffusion_time.toString(),
-                parameters.lambda.toString(),
-                parameters.diffusion_type,
-                parameters.noise_scale.toString(),
-                parameters.feature_scale.toString(),
-                parameters.exponent.toString()];
-            FS.lookupPath("/raw").node;
+                //parameters.diffusion_time.toString(),
+                //parameters.lambda.toString(),
+                //parameters.diffusion_type,
+                //parameters.noise_scale.toString(),
+                //parameters.feature_scale.toString(),
+                //parameters.exponent.toString()
+				];
+            //FS.lookupPath("/raw").node;
             Module.callMain(args);
 
             var output_data = FS.readFile(output_filename, {encoding: 'binary'});

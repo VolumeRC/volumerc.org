@@ -1,5 +1,8 @@
 // Emscripten namespace
 var Module = Module || {};
+//var ModuleCE = ModuleCE || {};
+//var ModuleCR = ModuleCR || {};
+//var ModuleCT = ModuleCT || {};
 
 // Our namespace
 var Runner = Runner || {};

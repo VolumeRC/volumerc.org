@@ -14,28 +14,29 @@
     <script type="text/javascript" src="../js/dat.gui.min.js"></script>
     <script type="text/javascript" src="../js/tinycolor.js"></script>
 
-<!--
-    <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/pace.css" rel="stylesheet">
-    <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/pace.min.js"></script>
--->
-    <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/bootstrap.min.css" rel="stylesheet">
-    <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/bootstrap-theme.min.css" rel="stylesheet">
-    <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/bootstrap.min.js" async></script>
-    <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/bootstrap-slider.min.css" rel="stylesheet">
-    <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/bootstrap-slider.min.js" async></script>
+    <!--
+        <link href="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/css/pace.css" rel="stylesheet">
+        <script type="text/javascript" src="http://insightsoftwareconsortium.github.io/ITKAnisotropicDiffusionLBR/js/pace.min.js"></script>
+    -->
+    <link href="ITKAnisotropicDiffusionLBR/css/bootstrap.min.css" rel="stylesheet">
+    <link href="ITKAnisotropicDiffusionLBR/css/bootstrap-theme.min.css" rel="stylesheet">
+    <script type="text/javascript" src="ITKAnisotropicDiffusionLBR/js/bootstrap.min.js" async></script>
+    <link href="ITKAnisotropicDiffusionLBR/css/bootstrap-slider.min.css" rel="stylesheet">
+    <script type="text/javascript" src="ITKAnisotropicDiffusionLBR/js/bootstrap-slider.min.js" async></script>
 
     <script type="text/javascript" src="EmscriptenDebug.js"></script>
-<script type="text/javascript" src="CoherenceEnhancingDiffusion.js" async></script>
-<!--script type="text/javascript" src="CoherenceEnhancingDiffusion.pretty.js" async></script-->
-<!--script type="text/javascript" src="CoherenceEnhancingDiffusion.1.js" async></script-->
-<!--script type="text/javascript" src="CoherenceEnhancingDiffusion.1.pretty.js" async></script-->
-<!--script type="text/javascript" src="CoherenceEnhancingDiffusion.2.js" ></script-->
-    <script type="text/javascript" src="ConvertAndResample.js" ></script>
-    <script type="text/javascript" src="CTThresholdSegmentation.js" ></script>
+    <!--script type="text/javascript" src="CoherenceEnhancingDiffusion.js"></script-->
+    <!--script type="text/javascript" src="CoherenceEnhancingDiffusion.pretty.js"></script-->
+    <!--script type="text/javascript" src="CoherenceEnhancingDiffusion.1.js"></script-->
+    <!--script type="text/javascript" src="CoherenceEnhancingDiffusion.1.pretty.js"></script-->
+    <!--script type="text/javascript" src="CoherenceEnhancingDiffusion.2.js"></script-->
+    <!--script type="text/javascript" src="ConvertAndResample.js" ></script-->
+    <!--script type="text/javascript" src="CTThresholdSegmentation.js" ></script-->
+    <script type="text/javascript" src="CTThresholdSegmentationAll.js"></script>
     <script type="text/javascript" src="FileSaver.min.js"></script>
     <script type="text/javascript" src="Runner.js"></script>
 
-<!---->
+    <!---->
 
     <script type="text/javascript">
         // Prevents the drop target element from triggering default action on dropped files (download)
@@ -50,14 +51,14 @@
             event.stopPropagation();
             event.preventDefault();
 
-            document.getElementById("input-previews").innerHTML="";
+            document.getElementById("input-previews").innerHTML = "";
             Runner.filter.setInputFile(event.dataTransfer.files);
 
             // Get the number of slices info, to update the ImageTextureAtlas
             CURRENT_FILES = event.dataTransfer.files;
             var numberOfSlices = event.dataTransfer.files.length;
             var slicesOverX = Math.ceil(Math.sqrt(numberOfSlices)),
-                    slicesOverY = slicesOverX;
+                slicesOverY = slicesOverX;
 
             // Reset the X3D scene declaration, and reload the scene;
             resetScene(numberOfSlices, slicesOverX, slicesOverY);
@@ -80,9 +81,9 @@
             myX3D.parentNode.removeChild(myX3D);
             // Replace original numberOfSlices/slicesOverX/slicesOverY CURRENT_TF_VALUES with current ones
             myX3DPlaceHolder.innerHTML = ORIGINAL_X3DNODE_HTML
-                    .replace(/numberOfSlices=.[\d]*./i, "numberOfSlices='" + numberOfSlices + "'")
-                    .replace(/slicesOverX=.[\d]*./i, "slicesOverX='" + slicesOverX + "'")
-                    .replace(/slicesOverY=.[\d]*./i, "slicesOverY='" + slicesOverY + "'");
+                .replace(/numberOfSlices=.[\d]*./i, "numberOfSlices='" + numberOfSlices + "'")
+                .replace(/slicesOverX=.[\d]*./i, "slicesOverX='" + slicesOverX + "'")
+                .replace(/slicesOverY=.[\d]*./i, "slicesOverY='" + slicesOverY + "'");
             // Force reload of scene
             x3dom.reload();
         }
@@ -95,22 +96,22 @@
                 filesToAtlas(CURRENT_FILES, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"), x3domcontrols.windowCenter, x3domcontrols.windowWidth);
             }
         }
-        function setNewTF(values, gradientColors){
+        function setNewTF(values, gradientColors) {
             //SINCE RAPHAEL IS SVG AND NOT CANVAS WE CAN'T COPY STRAIGHT INTO A CANVAS
             var tfTmpCanvas = document.getElementById("tfTmpCanvas");
             var ctx = tfTmpCanvas.getContext("2d");
             ctx.clearRect(0, 0, tfTmpCanvas.width, tfTmpCanvas.height);
-            var rangeWidth = Math.floor(tfTmpCanvas.width/x3domcontrols.numberOfHistogramPoints);
+            var rangeWidth = Math.floor(tfTmpCanvas.width / x3domcontrols.numberOfHistogramPoints);
             for (var i = 1; i < values.length; i++) {
-                var color1 = Raphael.color(gradientColors[i-1]);
+                var color1 = Raphael.color(gradientColors[i - 1]);
                 var color2 = Raphael.color(gradientColors[i]);
                 //"rgba("+color.R_TF_EDITOR+","+color.g+","+color.b+","+CURRENT_TF_VALUES[i]+")";
 
-                var grd = ctx.createLinearGradient((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
-                grd.addColorStop(0, "rgba(" + Math.floor(color1.r) + "," + Math.floor(color1.g) + "," + Math.floor(color1.b) + "," + values[i-1] + ")");
+                var grd = ctx.createLinearGradient((i - 1) * rangeWidth, 0, i * rangeWidth, tfTmpCanvas.height);
+                grd.addColorStop(0, "rgba(" + Math.floor(color1.r) + "," + Math.floor(color1.g) + "," + Math.floor(color1.b) + "," + values[i - 1] + ")");
                 grd.addColorStop(1, "rgba(" + Math.floor(color2.r) + "," + Math.floor(color2.g) + "," + Math.floor(color2.b) + "," + values[i] + ")");
                 ctx.fillStyle = grd;
-                ctx.fillRect((i-1)*rangeWidth, 0, i*rangeWidth, tfTmpCanvas.height);
+                ctx.fillRect((i - 1) * rangeWidth, 0, i * rangeWidth, tfTmpCanvas.height);
             }
 
             USE_TF_FROMEDITOR = true;
@@ -133,8 +134,8 @@
         var R_TF_CONTROLPOINTAREAS;
         var R_TF_CONTROLPOINTBUTTONS;
 
-        function createTFEditor(nControlPoints){
-            if(R_TF_EDITOR !== undefined){
+        function createTFEditor(nControlPoints) {
+            if (R_TF_EDITOR !== undefined) {
                 R_TF_EDITOR.clear();
                 R_TF_EDITOR.remove();
             }
@@ -148,29 +149,35 @@
             R_TF_CONTROLPOINTBUTTONS = R_TF_EDITOR.set();
             var isDrag = -1;
             var start = null;
-            var unhighlight = function () {};
+            var unhighlight = function () {
+            };
             var R_SPACE_BETWEEN_POINTS;
             var R_TF_UNDERLINE;
             var R_TF_LINE;
-            function initTFWithBWGradient(){
+
+            function initTFWithBWGradient() {
                 CURRENT_TF_VALUES = [];
                 CURRENT_TF_COLORS = [];
                 for (var i = 0; i < nControlPoints; i++) {
-                    CURRENT_TF_VALUES.push((i+1)*MAX_OPACITY/nControlPoints);
-                    var gray = Math.floor(255*(i)/(nControlPoints-1));
-                    CURRENT_TF_COLORS.push("rgba("+gray+","+gray+","+gray+","+opacityUnderLine+")");
+                    CURRENT_TF_VALUES.push((i + 1) * MAX_OPACITY / nControlPoints);
+                    var gray = Math.floor(255 * (i) / (nControlPoints - 1));
+                    CURRENT_TF_COLORS.push("rgba(" + gray + "," + gray + "," + gray + "," + opacityUnderLine + ")");
                 }
                 //var colorGradient = ;
                 R_SPACE_BETWEEN_POINTS = TF_WIDTH / CURRENT_TF_VALUES.length;
-                R_TF_UNDERLINE = R_TF_EDITOR.path().attr({stroke: "none", fill: [0].concat(CURRENT_TF_COLORS).join("-"), opacity: 0});
+                R_TF_UNDERLINE = R_TF_EDITOR.path().attr({
+                    stroke: "none",
+                    fill: [0].concat(CURRENT_TF_COLORS).join("-"),
+                    opacity: 0
+                });
                 R_TF_LINE = R_TF_EDITOR.path().attr({stroke: colorLine, "stroke-width": 2});
             }
 
             function translate(x, y) {
-                return [ TF_WIDTH / (CURRENT_TF_VALUES.length - 1) * x, TF_HEIGHT - TF_HEIGHT / MAX_OPACITY * y ];
+                return [TF_WIDTH / (CURRENT_TF_VALUES.length - 1) * x, TF_HEIGHT - TF_HEIGHT / MAX_OPACITY * y];
             }
 
-            function drawPath(X,Y,W,H) {
+            function drawPath(X, Y, W, H) {
                 var p = ["M", X[0], Y[0], "R"];
                 for (var j = 1; j < X.length; j++) {
                     p.push(X[j], Y[j]);
@@ -190,7 +197,10 @@
                     X[i] = xy[0];
                     Y[i] = xy[1];
                     (f = function (i, xy) {
-                        R_TF_CONTROLPOINTBUTTONS.push(R_TF_EDITOR.circle(xy[0], xy[1], 5).attr({fill: colorInactivePoint, stroke: "none"}));
+                        R_TF_CONTROLPOINTBUTTONS.push(R_TF_EDITOR.circle(xy[0], xy[1], 5).attr({
+                            fill: colorInactivePoint,
+                            stroke: "none"
+                        }));
                         R_TF_CONTROLPOINTAREAS.push(R_TF_EDITOR.circle(xy[0], xy[1], R_SPACE_BETWEEN_POINTS / 2).attr({
                             stroke: "none",
                             fill: "#fff",
@@ -200,25 +210,25 @@
                                 unhighlight = function () {
                                 };
                             } else {
-                                R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 10,fill: colorActivePoint}, 200);
+                                R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 10, fill: colorActivePoint}, 200);
                             }
                         }).mouseout(function () {
                             if (isDrag + 1) {
                                 unhighlight = function () {
-                                    R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
+                                    R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 5, fill: colorInactivePoint}, 200);
                                 };
                             } else {
-                                R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 5,fill: colorInactivePoint}, 200);
+                                R_TF_CONTROLPOINTBUTTONS.items[i].animate({r: 5, fill: colorInactivePoint}, 200);
                             }
                         }).drag(function (dx, dy) {
                             var start = this.start;
                             start && update(start.i, start.p + dy);
                         }, function (x, y) {
                             this.start = {i: i, m: y, p: Y[i]};
-                        }).click(function(){
+                        }).click(function () {
                             var currentColor = Raphael.color(document.getElementById("html5colorpicker").value);
-                            CURRENT_TF_COLORS[i] = "rgba("+currentColor.r+","+currentColor.g+","+currentColor.b+","+opacityUnderLine+")";
-                            R_TF_UNDERLINE.animate({fill : [0].concat(CURRENT_TF_COLORS).join("-")},100);
+                            CURRENT_TF_COLORS[i] = "rgba(" + currentColor.r + "," + currentColor.g + "," + currentColor.b + "," + opacityUnderLine + ")";
+                            R_TF_UNDERLINE.animate({fill: [0].concat(CURRENT_TF_COLORS).join("-")}, 100);
                             setNewTF(CURRENT_TF_VALUES, CURRENT_TF_COLORS);
                         }));
                         R_TF_CONTROLPOINTAREAS.items[R_TF_CONTROLPOINTAREAS.items.length - 1].node.style.cursor = "move";
@@ -237,8 +247,8 @@
                 (d > TF_HEIGHT ) && (d = TF_HEIGHT );
                 (d < 0) && (d = 0);
                 Y[i] = d;
-                CURRENT_TF_VALUES[i] = -1 / MAX_OPACITY*((Y[i]/TF_HEIGHT)-1);
-                drawPath(X,Y,TF_WIDTH,TF_HEIGHT);
+                CURRENT_TF_VALUES[i] = -1 / MAX_OPACITY * ((Y[i] / TF_HEIGHT) - 1);
+                drawPath(X, Y, TF_WIDTH, TF_HEIGHT);
                 R_TF_CONTROLPOINTBUTTONS.items[i].attr({cy: d});
                 R_TF_CONTROLPOINTAREAS.items[i].attr({cy: d});
                 setNewTF(CURRENT_TF_VALUES, CURRENT_TF_COLORS);
@@ -246,7 +256,7 @@
 
             initTFWithBWGradient();
             initPath();
-            drawPath(X,Y,TF_WIDTH,TF_HEIGHT);
+            drawPath(X, Y, TF_WIDTH, TF_HEIGHT);
 
             return R_TF_EDITOR;
         }
@@ -268,7 +278,10 @@
 
             var tfFolder = guiWL.addFolder('TF Editor options');
             var numberOfHistogramPoints = tfFolder.add(x3domcontrols, 'numberOfHistogramPoints').min(3).max(32).step(1);
-            numberOfHistogramPoints.onChange(function(value){R_TF_EDITOR = createTFEditor(value);setNewTF(CURRENT_TF_VALUES,CURRENT_TF_COLORS);});
+            numberOfHistogramPoints.onChange(function (value) {
+                R_TF_EDITOR = createTFEditor(value);
+                setNewTF(CURRENT_TF_VALUES, CURRENT_TF_COLORS);
+            });
 
             R_TF_EDITOR = createTFEditor(x3domcontrols.numberOfHistogramPoints);
         }
@@ -320,8 +333,8 @@ Drop something straight into the following X3DOM canvas.
 </div>
 
 <div id="tfEditor">
-<div id="tfEditorHolder"></div>
-<input id="html5colorpicker" value="#ffff00" type="color">
+    <div id="tfEditorHolder"></div>
+    <input id="html5colorpicker" value="#ffff00" type="color">
 </div>
 <div class="progress-bar" role="progressbar"
      aria-valuenow="0" arias-valuemin="0" aria-valuemax="100"

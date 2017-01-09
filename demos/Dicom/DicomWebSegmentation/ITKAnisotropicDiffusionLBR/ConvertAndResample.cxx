@@ -160,3 +160,8 @@ int ConvertAndResample(char *inputFileName, char *outputFileName) {
 
 } // end extern "C"
 
+#if !USE_EMSCRIPTEN
+int main(int argc, char **argv) {
+    return ConvertAndResample(argv[1], argv[2]);
+}
+#endif // !USE_EMSCRIPTEN

@@ -19,22 +19,18 @@
 #include <fstream>
 #include "CTThresholdSegmentationCommandLine.h"
 
-int main(int argc, char **argv)
-{
-  try
-    {
-      std::cout << "Command line: ";
-      for(int unsigned i=0;i<argc;i++)
-	{
-	  std::cout << argv[i] << " ";
-	}
-      std::cout << std::endl;
-    return CTThresholdSegmentationCommandLine::Execute(argc, argv);
+int main(int argc, char **argv) {
+    try {
+        std::cout << "Command line: ";
+        for (int unsigned i = 0; i < argc; i++) {
+            std::cout << argv[i] << " ";
+        }
+        std::cout << std::endl;
+        return CTThresholdSegmentationCommandLine::Execute(argc, argv);
     }
-  catch(itk::ExceptionObject& e)
-    {
-    std::cerr << "ITK Exception: " << e.GetDescription() << std::endl;
-    return EXIT_FAILURE;
+    catch (itk::ExceptionObject &e) {
+        std::cerr << "ITK Exception: " << e.GetDescription() << std::endl;
+        return EXIT_FAILURE;
     }
 }
 
