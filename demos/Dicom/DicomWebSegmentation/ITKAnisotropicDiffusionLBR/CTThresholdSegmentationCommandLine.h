@@ -37,6 +37,8 @@
 #include "itkMetaImageIOFactory.h"
 #include "itkCommand.h"
 
+#include "itkMinimumMaximumImageCalculator.h"
+
 #if USE_EMSCRIPTEN
 #include "emscripten.h"
 #endif // USE_EMSCRIPTEN
@@ -218,6 +220,13 @@ namespace CTThresholdSegmentationCommandLine {
 
         reader->SetFileNames(imageFileNames);//reader->SetFileName(imageFileName);
 
+        /*typedef MinimumMaximumImageCalculator<ImageType> MinMaxFilter;
+	typename MinMaxFilter::Pointer minmaxFilter = MinMaxFilter::New();
+	reader->Update();
+	minmaxFilter->SetImage(reader->GetOutput());
+	minmaxFilter->Compute();
+	std::cout << "Min=" << minmaxFilter->GetMinimum () << "Max=" << minmaxFilter->GetMaximum () << std::endl;*/
+
         typedef BinaryThresholdImageFilter <ImageType, OutputImageType> SegmentationFilterType;
         typename SegmentationFilterType::Pointer segmentationFilter = SegmentationFilterType::New();
         segmentationFilter->SetInput(reader->GetOutput());
@@ -225,24 +234,24 @@ namespace CTThresholdSegmentationCommandLine {
         EmscriptenProgressUpdate::Pointer emscriptenProgress = EmscriptenProgressUpdate::New();
         //segmentationFilter->AddObserver(ProgressEvent(), emscriptenProgress);
 
-        int argIndex = 3;
-        if (argIndex < argc) {
-            const double diffusionTime = atof(argv[argIndex++]);
-            if (diffusionTime == 0) itkGenericExceptionMacro("Error: Unrecognized lower threshold (third argument).\n");
+        //int argIndex = 3;
+        //if (argIndex < argc) {
+            //const double diffusionTime = atof(argv[argIndex++]);
+            //if (diffusionTime == 0) itkGenericExceptionMacro("Error: Unrecognized lower threshold (third argument).\n");
             segmentationFilter->SetLowerThreshold(500);
-        }
+        //}
 
-        if (argIndex < argc) {
-            const double lambda = atof(argv[argIndex++]);
-            if (lambda == 0.) itkGenericExceptionMacro("Error: Unrecognized upper threshold (fourth argument).\n");
+        //if (argIndex < argc) {
+            //const double lambda = atof(argv[argIndex++]);
+            //if (lambda == 0.) itkGenericExceptionMacro("Error: Unrecognized upper threshold (fourth argument).\n");
             segmentationFilter->SetUpperThreshold(1500);
-        }
+        //}
 
-        if (argIndex < argc) {
-            itkGenericExceptionMacro("Error: excessive number of arguments");
-        }
-		segmentationFilter->SetInsideValue(127);
-		segmentationFilter->SetOutsideValue(0);
+        //if (argIndex < argc) {
+            //itkGenericExceptionMacro("Error: excessive number of arguments");
+        //}
+	segmentationFilter->SetInsideValue(127);
+	segmentationFilter->SetOutsideValue(0);
 
 
         typedef Image <ExportPixelType, Dimension> ExportImageType;
@@ -258,6 +267,8 @@ namespace CTThresholdSegmentationCommandLine {
 
         itk::TimeProbe clock;
         clock.Start();
+	segmentationFilter->Update();
+	caster->Update();
         writer->Update();
         clock.Stop();
         std::cout << "Filtering took: " << clock.GetMean() << " seconds\n";
