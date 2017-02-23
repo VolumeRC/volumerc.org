@@ -26,6 +26,9 @@
 
 //#include "itkImageFileReader.h"
 #include "itkImageSeriesReader.h"
+#include "itkImageSeriesWriter.h"
+#include "itkGDCMImageIO.h"
+#include "itkNumericSeriesFileNames.h"
 #include "itkImageFileWriter.h"
 #include "itkBinaryThresholdImageFilter.h"
 #include "itkCastImageFilter.h"
@@ -218,6 +221,9 @@ namespace CTThresholdSegmentationCommandLine {
         std::vector <std::string> imageFileNames = split(argv[1], ',');//const char * imageFileName = argv[1];
         const char *outputFileName = argv[2];
 
+typedef GDCMImageIO ImageIOType;
+ImageIOType::Pointer gdcmIO = ImageIOType::New();
+reader->SetImageIO( gdcmIO );
         reader->SetFileNames(imageFileNames);//reader->SetFileName(imageFileName);
 
         /*typedef MinimumMaximumImageCalculator<ImageType> MinMaxFilter;
@@ -250,11 +256,12 @@ namespace CTThresholdSegmentationCommandLine {
         //if (argIndex < argc) {
             //itkGenericExceptionMacro("Error: excessive number of arguments");
         //}
-	segmentationFilter->SetInsideValue(127);
+	segmentationFilter->SetInsideValue(1);
 	segmentationFilter->SetOutsideValue(0);
 
 
         typedef Image <ExportPixelType, Dimension> ExportImageType;
+	typedef Image <ExportPixelType, 2> ExportImage2DType;
         typedef CastImageFilter <OutputImageType, ExportImageType> CasterType;
         typename CasterType::Pointer caster = CasterType::New();
         caster->SetInput(segmentationFilter->GetOutput());
@@ -265,11 +272,25 @@ namespace CTThresholdSegmentationCommandLine {
         writer->SetInput(caster->GetOutput());
         writer->SetFileName(outputFileName);
 
+typedef itk::NumericSeriesFileNames NamesGeneratorType;
+NamesGeneratorType::Pointer namesGenerator = NamesGeneratorType::New();
+namesGenerator->SetSeriesFormat( "OUTPUT%03d.dcm" );
+namesGenerator->SetEndIndex( imageFileNames.size() );
+
+  	typedef ImageSeriesWriter<ExportImageType, ExportImage2DType >  SeriesWriterType;
+  	typename SeriesWriterType::Pointer seriesWriter = SeriesWriterType::New();
+  	seriesWriter->SetInput( caster->GetOutput() );
+       	seriesWriter->SetImageIO( gdcmIO );
+        seriesWriter->SetFileNames( namesGenerator->GetFileNames() );
+std::cout << "Writing to:" << namesGenerator->GetFileNames()[0] << std::endl;
+  	seriesWriter->SetMetaDataDictionaryArray(reader->GetMetaDataDictionaryArray() );
+
         itk::TimeProbe clock;
         clock.Start();
 	segmentationFilter->Update();
 	caster->Update();
         writer->Update();
+	seriesWriter->Update();
         clock.Stop();
         std::cout << "Filtering took: " << clock.GetMean() << " seconds\n";
 
