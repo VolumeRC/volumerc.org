@@ -219,6 +219,7 @@ namespace CTThresholdSegmentationCommandLine {
         typename ReaderType::Pointer reader = ReaderType::New();
 
         std::vector <std::string> imageFileNames = split(argv[1], ',');//const char * imageFileName = argv[1];
+	std::cout << "Reading from:" << imageFileNames[0] << std::endl;
         const char *outputFileName = argv[2];
 
 typedef GDCMImageIO ImageIOType;
@@ -267,14 +268,19 @@ reader->SetImageIO( gdcmIO );
         caster->SetInput(segmentationFilter->GetOutput());
 
         //typedef typename SegmentationFilterType::ScalarImageType ScalarImageType;
-        typedef ImageFileWriter <ExportImageType> WriterType;
+        /*typedef ImageFileWriter <ExportImageType> WriterType;
         typename WriterType::Pointer writer = WriterType::New();
         writer->SetInput(caster->GetOutput());
-        writer->SetFileName(outputFileName);
+        writer->SetFileName(outputFileName);*/
 
 typedef itk::NumericSeriesFileNames NamesGeneratorType;
 NamesGeneratorType::Pointer namesGenerator = NamesGeneratorType::New();
+#if USE_EMSCRIPTEN
+namesGenerator->SetSeriesFormat( "/raw/OUTPUT%03d.dcm" );
+#else //USE_EMSCRIPTEN
 namesGenerator->SetSeriesFormat( "OUTPUT%03d.dcm" );
+#endif // USE_EMSCRIPTEN
+
 namesGenerator->SetEndIndex( imageFileNames.size() );
 
   	typedef ImageSeriesWriter<ExportImageType, ExportImage2DType >  SeriesWriterType;
@@ -282,14 +288,14 @@ namesGenerator->SetEndIndex( imageFileNames.size() );
   	seriesWriter->SetInput( caster->GetOutput() );
        	seriesWriter->SetImageIO( gdcmIO );
         seriesWriter->SetFileNames( namesGenerator->GetFileNames() );
-std::cout << "Writing to:" << namesGenerator->GetFileNames()[0] << std::endl;
+        std::cout << "Writing to:" << namesGenerator->GetFileNames()[0] << std::endl;
   	seriesWriter->SetMetaDataDictionaryArray(reader->GetMetaDataDictionaryArray() );
 
         itk::TimeProbe clock;
         clock.Start();
 	segmentationFilter->Update();
 	caster->Update();
-        writer->Update();
+        //writer->Update();
 	seriesWriter->Update();
         clock.Stop();
         std::cout << "Filtering took: " << clock.GetMean() << " seconds\n";
