@@ -59,10 +59,20 @@ Runner.Filter.prototype.setProgress = function (progress) {
     progress_element.html(progress_str + '%');
 };
 
+function pad(n, width, z) {
+  z = z || '0';
+  n = n + '';
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
 
 Runner.Filter.prototype.postExecute = function () {
-    var output_display_filename = '/display/Output.png';
-    var output_filename = '/raw/' + this.parameters.output_filename;
+    //var output_filename = '/raw/' + this.parameters.output_filename;
+    var output_filenames = [];
+    for (var idx = 0; idx < this.parameters.input_filenames.length; idx++) {
+	var output_display_filename = '/display/OUTPUT'+ pad(idx+1,3) +'.png';
+        var output_filename = 'OUTPUT' + pad(idx+1,3) +".dcm";
+        output_filenames.push('/raw/' + output_filename);console.log(output_filenames);
+    
     Module.ccall('ConvertAndResample', 'number',
         ['string', 'string'],
         [output_filename, output_display_filename]);
@@ -70,7 +80,7 @@ Runner.Filter.prototype.postExecute = function () {
     var output_img = document.getElementById("output-image");
     output_img.src = Runner.binaryToPng(output_data);
     output_img.style.visibility = 'visible';
-
+    }
     var progress_element = $('#execution-progress');
     this.setProgress(0);
     progress_element.removeClass('progress-bar-striped active');
@@ -88,8 +98,8 @@ Runner.Filter.prototype.execute = function () {
     var input_filenames = [];
     for (var idx = 0; idx < this.parameters.input_filenames.length; idx++) {
         var input_filename = this.parameters.input_filenames[idx];
-        var basename = input_filename.substr(0, input_filename.lastIndexOf('.'));
-        var extension = input_filename.substr(input_filename.lastIndexOf('.'));
+        //var basename = input_filename.substr(0, input_filename.lastIndexOf('.'));
+        //var extension = input_filename.substr(input_filename.lastIndexOf('.'));
         input_filenames.push('/raw/' + input_filename);
     }
     this.parameters.output_filename = "output.mha";////basename + 'Filtered' + extension;
@@ -299,8 +309,12 @@ Runner.Filter.prototype.setUpFilterControls = function () {
                 }
             }
             else { // Returning processed output image data
-                var output_filename = '/raw/' + Runner.filter.parameters.output_filename;
-                FS.writeFile(output_filename, e.data.output_data, {encoding: 'binary'});
+                //var output_filename = '/raw/' + Runner.filter.parameters.output_filename;
+                //FS.writeFile(output_filename, e.data.output_data, {encoding: 'binary'});
+		for (var idx = 0; idx < Runner.filter.parameters.input_filenames.length; idx++) {
+			var output_filename = '/raw/OUTPUT'+ pad(idx+1,3) +'.png';
+			FS.writeFile(output_filename, e.data.output_data, {encoding: 'binary'});
+		}
                 Runner.filter.postExecute();
             }
         }, false);
