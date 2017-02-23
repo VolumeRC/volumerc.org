@@ -36,13 +36,15 @@ file(COPY ${INPUT_DATA_DIR}/PacMan.png
 #add_executable(CTThresholdSegmentation
 #        CTThresholdSegmentation.cxx)
 
-add_executable(CTThresholdSegmentationAll
-        CTThresholdSegmentation.cxx
-        ConvertAndResample.cxx)
-
 MESSAGE(STATUS "CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}")
 
 IF (${CMAKE_SYSTEM_NAME} STREQUAL "Emscripten")
+add_executable(CTThresholdSegmentationAll
+        CTThresholdSegmentation.cxx
+        ConvertAndResample.cxx
+)
+
+
 #    target_compile_definitions(CoherenceEnhancingDiffusion PRIVATE USE_EMSCRIPTEN=1)
 #    set_target_properties(CoherenceEnhancingDiffusion PROPERTIES LINK_FLAGS
 #            "-s NO_EXIT_RUNTIME=1 -s INVOKE_RUN=0 -s MODULARIZE=1 -s EXPORT_NAME=\"'ModuleCE'\" -s EXPORTED_FUNCTIONS=\"['_main']\"")
@@ -71,6 +73,13 @@ IF (${CMAKE_SYSTEM_NAME} STREQUAL "Emscripten")
             ${ITK_LIBRARIES})
     em_link_pre_js(CTThresholdSegmentationAll ${CMAKE_CURRENT_SOURCE_DIR}/js/pre.js)
 ELSE ()
+add_executable(CTThresholdSegmentationAll
+        CTThresholdSegmentation.cxx
+)
+add_executable(ConvertAndResample
+        ConvertAndResample.cxx
+)
+
 #    target_compile_definitions(CoherenceEnhancingDiffusion PRIVATE USE_EMSCRIPTEN=0)
 #    target_link_libraries(CoherenceEnhancingDiffusion
 #            ${ITK_LIBRARIES})
@@ -84,8 +93,9 @@ ELSE ()
 #            ${ITK_LIBRARIES})
 
     target_compile_definitions(CTThresholdSegmentationAll PRIVATE USE_EMSCRIPTEN=0)
-    target_link_libraries(CTThresholdSegmentationAll
-            ${ITK_LIBRARIES})
+    target_link_libraries(CTThresholdSegmentationAll ${ITK_LIBRARIES})
+    target_compile_definitions(ConvertAndResample PRIVATE USE_EMSCRIPTEN=0)
+    target_link_libraries(ConvertAndResample ${ITK_LIBRARIES})
 ENDIF ()
 
 
@@ -104,4 +114,5 @@ ENDIF ()
 
 add_test(NAME CTThresholdSegmentationAllTest
         COMMAND CTThresholdSegmentationAll /Input/PacMan.png
-        ${TEST_OUTPUT_DIR}/PacManSegmented.png)
+        ${TEST_OUTPUT_DIR}/PacManSegmented.png
+)
