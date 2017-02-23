@@ -70,13 +70,12 @@
             //Now process the dropped files with dicomParser
             filesToAtlas(event.dataTransfer.files, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"));
 
-
             // Resulting canvas containing atlas
             var segmentCanvas = document.getElementById("segmentCanvas");
             var segmentContext = segmentCanvas.getContext("2d");
 
             //Now process the dropped files with dicomParser
-            filesToAtlas(event.dataTransfer.files, segmentContext, segmentCanvas.width, segmentCanvas.height, document.getElementById("InvisibleDiv"));
+            filesToAtlas(Runner.filter.getOutputFiles(), segmentContext, segmentCanvas.width, segmentCanvas.height, document.getElementById("InvisibleDiv"));
         }
 
         /*
@@ -309,24 +308,26 @@ Drop something straight into the following X3DOM canvas.
                 <Background skyColor='0.3 0.3 0.3'></Background>
                 <Viewpoint description='Default' zNear='0.0001' zFar='100'></Viewpoint>
                 <Transform id="volumeTransform">
-                    <SegmentedVolumeData id='volume' dimensions='4.0 4.0 4.0'>
+                    <SegmentedVolumeData id='volume' dimensions='4.0 4.0 4.0' numberOfMaxSegments="2.0">
                         <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='1' slicesOverX='1'
                                            slicesOverY='1' hideChildren="true">
                             <canvas width='1024' height='1024' id='voxelCanvas'></canvas>
                         </ImageTextureAtlas>
-			<ImageTextureAtlas containerField='segmentIdentifiers' id="segmentAtlas" numberOfSlices='1' slicesOverX='1'
+                        <ImageTextureAtlas containerField='segmentIdentifiers' id="segmentAtlas" numberOfSlices='1'
+                                           slicesOverX='1'
                                            slicesOverY='1' hideChildren="true">
                             <canvas width='1024' height='1024' id='segmentCanvas'></canvas>
                         </ImageTextureAtlas>
                         <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='12.0'>
-                            <ImageTexture containerField='transferFunction' hideChildren="true">
+                            <!--ImageTexture containerField='transferFunction' hideChildren="true">
                                 <canvas width='256' height='10' id='tfCanvas'></canvas>
-                            </ImageTexture>
+                            </ImageTexture-->
                         </OpacityMapVolumeStyle>
-        <ComposedVolumeStyle>
-          <OpacityMapVolumeStyle opacityFactor="40.0" lightFactor="1.2"></OpacityMapVolumeStyle>
-          <EdgeEnhancementVolumeStyle gradientThreshold='1.8' edgeColor='0.0 0.0 1.0'></EdgeEnhancementVolumeStyle>
-</ComposedVolumeStyle>
+                        <ComposedVolumeStyle>
+                            <OpacityMapVolumeStyle opacityFactor="40.0" lightFactor="1.2"></OpacityMapVolumeStyle>
+                            <EdgeEnhancementVolumeStyle gradientThreshold='1.8'
+                                                        edgeColor='1.0 0.5 0.0'></EdgeEnhancementVolumeStyle>
+                        </ComposedVolumeStyle>
                     </SegmentedVolumeData>
                 </Transform>
             </Scene>
@@ -341,6 +342,7 @@ Drop something straight into the following X3DOM canvas.
 
 <!-- The following div is made invisible in order to hide temporary images needed for atlas and TF computation -->
 <div id="InvisibleDiv" style="display:none;background:#888888;width:50%;height:50%">
+    <canvas width='256' height='10' id='tfCanvas'></canvas>
     <canvas width='256' height='10' id="tfTmpCanvas"></canvas>
     <canvas width='32' height='32' id="tmpCanvas"></canvas>
     <div id="fullHistogramHolder" style="width:512px;height:100px;display:none;">

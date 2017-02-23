@@ -60,31 +60,32 @@ Runner.Filter.prototype.setProgress = function (progress) {
 };
 
 function pad(n, width, z) {
-  z = z || '0';
-  n = n + '';
-  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+    z = z || '0';
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
 Runner.Filter.prototype.postExecute = function () {
     //var output_filename = '/raw/' + this.parameters.output_filename;
-    var output_filenames = [];
-    for (var idx = 0; idx < this.parameters.input_filenames.length; idx++) {
-	var output_display_filename = '/display/OUTPUT'+ pad(idx+1,3) +'.png';
-        var output_filename = 'OUTPUT' + pad(idx+1,3) +".dcm";
-        output_filenames.push('/raw/' + output_filename);console.log(output_filenames);
-    
-    Module.ccall('ConvertAndResample', 'number',
-        ['string', 'string'],
-        [output_filename, output_display_filename]);
-    var output_data = FS.readFile(output_display_filename, {encoding: 'binary'});
-    var output_img = document.getElementById("output-image");
-    output_img.src = Runner.binaryToPng(output_data);
-    output_img.style.visibility = 'visible';
-    }
-    var progress_element = $('#execution-progress');
-    this.setProgress(0);
-    progress_element.removeClass('progress-bar-striped active');
-    progress_element.html('Done.');
+    //var output_filenames = [];
+    //for (var idx = 0; idx < this.parameters.input_filenames.length; idx++) {
+        //var output_display_filename = '/display/OUTPUT' + pad(idx + 1, 3) + '.png';
+        //var output_filename = 'OUTPUT' + pad(idx + 1, 3) + ".dcm";
+        //output_filenames.push('/raw/' + output_filename);
+        //console.log(output_filenames);
+
+        //Module.ccall('ConvertAndResample', 'number',
+            //['string', 'string'],
+            //[output_filename, output_display_filename]);
+        //var output_data = FS.readFile(output_display_filename, {encoding: 'binary'});
+        //var output_img = document.getElementById("output-image");
+        //output_img.src = Runner.binaryToPng(output_data);
+        //output_img.style.visibility = 'visible';
+    //}
+    //var progress_element = $('#execution-progress');
+    //this.setProgress(0);
+    //progress_element.removeClass('progress-bar-striped active');
+    //progress_element.html('Done.');
 };
 
 
@@ -139,85 +140,62 @@ Runner.Filter.prototype.displayInput = function (filepath) {
 
 Runner.Filter.prototype.setInputFile = function (input_files) {
     this.parameters.input_filenames = [];
+    this.PARSED_FILES=0;
     for (var idx = 0; idx < input_files.length; idx++) {
         var input_filename = input_files[idx];
         if (typeof input_files[idx] === 'object') {
             input_filename = input_files[idx].name;
         }
         this.parameters.input_filenames.push(input_filename);
-        //$('#input-filename').html(input_filename);
 
         var input_filepath = '/raw/' + input_filename;
         var input_display_filepath = '/display/' + input_filename + '.png';
         // Re-use the file it has already been downloaded.
-        /*try {
-         FS.stat(input_filepath);
-         this.displayInput(input_display_filepath);
-         if(this.worker) {
-         this.worker.postMessage({'cmd': 'run_filter', 'parameters': this.parameters});
-         }
-         else {
-         Runner.filter.execute();
-         }
-         }
-         catch(err)*/
-        {
-            /*if(typeof input_files[0] === 'string') {
-             console.log('Downloading ' + input_filename);
-             xhr = new XMLHttpRequest();
-             xhr.open('GET', '../../../imagenes/siggraph.png');////xhr.open('GET', 'images/' + input_filename);
-             xhr.responseType = 'arraybuffer';
-             xhr.overrideMimeType('application/octet-stream');
-             var that = this;
-             xhr.onload = function() {
-             console.log('Installing ' + input_filename);
-             var data = new Uint8Array(xhr.response);
-             FS.writeFile(input_filepath, data, { encoding: 'binary' });
-             Module.ccall('ConvertAndResample', 'number',
-             ['string', 'string'],
-             [input_filepath, input_display_filepath]);
-             that.displayInput(input_display_filepath);
-             if(that.worker) {
-             that.worker.postMessage({'cmd': 'install_input',
-             'input_filepath': input_filepath,
-             'data': data});
-             }
-             else {
-             Runner.filter.execute();
-             }
-             };
-             xhr.send();
-             }
-             else*/
-            { // A File object
-                var reader = new FileReader();
-                var that = this;
-                reader.input_filepath = input_filepath;
-                reader.input_display_filepath = input_display_filepath;
-                reader.onload = (function (file) {
-                    return function (e) {
-                        var data = new Uint8Array(e.target.result);
-                        FS.writeFile(this.input_filepath, data, {encoding: 'binary'});
-                        Module.ccall('ConvertAndResample', 'number',
-                            ['string', 'string'],
-                            [this.input_filepath, this.input_display_filepath]);
-                        that.displayInput(this.input_display_filepath);
-                        if(that.worker) {
-                         that.worker.postMessage({'cmd': 'install_input',
-                         'input_filepath': this.input_filepath,
-                         'data': data});
-                         }
-                         else {
-                         Runner.filter.execute();
-                         }
+        // A File object
+        var reader = new FileReader();
+        var that = this;
+        reader.input_filepath = input_filepath;
+        reader.input_display_filepath = input_display_filepath;
+        reader.total_files = input_files.length;
+        reader.onload = (function (file) {
+            return function (e) {
+                var data = new Uint8Array(e.target.result);
+                FS.writeFile(this.input_filepath, data, {encoding: 'binary'});
+                Module.ccall('ConvertAndResample', 'number',
+                    ['string', 'string'],
+                    [this.input_filepath, this.input_display_filepath]);
+                that.displayInput(this.input_display_filepath);
+                that.PARSED_FILES += 1;
+                if(that.PARSED_FILES == this.total_files){
+                    if (that.worker) {
+                        that.worker.postMessage({
+                            'cmd': 'install_input',
+                            'input_filepath': this.input_filepath,
+                            'data': data
+                        });
                     }
-                })(input_files[idx]);
-                reader.readAsArrayBuffer(input_files[idx]);
+                    else {
+                        Runner.filter.execute();
+                    }
+                }
             }
-        }
+        })(input_files[idx]);
+        reader.readAsArrayBuffer(input_files[idx]);
     }
 };
 
+Runner.Filter.prototype.getOutputFiles = function () {
+    var output_files = [];
+    //this.parameters.input_filenames = [];
+    for (var idx = 0; idx < Runner.filter.parameters.input_filenames.length; idx++) {
+        var output_filename = 'OUTPUT' + pad(idx + 1, 3) + ".dcm";
+        var output_filepath = '/raw/' + output_filename;
+        var data = FS.readFile(output_filepath, {encoding: 'binary'});
+        var output_file = new Blob([data], {"type": "image\/png"});
+        output_files.push(output_file);
+    }
+    return output_files;
+};
 
 Runner.Filter.prototype.downloadOutput = function () {
     var output_path = '/raw/' + this.parameters.output_filename;
@@ -229,70 +207,13 @@ Runner.Filter.prototype.downloadOutput = function () {
 
 
 Runner.Filter.prototype.setUpFilterControls = function () {
-    /*$('#diffusion-time-slider').slider({
-     value: (Runner.filter.parameters.diffusion_time != undefined) ? Runner.filter.parameters.diffusion_time : 20 ,
-     scale: 'logarithmic',
-     precision: 2
-     })
-     .on('slide', function(ee) {
-     Runner.filter.parameters.diffusion_time = ee.value;
-     });*/
     Runner.filter.parameters.diffusion_time = 20;
 
-    /*$('#lambda-slider').slider({
-     scale: 'logarithmic',
-     precision: 4,
-     reversed: true
-     })
-     .on('slide', function(ee) {
-     Runner.filter.parameters.lambda = ee.value;
-     });*/
-
-    /*$('#diffusion-type').change(function(ee) {
-     Runner.filter.parameters.diffusion_type = ee.target.value;
-     });*/
-
-    /*$('#noise-scale-slider').slider({
-     precision: 1
-     })
-     .on('slide', function(ee) {
-     Runner.filter.parameters.noise_scale = ee.value;
-     });*/
-
-    /*$('#feature-scale-slider').slider({
-     precision: 1
-     })
-     .on('slide', function(ee) {
-     Runner.filter.parameters.feature_scale = ee.value;
-     });*/
-
-    /*$('#exponent-slider').slider({
-     precision: 1
-     })
-     .on('slide', function(ee) {
-     Runner.filter.parameters.exponent = ee.value;
-     });*/
-
-    /*if(window.File && window.FileReader && window.FileList && window.Blob) {
-     file_input = $('#file-input');
-     file_input[0].disabled = "";
-     }*/
-
-    /*$('#download').submit(function(e) {
-     e.preventDefault();
-     Runner.filter.downloadOutput();
-     return false;
-     });*/
-
-    /*$('#execute-button').on('click', function() {
-     Runner.filter.execute();
-     });*/
     $(document).keypress(function (press) {
         if (press.which === 13) {
             Runner.filter.execute();
         }
     });
-
 
     if (Runner.filter.worker) {
         Runner.filter.worker.addEventListener('message', function (e) {
@@ -311,10 +232,10 @@ Runner.Filter.prototype.setUpFilterControls = function () {
             else { // Returning processed output image data
                 //var output_filename = '/raw/' + Runner.filter.parameters.output_filename;
                 //FS.writeFile(output_filename, e.data.output_data, {encoding: 'binary'});
-		for (var idx = 0; idx < Runner.filter.parameters.input_filenames.length; idx++) {
-			var output_filename = '/raw/OUTPUT'+ pad(idx+1,3) +'.png';
-			FS.writeFile(output_filename, e.data.output_data, {encoding: 'binary'});
-		}
+                for (var idx = 0; idx < Runner.filter.parameters.input_filenames.length; idx++) {
+                    var output_filename = '/raw/OUTPUT' + pad(idx + 1, 3) + '.png';
+                    FS.writeFile(output_filename, e.data.output_data, {encoding: 'binary'});
+                }
                 Runner.filter.postExecute();
             }
         }, false);
