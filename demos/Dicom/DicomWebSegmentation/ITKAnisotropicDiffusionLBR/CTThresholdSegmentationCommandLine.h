@@ -257,7 +257,7 @@ reader->SetImageIO( gdcmIO );
         //if (argIndex < argc) {
             //itkGenericExceptionMacro("Error: excessive number of arguments");
         //}
-	segmentationFilter->SetInsideValue(1);
+	segmentationFilter->SetInsideValue(255);
 	segmentationFilter->SetOutsideValue(0);
 
 
