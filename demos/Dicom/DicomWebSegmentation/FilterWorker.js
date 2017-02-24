@@ -1,15 +1,5 @@
 var FilterWorker = FilterWorker || {};
 
-//importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.js');
-//importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.1.js');
-//importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.1.pretty.js');
-//importScripts('EmscriptenDebug.js', 'CoherenceEnhancingDiffusion.2.js');
-//var ModuleCE = ModuleCE;
-//importScripts('EmscriptenDebug.js', 'ConvertAndResample.js');
-//var ModuleCR = ModuleCR;
-//importScripts('EmscriptenDebug.js', 'CTThresholdSegmentation.js');
-//var ModuleCT = ModuleCT;
-
 importScripts('EmscriptenDebug.js', 'CTThresholdSegmentationAll.js');
 
 // Where to put the raw input and output images.
@@ -18,28 +8,26 @@ FS.mkdir('/raw');
 self.addEventListener('message', function (e) {
     switch (e.data.cmd) {
         case 'install_input':
-            FS.writeFile(e.data.input_filepath, e.data.data, {encoding: 'binary'});
+            for(var idx=0;idx<e.data.input_filepath.length;idx++) {
+                FS.writeFile(e.data.input_filepath[idx], e.data.data[idx], {encoding: 'binary'});
+            }
             self.postMessage({'cmd': 'execute'});
             break;
         case 'run_filter':
             var parameters = e.data.parameters;
-            var output_filename = '/raw/' + parameters.output_filename;
-            var args = [parameters.input_filenames.map(function (a) {
-                return '/raw/' + a;
-            }).toString(),//'/raw/' + parameters.input_filename,
-                output_filename,
-                //parameters.diffusion_time.toString(),
-                //parameters.lambda.toString(),
-                //parameters.diffusion_type,
-                //parameters.noise_scale.toString(),
-                //parameters.feature_scale.toString(),
-                //parameters.exponent.toString()
-				];
-            //FS.lookupPath("/raw").node;
+            var args = [parameters.input_filenames.toString(),parameters.output_filenames.toString()];
             Module.callMain(args);
-
-            var output_data = FS.readFile(output_filename, {encoding: 'binary'});
-            self.postMessage({'output_data': output_data}, [output_data.buffer]);
+            var output_data = [];
+            var output_data_buffers = [];
+            for(var idx=0;idx<parameters.output_filenames.length;idx++) {
+                var f = FS.readFile(parameters.output_filenames[idx], {encoding: 'binary'});
+                output_data.push(f);
+                output_data_buffers.push(f.buffer);
+            }
+            //console.log(output_data);
+            //console.log(output_data_buffers);
+            //self.postMessage({'output_data': output_data}/*, [output_data_buffers]*/);
+            self.postMessage({'cmd':'return_output','output_data': output_data});
             break;
         default:
             console.error('Unknown worker command.');
