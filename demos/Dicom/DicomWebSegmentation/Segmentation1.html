@@ -52,6 +52,7 @@
             event.preventDefault();
 
             document.getElementById("input-previews").innerHTML = "";
+            document.getElementById("output-previews").innerHTML = "";
             Runner.filter.setInputFile(event.dataTransfer.files);
 
             // Get the number of slices info, to update the ImageTextureAtlas
@@ -71,11 +72,11 @@
             filesToAtlas(event.dataTransfer.files, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"));
 
             // Resulting canvas containing atlas
-            var segmentCanvas = document.getElementById("segmentCanvas");
-            var segmentContext = segmentCanvas.getContext("2d");
+            //var segmentCanvas = document.getElementById("segmentCanvas");
+            //var segmentContext = segmentCanvas.getContext("2d");
 
             //Now process the dropped files with dicomParser
-            filesToAtlas(Runner.filter.getOutputFiles(), segmentContext, segmentCanvas.width, segmentCanvas.height, document.getElementById("InvisibleDiv"));
+            //filesToAtlas(Runner.filter.getOutputFiles(), segmentContext, segmentCanvas.width, segmentCanvas.height, document.getElementById("InvisibleDiv"));
         }
 
         /*
@@ -310,12 +311,12 @@ Drop something straight into the following X3DOM canvas.
                 <Transform id="volumeTransform">
                     <SegmentedVolumeData id='volume' dimensions='4.0 4.0 4.0' numberOfMaxSegments="2.0">
                         <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='1' slicesOverX='1'
-                                           slicesOverY='1' hideChildren="true">
+                                           slicesOverY='1' hideChildren="false">
                             <canvas width='1024' height='1024' id='voxelCanvas'></canvas>
                         </ImageTextureAtlas>
                         <ImageTextureAtlas containerField='segmentIdentifiers' id="segmentAtlas" numberOfSlices='1'
                                            slicesOverX='1'
-                                           slicesOverY='1' hideChildren="true">
+                                           slicesOverY='1' hideChildren="false">
                             <canvas width='1024' height='1024' id='segmentCanvas'></canvas>
                         </ImageTextureAtlas>
                         <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='12.0'>
@@ -363,6 +364,6 @@ Drop something straight into the following X3DOM canvas.
 <img src="../../../imagenes/siggraph.png" class="img-responsive center-block"
      alt="Output image" id="output-image" style="visibility:hidden;">
 <div id="input-previews"></div>
-
+<div id="output-previews"></div>
 </body>
 </html>
