@@ -45,6 +45,16 @@
         }
 
         var CURRENT_FILES;
+        
+        function segmentedToAtlas(output_files){
+            // Resulting canvas containing atlas
+            var segmentCanvas = document.getElementById("segmentCanvas");
+            var segmentContext = segmentCanvas.getContext("2d");
+
+            //Now process the dropped files with dicomParser
+            filesToAtlas(output_files, segmentContext, segmentCanvas.width, segmentCanvas.height, document.getElementById("InvisibleDiv"), 127, 256);
+        }
+        
         // Handles multiple DICOM files drop on element and converts them into an atlas
         function divondrop(event) {
             // Also needed to prevent the drop target element from triggering default action on dropped files (download)
@@ -53,6 +63,7 @@
 
             document.getElementById("input-previews").innerHTML = "";
             document.getElementById("output-previews").innerHTML = "";
+            Runner.filter.setCallbackCompletion(segmentedToAtlas);
             Runner.filter.setInputFile(event.dataTransfer.files);
 
             // Get the number of slices info, to update the ImageTextureAtlas
@@ -70,13 +81,6 @@
 
             //Now process the dropped files with dicomParser
             filesToAtlas(event.dataTransfer.files, voxelContext, voxelCanvas.width, voxelCanvas.height, document.getElementById("InvisibleDiv"));
-
-            // Resulting canvas containing atlas
-            //var segmentCanvas = document.getElementById("segmentCanvas");
-            //var segmentContext = segmentCanvas.getContext("2d");
-
-            //Now process the dropped files with dicomParser
-            //filesToAtlas(Runner.filter.getOutputFiles(), segmentContext, segmentCanvas.width, segmentCanvas.height, document.getElementById("InvisibleDiv"));
         }
 
         /*
@@ -311,12 +315,12 @@ Drop something straight into the following X3DOM canvas.
                 <Transform id="volumeTransform">
                     <SegmentedVolumeData id='volume' dimensions='4.0 4.0 4.0' numberOfMaxSegments="2.0">
                         <ImageTextureAtlas containerField='voxels' id="voxelAtlas" numberOfSlices='1' slicesOverX='1'
-                                           slicesOverY='1' hideChildren="false">
+                                           slicesOverY='1' hideChildren="true">
                             <canvas width='1024' height='1024' id='voxelCanvas'></canvas>
                         </ImageTextureAtlas>
                         <ImageTextureAtlas containerField='segmentIdentifiers' id="segmentAtlas" numberOfSlices='1'
                                            slicesOverX='1'
-                                           slicesOverY='1' hideChildren="false">
+                                           slicesOverY='1' hideChildren="true">
                             <canvas width='1024' height='1024' id='segmentCanvas'></canvas>
                         </ImageTextureAtlas>
                         <OpacityMapVolumeStyle lightFactor='1.2' opacityFactor='12.0'>

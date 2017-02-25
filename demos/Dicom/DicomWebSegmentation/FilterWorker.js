@@ -24,9 +24,6 @@ self.addEventListener('message', function (e) {
                 output_data.push(f);
                 output_data_buffers.push(f.buffer);
             }
-            //console.log(output_data);
-            //console.log(output_data_buffers);
-            //self.postMessage({'output_data': output_data}/*, [output_data_buffers]*/);
             self.postMessage({'cmd':'return_output','output_data': output_data});
             break;
         default:

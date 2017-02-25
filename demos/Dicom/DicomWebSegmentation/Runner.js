@@ -59,8 +59,12 @@ function pad(n, width, z) {
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
+Runner.Filter.prototype.setCallbackCompletion = function(func){
+    this.callbackCompletion = func;
+};
+
 Runner.Filter.prototype.postExecute = function () {
-    var output_filenames = [];
+    /*var output_filenames = [];
     for (var idx = 0; idx < this.parameters.output_filenames.length; idx++) {
         var output_display_filename = '/display/' + this.parameters.output_filenames[idx].substr(5) + '.png';
         var output_filename = this.parameters.output_filenames[idx];
@@ -71,19 +75,15 @@ Runner.Filter.prototype.postExecute = function () {
             ['string', 'string'],
             [output_filename, output_display_filename]);
         this.displayOutput(output_display_filename);
-    }
+    }*/
 
     var progress_element = $('#execution-progress');
     this.setProgress(0);
     progress_element.removeClass('progress-bar-striped active');
     progress_element.html('Done.');
 
-            // Resulting canvas containing atlas
-            var segmentCanvas = document.getElementById("segmentCanvas");
-            var segmentContext = segmentCanvas.getContext("2d");
-
-            //Now process the dropped files with dicomParser
-            filesToAtlas(this.getOutputFiles(), segmentContext, segmentCanvas.width, segmentCanvas.height, document.getElementById("InvisibleDiv"));
+    if(this.callbackCompletion != null)
+        this.callbackCompletion(this.getOutputFiles());
 };
 
 
@@ -114,7 +114,7 @@ Runner.Filter.prototype.execute = function () {
 };
 
 Runner.Filter.prototype.displayOutput = function (filepath) {
-    var output_data = FS.readFile(filepath, {encoding: 'binary'});
+    /*var output_data = FS.readFile(filepath, {encoding: 'binary'});
     var output_img = document.createElement("img");
     output_img.className = "img-responsive center-block";
     output_img.alt = filepath;
@@ -122,11 +122,11 @@ Runner.Filter.prototype.displayOutput = function (filepath) {
     output_img.style.visibility = 'visible';
 
     var output_previews = document.getElementById("output-previews");
-    output_previews.appendChild(output_img);
+    output_previews.appendChild(output_img);*/
 };
 
 Runner.Filter.prototype.displayInput = function (filepath) {
-    var input_data = FS.readFile(filepath, {encoding: 'binary'});
+    /*var input_data = FS.readFile(filepath, {encoding: 'binary'});
     var input_img = document.createElement("img");
     input_img.className = "img-responsive center-block";
     input_img.alt = filepath;
@@ -134,16 +134,16 @@ Runner.Filter.prototype.displayInput = function (filepath) {
     input_img.style.visibility = 'visible';
 
     var input_previews = document.getElementById("input-previews");
-    input_previews.appendChild(input_img);
+    input_previews.appendChild(input_img);*/
 };
-
 
 Runner.Filter.prototype.setInputFile = function (input_files) {
     this.parameters.input_filenames = [];
-    var PARSED_FILES=0;
     var input_filepaths=[];
-    var datas=[];
+    var datas=Array(input_files.length).fill(null);
+    var promises = [];
     for (var idx = 0; idx < input_files.length; idx++) {
+        var that=this;
         var input_filename = input_files[idx];
         if (typeof input_files[idx] === 'object') {
             input_filename = input_files[idx].name;
@@ -152,49 +152,39 @@ Runner.Filter.prototype.setInputFile = function (input_files) {
 
         var input_filepath = '/raw/' + input_filename;
         var input_display_filepath = '/display/' + input_filename + '.png';
-        // Re-use the file it has already been downloaded.
-        // A File object
-        var reader = new FileReader();
-        var that = this;
-        input_filepaths.push(input_filepath);
-        reader.input_filepath = input_filepath;
-        reader.input_display_filepath = input_display_filepath;
-        reader.total_files = input_files.length;
-        reader.onload = (function (file) {
-            return function (e) {
-                var data = new Uint8Array(e.target.result);
-                FS.writeFile(this.input_filepath, data, {encoding: 'binary'});
-                Module.ccall('ConvertAndResample', 'number',
-                    ['string', 'string'],
-                    [this.input_filepath, this.input_display_filepath]);
-                that.displayInput(this.input_display_filepath);
-                datas.push(data);
-                PARSED_FILES += 1;
-            }
-        })(input_files[idx]);
-        reader.readAsArrayBuffer(input_files[idx]);
+        input_filepaths.push(input_filepath);        
+        promises.push((function(that, input_filepath, input_display_filepath, datas, idx) {
+            return new Promise((resolve) => {
+                // Re-use the file it has already been downloaded.
+                // A File object
+                var reader = new FileReader();
+                //var that = this;
+                reader.input_filepath = input_filepath;
+                reader.input_display_filepath = input_display_filepath;
+                reader.idx = idx;
+                reader.onload = (function (file) {
+                    return function (e) {
+                        var data = new Uint8Array(e.target.result);
+                        FS.writeFile(this.input_filepath, data, {encoding: 'binary'});
+                        /*Module.ccall('ConvertAndResample', 'number',
+                            ['string', 'string'],
+                            [this.input_filepath, this.input_display_filepath]);
+                            that.displayInput(this.input_display_filepath);*/
+                        datas[this.idx]=data;
+                        resolve(this.idx);
+                   }
+                })(input_files[idx]);
+                reader.readAsArrayBuffer(input_files[idx]); 
+            });
+       })(this, input_filepath, input_display_filepath, datas, idx)
+       );
     }
-    //while(datas.length < input_files.length){setTimeout(function(){},200);}
-    //var myVar = setInterval(function(){ if(datas.length >= input_files.length){clearInterval(myVar);} }, 200);
-
-	/*var check = function() {
-	    if (PARSED_FILES >= input_files.length) {
-		    if (this.worker) {
-			this.worker.postMessage({
-			    'cmd': 'install_input',
-			    'input_filepath': input_filepaths,
-			    'data': datas
-			});
-		    }
-		    else {
-			Runner.filter.execute();
-		    }
-		 return;
-	    }
-	    setTimeout(check, 500);
-	}
-check();*/
-    if (this.worker) {
+    
+    //Wait for all readers and conversions to complete
+    Promise.all(promises)
+      .then((results) => {
+        //console.log("All done", datas);
+        if (this.worker) {
         this.worker.postMessage({
             'cmd': 'install_input',
             'input_filepath': input_filepaths,
@@ -204,6 +194,11 @@ check();*/
     else {
         Runner.filter.execute();
     }
+      })
+      .catch((e) => {
+          // Handle errors here
+          console.log("Errors", e);
+      });
 };
 
 Runner.Filter.prototype.getOutputFiles = function () {
@@ -253,11 +248,8 @@ Runner.Filter.prototype.setUpFilterControls = function () {
                         console.error('Unknown message received from worker');
                 }
             }
-            else { // Returning processed output image data
-                //for (var idx = 0; idx < e.data.output_data.length; idx++) {
-                //    FS.writeFile(Runner.filter.parameters.output_filenames[idx], e.data.output_data[idx], {encoding: 'binary'});
-                //}
-                //Runner.filter.postExecute();
+            else {
+                //???
             }
         }, false);
     }
@@ -267,6 +259,7 @@ Runner.Filter.prototype.setUpFilterControls = function () {
 Runner.initialize = function () {
     Runner.filter = new Runner.Filter();
     Runner.filter.setUpFilterControls();
+    Runner.filter.setCallbackCompletion(null);
 };
 
 
